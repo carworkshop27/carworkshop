@@ -914,8 +914,7 @@ export default function Home() {
       viewMode={viewMode}
       partQuantity={partQuantity}
       selectedPartId={selectedPartId}
-      pColor={pColor}
-      pStatus={pStatus}
+      purchaseForm={purchaseForm}
       isLoading={isLoading}
       handleAddPartToJob={handleAddPartToJob}
       handleExportJobCardsExcel={handleExportJobCardsExcel}

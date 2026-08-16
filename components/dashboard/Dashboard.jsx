@@ -25,6 +25,12 @@ import {
   Package,
   Send,
   Wrench,
+  Truck,
+  Lock,
+  Phone,
+  Copy,
+  Users,
+  Trash2,
 } from "lucide-react";
 
 export default function Dashboard({
@@ -38,9 +44,9 @@ export default function Dashboard({
   searchTerm,
   viewMode,
   partQuantity,
+  purchaseForm,
+
   selectedPartId,
-  pColor,
-  pStatus,
   isLoading,
   handleAddPartToJob,
   handleExportJobCardsExcel,
