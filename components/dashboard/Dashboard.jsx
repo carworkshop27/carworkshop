@@ -70,6 +70,7 @@ export default function Dashboard({
   handlePurchaseOrderSubmit,
   handleResetData,
   handleSelectJob,
+  togglePaymentStatus,
   updateJobStatus,
   setActiveScreen,
   isSmsModalOpen,
