@@ -38,6 +38,7 @@ import DashboardHeader from "./DashboardHeader";
 import PanelInspection from "../panel-inspection/PanelInspection";
 import BulkReports from "../reports/BulkReports";
 import DashboardStats from "../dashboard-stats/DashboardStats";
+import DashboardActions from "./DashboardActions";
 export default function Dashboard({
   currentUser,
   activeJob,
@@ -100,34 +101,11 @@ export default function Dashboard({
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">
-              Workshop Dashboard
-            </h2>
-            <p className="text-sm text-slate-600">
-              {activeJob
-                ? `Viewing Vehicle: ${activeJob.model} (${activeJob.plate})`
-                : "Register or select a vehicle to begin"}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setActiveScreen("inventory-list")}
-              className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold px-4 py-2.5 rounded-lg text-sm flex items-center justify-center space-x-2 shadow transition-transform"
-            >
-              <Layers className="w-5 h-5" />
-              <span>Paint & Chemicals Inventory</span>
-            </button>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold px-4 py-2.5 rounded-lg text-sm flex items-center justify-center space-x-2 shadow transition-transform"
-            >
-              <Plus className="w-5 h-5" />
-              <span>New Vehicle Intake</span>
-            </button>
-          </div>
-        </div>
+        <DashboardActions
+          activeJob={activeJob}
+          setActiveScreen={setActiveScreen}
+          setIsModalOpen={setIsModalOpen}
+        />
 
         <BulkReports
           handleExportJobCardsExcel={handleExportJobCardsExcel}
