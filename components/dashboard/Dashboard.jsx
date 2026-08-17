@@ -36,6 +36,7 @@ import SparePartsInventory from "../spare-parts/SparePartsInventory";
 import ActiveGarageVehicles from "../garage/ActiveGarageVehicles";
 import DashboardHeader from "./DashboardHeader";
 import PanelInspection from "../panel-inspection/PanelInspection";
+import BulkReports from "../reports/BulkReports";
 export default function Dashboard({
   currentUser,
   activeJob,
@@ -127,44 +128,12 @@ export default function Dashboard({
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h4 className="font-bold text-slate-900 text-sm">
-              Bulk Reports & Data Export
-            </h4>
-            <p className="text-xs text-slate-500">
-              Download complete workshop registers with current date naming
-              tags.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={handleExportJobCardsExcel}
-              className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> Job Cards
-              (Excel)
-            </button>
-            <button
-              onClick={handleExportJobCardsPDF}
-              className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow"
-            >
-              <FileDown className="w-4 h-4 text-blue-400" /> Job Cards (PDF)
-            </button>
-            <button
-              onClick={handleExportSalesExcel}
-              className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow"
-            >
-              <FileSpreadsheet className="w-4 h-4" /> Sales History (Excel)
-            </button>
-            <button
-              onClick={handleExportSalesPDF}
-              className="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow"
-            >
-              <FileDown className="w-4 h-4" /> Sales History (PDF)
-            </button>
-          </div>
-        </div>
+        <BulkReports
+          handleExportJobCardsExcel={handleExportJobCardsExcel}
+          handleExportJobCardsPDF={handleExportJobCardsPDF}
+          handleExportSalesExcel={handleExportSalesExcel}
+          handleExportSalesPDF={handleExportSalesPDF}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
