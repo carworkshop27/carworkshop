@@ -3,6 +3,7 @@
 import LoginScreen from "../components/auth/LoginScreen";
 import Dashboard from "../components/dashboard/Dashboard";
 import InventoryList from "../components/inventory/InventoryList";
+import SmsNotificationModal from "../components/notifications/SmsNotificationModal";
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
 import jsPDF from "jspdf";
@@ -1624,6 +1625,13 @@ export default function Home() {
             )}
           </div>
         </main>
+
+        <SmsNotificationModal
+          isSmsModalOpen={isSmsModalOpen}
+          smsJobData={smsJobData}
+          generateSmsText={generateSmsText}
+          setIsSmsModalOpen={setIsSmsModalOpen}
+        />
       </div>
     );
   }
@@ -1676,6 +1684,7 @@ export default function Home() {
         handlePurchaseOrderSubmit={handlePurchaseOrderSubmit}
         handleResetData={handleResetData}
         handleSelectJob={handleSelectJob}
+        togglePaymentStatus={togglePaymentStatus}
         setActiveScreen={setActiveScreen}
         setIsModalOpen={setIsModalOpen}
         setIsSmsModalOpen={setIsSmsModalOpen}

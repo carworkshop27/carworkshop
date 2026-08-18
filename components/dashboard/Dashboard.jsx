@@ -1,36 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  FileSpreadsheet,
-  FileDown,
-  Layers,
-  LayoutGrid,
-  LayoutList,
-  Loader2,
-  ClipboardList,
-  DollarSign,
-  CheckCircle2,
-  Search,
-  ShieldCheck,
-  UserPlus,
-  RefreshCw,
-  LogOut,
-  Plus,
-  X,
-  MessageSquare,
-  MinusCircle,
-  ShoppingCart,
-  Package,
-  Send,
-  Wrench,
-  Truck,
-  Lock,
-  Phone,
-  Copy,
-  Users,
-  Trash2,
-} from "lucide-react";
+
 import SmsNotificationModal from "../notifications/SmsNotificationModal";
 import SparePartsInventory from "../spare-parts/SparePartsInventory";
 import ActiveGarageVehicles from "../garage/ActiveGarageVehicles";
