@@ -156,7 +156,7 @@ export default function PanelInspection({
                 </span>
 
                 <span className="text-lg font-black text-slate-900">
-                  $
+                  ⃁
                   {(
                     damageTypes[selectedPanel.status] || damageTypes.ok
                   ).cost.toLocaleString()}

@@ -45,8 +45,8 @@ export default function SparePartsInventory({
               <p className="text-xs font-bold text-slate-700 mt-0.5">
                 {currentUser.role === "Mechanic"
                   ? "Restricted Cost"
-                  : `Buy: $${item.costPrice || 40}`}{" "}
-                | Sell: ${item.price}
+                  : `Buy: ⃁${item.costPrice || 40}`}
+                | Sell: ⃁{item.price}
               </p>
             </div>
 
@@ -92,7 +92,7 @@ export default function SparePartsInventory({
 
                   {inventory.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.name} (${item.price} - Stock: {item.stock})
+                      {item.name} (⃁{item.price} - Stock: {item.stock})
                     </option>
                   ))}
                 </select>
@@ -215,7 +215,7 @@ export default function SparePartsInventory({
 
                   <div>
                     <label className="block text-[11px] font-extrabold text-emerald-950 mb-1">
-                      Unit Cost ($)
+                      Unit Cost (⃁)
                     </label>
 
                     <input

@@ -797,7 +797,7 @@ export default function Home() {
         Customer: job.owner,
         Plate: job.plate,
         "Payment Status": job.paymentStatus || "Unpaid",
-        "Invoice Amount ($)": grandTotal,
+        "Invoice Amount (⃁)": grandTotal,
         Date: job.date,
       };
     });
@@ -808,9 +808,17 @@ export default function Home() {
     XLSX.writeFile(workbook, `Sales_Invoice_History_${dateStr}.xlsx`);
   };
 
-  const handleExportSalesPDF = () => {
+  const handleExportSalesPDF = async () => {
     const dateStr = getFormattedDateString();
+
+    const fontResponse = await fetch("/fonts/saudi_riyal.ttf");
+    const fontBuffer = await fontResponse.arrayBuffer();
+    const fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBuffer)));
+
     const doc = new jsPDF();
+
+    doc.addFileToVFS("saudi_riyal.ttf", fontBase64);
+    doc.addFont("saudi_riyal.ttf", "SaudiRiyal", "normal");
     doc.setFontSize(18);
     doc.setTextColor(37, 99, 235);
     doc.text("AutoFix Pro - Sales & Invoice History", 14, 20);
@@ -837,18 +845,10 @@ export default function Home() {
         job.id,
         job.owner,
         job.paymentStatus || "Unpaid",
-        `$${grandTotal.toFixed(2)}`,
+        `${grandTotal.toFixed(2)}`,
         job.date,
       ];
     });
-
-    tableRows.push([
-      {
-        content: `Total Accumulated Revenue: $${overallRevenue.toFixed(2)}`,
-        colSpan: 6,
-        styles: { fontStyle: "bold", halign: "right" },
-      },
-    ]);
 
     autoTable(doc, {
       startY: 35,
@@ -858,7 +858,52 @@ export default function Home() {
       body: tableRows,
       theme: "striped",
       headStyles: { fillColor: [37, 99, 235] },
+
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 4) {
+          data.cell.styles.cellPadding = {
+            top: 4,
+            right: 4,
+            bottom: 4,
+            left: 8,
+          };
+        }
+      },
+
+      didDrawCell: (data) => {
+        if (data.section === "body" && data.column.index === 4) {
+          const symbol = "\uE900";
+
+          doc.setFont("SaudiRiyal", "normal");
+          doc.setFontSize(10);
+
+          doc.text(
+            symbol,
+            data.cell.x + 4,
+            data.cell.y + data.cell.height / 2 + 3,
+          );
+        }
+      },
     });
+
+    doc.setFontSize(11);
+    doc.setTextColor(51, 51, 51);
+
+    const totalY = doc.lastAutoTable.finalY + 10;
+    const totalLabel = "Total Accumulated Revenue: ";
+
+    doc.setFont("helvetica", "normal");
+    doc.text(totalLabel, 14, totalY);
+
+    const labelWidth = doc.getTextWidth(totalLabel);
+
+    doc.setFont("SaudiRiyal", "normal");
+    doc.text("\uE900", 14 + labelWidth, totalY);
+
+    const symbolWidth = doc.getTextWidth("\uE900");
+
+    doc.setFont("helvetica", "normal");
+    doc.text(overallRevenue.toFixed(2), 14 + labelWidth + symbolWidth, totalY);
 
     doc.save(`Sales_Invoice_History_${dateStr}.pdf`);
   };
@@ -986,7 +1031,7 @@ export default function Home() {
 
     let text = `Hello ${job.owner}, here is an update from AutoFix Pro regarding your vehicle (${job.model} - ${job.plate}).\n\n`;
     text += `Current Workshop Status: ${job.status.toUpperCase()}\n`;
-    text += `Total Repair Estimate: $${grandTotal.toFixed(2)}\n`;
+    text += `Total Repair Estimate: ⃁${grandTotal.toFixed(2)}\n`;
     text += `Payment Status: ${job.paymentStatus || "Unpaid"}\n\n`;
 
     if (job.status === "Ready for Pickup") {
@@ -1260,7 +1305,7 @@ export default function Home() {
       tableData.push([
         p.name,
         `Body Repair - ${info.label}${techStr}`,
-        `$ ${info.cost.toFixed(2)}`,
+        `⃁${info.cost.toFixed(2)}`,
       ]);
     });
 
@@ -1269,7 +1314,7 @@ export default function Home() {
       tableData.push([
         part.name,
         `Spare Part (x${part.qty})`,
-        `$ ${part.price.toFixed(2)}`,
+        `⃁${part.price.toFixed(2)}`,
       ]);
     });
 
@@ -1286,16 +1331,14 @@ export default function Home() {
         colSpan: 2,
         styles: { fontStyle: "bold", halign: "right" },
       },
-      { content: `$ ${totalCost.toFixed(2)}`, styles: { fontStyle: "bold" } },
+      { content: `⃁${totalCost.toFixed(2)}`, styles: { fontStyle: "bold" } },
     ]);
 
     autoTable(doc, {
       startY: 75,
       head: [["Item Description", "Category / Details", "Amount"]],
       body:
-        tableData.length > 0
-          ? tableData
-          : [["No items added", "N/A", "$ 0.00"]],
+        tableData.length > 0 ? tableData : [["No items added", "N/A", "⃁0.00"]],
       theme: "striped",
       headStyles: { fillColor: [37, 99, 235] },
     });
@@ -1434,7 +1477,7 @@ export default function Home() {
                 Total Invoice Cost
               </p>
               <h3 className="text-3xl font-black text-slate-900">
-                ${totalJobCost.toFixed(2)}
+                ⃁{totalJobCost.toFixed(2)}
               </h3>
             </div>
           </div>
@@ -1581,7 +1624,7 @@ export default function Home() {
                         </div>
                       </div>
                       <span className="font-black text-slate-900">
-                        ${info.cost.toFixed(2)}
+                        ⃁{info.cost.toFixed(2)}
                       </span>
                     </div>
                   );
@@ -1617,7 +1660,7 @@ export default function Home() {
                       </p>
                     </div>
                     <span className="font-black text-slate-900">
-                      ${pt.price.toFixed(2)}
+                      ⃁{pt.price.toFixed(2)}
                     </span>
                   </div>
                 ))}

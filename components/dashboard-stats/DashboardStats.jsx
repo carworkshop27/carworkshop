@@ -1,4 +1,4 @@
-import { ClipboardList, DollarSign, CheckCircle2 } from "lucide-react";
+import { ClipboardList, CheckCircle2 } from "lucide-react";
 
 export default function DashboardStats({
   totalVehicles,
@@ -21,14 +21,14 @@ export default function DashboardStats({
 
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
         <div className="bg-emerald-100 p-3 rounded-lg text-emerald-600">
-          <DollarSign className="w-6 h-6" />
+          <span className="text-2xl font-bold">⃁</span>
         </div>
         <div>
           <p className="text-sm font-semibold text-slate-500">
             Total Invoiced Sales
           </p>
           <h4 className="text-2xl font-bold text-slate-900">
-            ${totalRevenue.toLocaleString()}
+            ⃁{totalRevenue.toLocaleString()}
           </h4>
         </div>
       </div>
