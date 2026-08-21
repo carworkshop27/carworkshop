@@ -1,30 +1,29 @@
 import React from "react";
-import { Wrench, KeyRound, UserCheck } from "lucide-react";
+import { KeyRound, UserCheck } from "lucide-react";
 
 export default function LoginScreen({ loginInput, setLoginInput, onSubmit }) {
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-700">
-        <div className="bg-slate-950 text-white p-6 text-center border-b border-slate-800">
-          <div className="inline-flex bg-blue-600 p-3 rounded-xl text-white mb-2 shadow">
-            <Wrench className="w-8 h-8" />
-          </div>
-
-          <h1 className="text-2xl font-black">AutoFix Pro</h1>
-
-          <p className="text-xs text-slate-400 mt-1">
-            Multi-User Authentication Portal
-          </p>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-700">
+        {/* GARAGE ALTALAA FAKHIR LOGO */}
+        <div className="bg-white flex items-center justify-center h-[270px] border-b border-slate-300">
+          <img
+            src="/images/garage-logo.png"
+            alt="Garage Altalaa Fakhir"
+            className="max-w-[400px] w-[78%] h-auto object-contain"
+          />
         </div>
 
-        <form onSubmit={onSubmit} className="p-6 space-y-4">
+        {/* LOGIN FORM */}
+        <form onSubmit={onSubmit} className="px-8 py-7 space-y-5">
+          {/* Username */}
           <div>
-            <label className="block text-xs font-black text-slate-700 mb-1">
+            <label className="block text-base font-black text-slate-700 mb-2">
               Username
             </label>
 
             <div className="relative">
-              <UserCheck className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <UserCheck className="w-6 h-6 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
 
               <input
                 type="text"
@@ -37,18 +36,19 @@ export default function LoginScreen({ loginInput, setLoginInput, onSubmit }) {
                     username: e.target.value,
                   })
                 }
-                className="w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full pl-12 pr-4 py-4 text-base font-bold text-slate-900 border-2 border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
               />
             </div>
           </div>
 
+          {/* PIN / Password */}
           <div>
-            <label className="block text-xs font-black text-slate-700 mb-1">
+            <label className="block text-base font-black text-slate-700 mb-2">
               PIN / Password
             </label>
 
             <div className="relative">
-              <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <KeyRound className="w-6 h-6 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
 
               <input
                 type="password"
@@ -61,14 +61,15 @@ export default function LoginScreen({ loginInput, setLoginInput, onSubmit }) {
                     pin: e.target.value,
                   })
                 }
-                className="w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full pl-12 pr-4 py-4 text-base font-bold text-slate-900 border-2 border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
               />
             </div>
           </div>
 
+          {/* Sign In */}
           <button
             type="submit"
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow transition-all"
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base uppercase tracking-wider rounded-xl shadow-lg transition-all"
           >
             Sign In to Workshop
           </button>
