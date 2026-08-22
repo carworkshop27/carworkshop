@@ -102,6 +102,32 @@ const DAMAGE_TYPES = {
     cost: 600,
     uiColor: "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-200",
   },
+  light_damage: {
+    label: "Light Damage",
+    color: "#facc15",
+    cost: 100,
+    uiColor:
+      "bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200",
+  },
+  medium_damage: {
+    label: "Medium Damage",
+    color: "#fb923c",
+    cost: 250,
+    uiColor:
+      "bg-orange-100 text-orange-800 border-orange-300 hover:bg-orange-200",
+  },
+  large_damage: {
+    label: "Large Damage",
+    color: "#ef4444",
+    cost: 400,
+    uiColor: "bg-red-100 text-red-800 border-red-300 hover:bg-red-200",
+  },
+  polish: {
+    label: "Polish",
+    color: "#3b82f6",
+    cost: 75,
+    uiColor: "bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200",
+  },
 };
 
 const getDamageInfo = (status) => DAMAGE_TYPES[status] || DAMAGE_TYPES["ok"];

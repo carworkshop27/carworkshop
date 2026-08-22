@@ -118,18 +118,6 @@ export default function Dashboard({
           updateJobStatus={updateJobStatus}
         />
 
-        {/* --- PANEL INSPECTION --- */}
-        <PanelInspection
-          activeJob={activeJob}
-          panels={panels}
-          selectedPanelId={selectedPanelId}
-          setSelectedPanelId={setSelectedPanelId}
-          damageTypes={damageTypes}
-          selectedPanel={selectedPanel}
-          updatePanelDamage={updatePanelDamage}
-          updatePanelTechnician={updatePanelTechnician}
-        />
-
         <SparePartsInventory
           currentUser={currentUser}
           inventory={inventory}
