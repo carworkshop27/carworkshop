@@ -85,6 +85,18 @@ export default function Dashboard({
           handleExportSalesPDF={handleExportSalesPDF}
         />
 
+        {/* --- PANEL INSPECTION --- */}
+        <PanelInspection
+          activeJob={activeJob}
+          panels={panels}
+          selectedPanelId={selectedPanelId}
+          setSelectedPanelId={setSelectedPanelId}
+          damageTypes={damageTypes}
+          selectedPanel={selectedPanel}
+          updatePanelDamage={updatePanelDamage}
+          updatePanelTechnician={updatePanelTechnician}
+        />
+
         <DashboardStats
           totalVehicles={totalVehicles}
           totalRevenue={totalRevenue}
@@ -107,18 +119,16 @@ export default function Dashboard({
         />
 
         {/* --- PANEL INSPECTION --- */}
-        {activeJob && (
-          <PanelInspection
-            activeJob={activeJob}
-            panels={panels}
-            selectedPanelId={selectedPanelId}
-            setSelectedPanelId={setSelectedPanelId}
-            damageTypes={damageTypes}
-            selectedPanel={selectedPanel}
-            updatePanelDamage={updatePanelDamage}
-            updatePanelTechnician={updatePanelTechnician}
-          />
-        )}
+        <PanelInspection
+          activeJob={activeJob}
+          panels={panels}
+          selectedPanelId={selectedPanelId}
+          setSelectedPanelId={setSelectedPanelId}
+          damageTypes={damageTypes}
+          selectedPanel={selectedPanel}
+          updatePanelDamage={updatePanelDamage}
+          updatePanelTechnician={updatePanelTechnician}
+        />
 
         <SparePartsInventory
           currentUser={currentUser}

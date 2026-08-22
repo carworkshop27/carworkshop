@@ -457,7 +457,9 @@ export default function PanelInspection({
               Panel Inspection
             </h3>
             <p className="text-xs text-slate-500 font-medium">
-              {activeJob.id} — {activeJob.model}
+              {activeJob
+                ? `${activeJob.id} — ${activeJob.model}`
+                : "No active vehicle selected"}
             </p>
           </div>
         </div>
