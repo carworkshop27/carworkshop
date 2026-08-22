@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Wrench,
-  Search,
-  ShieldCheck,
-  UserPlus,
-  RefreshCw,
-  LogOut,
-} from "lucide-react";
+import { Search, ShieldCheck, UserPlus, RefreshCw, LogOut } from "lucide-react";
 
 export default function DashboardHeader({
   currentUser,
@@ -21,19 +14,24 @@ export default function DashboardHeader({
     <header className="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
-          <div className="flex items-center space-x-3 shrink-0">
-            <div className="bg-blue-600 p-2 rounded-lg text-white">
-              <Wrench className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg leading-tight">AutoFix Pro</h1>
-              <p className="text-xs text-slate-400">Enterprise System</p>
-            </div>
+          {/* Garage Altalaa Fakhir Logo */}
+          <div className="flex items-center shrink-0">
+            <img
+              src="/images/garage-logo.png"
+              alt="Garage Altalaa Fakhir"
+              className="h-12 w-auto object-contain"
+              style={{
+                filter: "invert(1)",
+                mixBlendMode: "screen",
+              }}
+            />
           </div>
 
+          {/* Search */}
           <div className="flex-1 max-w-md hidden md:block">
             <div className="relative">
               <Search className="w-5 h-5 absolute left-3 top-2.5 text-slate-400" />
+
               <input
                 type="text"
                 placeholder="Search by Customer, Plate, or ID..."
@@ -44,6 +42,7 @@ export default function DashboardHeader({
             </div>
           </div>
 
+          {/* User Controls */}
           <div className="flex items-center space-x-3">
             <div className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 flex items-center space-x-2">
               <ShieldCheck
@@ -53,10 +52,12 @@ export default function DashboardHeader({
                     : "text-emerald-400"
                 }`}
               />
+
               <div className="text-left">
                 <p className="text-[10px] text-slate-400 leading-none">
                   Logged in as:
                 </p>
+
                 <p className="text-xs font-black text-white">
                   {currentUser.name} ({currentUser.role})
                 </p>
@@ -69,6 +70,7 @@ export default function DashboardHeader({
                 className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center space-x-1 shadow transition-colors"
               >
                 <UserPlus className="w-4 h-4" />
+
                 <span className="hidden sm:inline">Manage Users</span>
               </button>
             )}
@@ -81,6 +83,7 @@ export default function DashboardHeader({
                 className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1 border border-slate-700 transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
+
                 <span className="hidden sm:inline">Reset Demo</span>
               </button>
             )}
@@ -91,6 +94,7 @@ export default function DashboardHeader({
               className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center space-x-1 shadow transition-colors"
             >
               <LogOut className="w-4 h-4" />
+
               <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
