@@ -7,6 +7,7 @@ import SparePartsInventory from "../spare-parts/SparePartsInventory";
 import ActiveGarageVehicles from "../garage/ActiveGarageVehicles";
 import DashboardHeader from "./DashboardHeader";
 import PanelInspection from "../panel-inspection/PanelInspection";
+import ElectricalPanel from "../electrical-panel/ElectricalPanel";
 import BulkReports from "../reports/BulkReports";
 import DashboardStats from "../dashboard-stats/DashboardStats";
 import DashboardActions from "./DashboardActions";
@@ -96,6 +97,8 @@ export default function Dashboard({
           updatePanelDamage={updatePanelDamage}
           updatePanelTechnician={updatePanelTechnician}
         />
+
+        <ElectricalPanel />
 
         <DashboardStats
           totalVehicles={totalVehicles}
