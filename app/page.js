@@ -1625,31 +1625,6 @@ export default function Home() {
 
           <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
             <div className="flex items-center space-x-2 mb-4 border-b border-slate-200 pb-3">
-              <UserCheck className="w-5 h-5 text-indigo-600" />
-              <h3 className="font-extrabold text-base text-slate-900">
-                Assigned Technician & Labor Team
-              </h3>
-            </div>
-            {assignedTechsList.length === 0 ? (
-              <p className="text-xs font-bold text-slate-500 py-2">
-                No individual technicians assigned to panels yet.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {assignedTechsList.map((tech, idx) => (
-                  <span
-                    key={idx}
-                    className="bg-indigo-50 text-indigo-900 border border-indigo-200 font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1"
-                  >
-                    <UserCheck className="w-3.5 h-3.5 text-indigo-600" /> {tech}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
-            <div className="flex items-center space-x-2 mb-4 border-b border-slate-200 pb-3">
               <ShieldAlert className="w-5 h-5 text-amber-500" />
               <h3 className="font-extrabold text-base text-slate-900">
                 Repairs & Bodywork Required ({damagedPanelsList.length} Panels)
@@ -1691,6 +1666,31 @@ export default function Home() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
+            <div className="flex items-center space-x-2 mb-4 border-b border-slate-200 pb-3">
+              <UserCheck className="w-5 h-5 text-indigo-600" />
+              <h3 className="font-extrabold text-base text-slate-900">
+                Assigned Technician & Labor Team
+              </h3>
+            </div>
+            {assignedTechsList.length === 0 ? (
+              <p className="text-xs font-bold text-slate-500 py-2">
+                No individual technicians assigned to panels yet.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {assignedTechsList.map((tech, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-indigo-50 text-indigo-900 border border-indigo-200 font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1"
+                  >
+                    <UserCheck className="w-3.5 h-3.5 text-indigo-600" /> {tech}
+                  </span>
+                ))}
               </div>
             )}
           </div>
