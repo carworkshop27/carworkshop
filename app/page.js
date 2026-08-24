@@ -989,6 +989,33 @@ export default function Home() {
     localStorage.removeItem("autofix_current_user");
   };
 
+  const handleDeleteJob = (jobId) => {
+    const jobToDelete = jobs.find((job) => job.id === jobId);
+
+    if (!jobToDelete) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete job ${jobToDelete.id}?\n\nThis will permanently remove the vehicle from the active garage list.`,
+    );
+
+    if (!confirmed) return;
+
+    const updatedJobs = jobs.filter((job) => job.id !== jobId);
+
+    setJobs(updatedJobs);
+    localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+
+    if (selectedJobId === jobId) {
+      setSelectedJobId(updatedJobs.length > 0 ? updatedJobs[0].id : null);
+
+      if (updatedJobs.length > 0) {
+        setPanels(updatedJobs[0].panels || DEFAULT_PANELS);
+      } else {
+        setPanels(DEFAULT_PANELS);
+      }
+    }
+  };
+
   const handleCreateUserSubmit = (e) => {
     e.preventDefault();
     if (currentUser?.role !== "Super User")
@@ -1763,6 +1790,8 @@ export default function Home() {
         handleResetData={handleResetData}
         handleSelectJob={handleSelectJob}
         togglePaymentStatus={togglePaymentStatus}
+        handleDeleteJob={handleDeleteJob}
+        updateJobStatus={updateJobStatus}
         setActiveScreen={setActiveScreen}
         setIsModalOpen={setIsModalOpen}
         setIsSmsModalOpen={setIsSmsModalOpen}

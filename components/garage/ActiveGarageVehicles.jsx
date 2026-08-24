@@ -6,6 +6,7 @@ import {
   Loader2,
   MessageSquare,
   CheckCircle2,
+  X,
 } from "lucide-react";
 
 export default function ActiveGarageVehicles({
@@ -20,6 +21,7 @@ export default function ActiveGarageVehicles({
   handleOpenSmsModal,
   handleOpenFullJobCard,
   updateJobStatus,
+  handleDeleteJob,
 }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-8">
@@ -140,6 +142,17 @@ export default function ActiveGarageVehicles({
 
                           <td className="py-4 px-6 text-right space-x-2">
                             <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteJob(job.id);
+                              }}
+                              title="Delete vehicle"
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 hover:bg-rose-200 hover:text-rose-900 border border-rose-300 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+
+                            <button
                               onClick={(e) => handleOpenSmsModal(job, e)}
                               className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
                             >
@@ -202,6 +215,17 @@ export default function ActiveGarageVehicles({
                               </div>
 
                               <div className="flex items-center gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteJob(job.id);
+                                  }}
+                                  title="Delete vehicle"
+                                  className="p-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+
                                 <button
                                   onClick={(e) => handleOpenSmsModal(job, e)}
                                   title="Send SMS / WhatsApp"
@@ -301,6 +325,17 @@ export default function ActiveGarageVehicles({
 
                               <div className="flex items-center gap-1">
                                 <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteJob(job.id);
+                                  }}
+                                  title="Delete vehicle"
+                                  className="p-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+
+                                <button
                                   onClick={(e) => handleOpenSmsModal(job, e)}
                                   title="Send SMS / WhatsApp"
                                   className="p-1 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded"
@@ -394,6 +429,17 @@ export default function ActiveGarageVehicles({
                               </div>
 
                               <div className="flex items-center gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteJob(job.id);
+                                  }}
+                                  title="Delete vehicle"
+                                  className="p-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+
                                 <button
                                   onClick={(e) => handleOpenSmsModal(job, e)}
                                   title="Send SMS / WhatsApp"

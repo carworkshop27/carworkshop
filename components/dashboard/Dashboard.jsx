@@ -8,6 +8,7 @@ import ActiveGarageVehicles from "../garage/ActiveGarageVehicles";
 import DashboardHeader from "./DashboardHeader";
 import PanelInspection from "../panel-inspection/PanelInspection";
 import ElectricalPanel from "../electrical-panel/ElectricalPanel";
+import MechanicalPanel from "../mechanical-panel/MechanicalPanel";
 import BulkReports from "../reports/BulkReports";
 import DashboardStats from "../dashboard-stats/DashboardStats";
 import DashboardActions from "./DashboardActions";
@@ -47,6 +48,7 @@ export default function Dashboard({
   handleSelectJob,
   togglePaymentStatus,
   updateJobStatus,
+  handleDeleteJob,
   setActiveScreen,
   isSmsModalOpen,
   smsJobData,
@@ -100,6 +102,8 @@ export default function Dashboard({
 
         <ElectricalPanel />
 
+        <MechanicalPanel />
+
         <DashboardStats
           totalVehicles={totalVehicles}
           totalRevenue={totalRevenue}
@@ -119,6 +123,7 @@ export default function Dashboard({
           handleOpenSmsModal={handleOpenSmsModal}
           handleOpenFullJobCard={handleOpenFullJobCard}
           updateJobStatus={updateJobStatus}
+          handleDeleteJob={handleDeleteJob}
         />
 
         <SparePartsInventory
