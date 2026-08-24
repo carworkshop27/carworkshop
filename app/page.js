@@ -941,6 +941,11 @@ export default function Home() {
         const savedUsers = localStorage.getItem("autofix_users_db");
         if (savedUsers) setRegisteredUsers(JSON.parse(savedUsers));
 
+        const savedCurrentUser = localStorage.getItem("autofix_current_user");
+        if (savedCurrentUser) {
+          setCurrentUser(JSON.parse(savedCurrentUser));
+        }
+
         const savedJobs = localStorage.getItem("autofix_offline_db");
         if (savedJobs) {
           const parsedJobs = JSON.parse(savedJobs);
@@ -973,12 +978,16 @@ export default function Home() {
 
     if (foundUser) {
       setCurrentUser(foundUser);
+      localStorage.setItem("autofix_current_user", JSON.stringify(foundUser));
     } else {
       alert("Invalid Username or PIN.");
     }
   };
 
-  const handleLogout = () => setCurrentUser(null);
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem("autofix_current_user");
+  };
 
   const handleCreateUserSubmit = (e) => {
     e.preventDefault();
