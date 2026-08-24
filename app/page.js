@@ -675,10 +675,10 @@ export default function Home() {
     owner: "",
     phone: "",
     model: "",
-    company: "Toyota",
-    make: "Camry",
-    year: "2023",
-    color: "Pearl White",
+    company: "",
+    make: "",
+    year: "",
+    color: "",
     plate: "",
     issue: "",
     status: "Inspection & Body Check",
@@ -941,7 +941,7 @@ export default function Home() {
         const savedUsers = localStorage.getItem("autofix_users_db");
         if (savedUsers) setRegisteredUsers(JSON.parse(savedUsers));
 
-        const savedCurrentUser = localStorage.getItem("autofix_current_user");
+        const savedCurrentUser = sessionStorage.getItem("autofix_current_user");
         if (savedCurrentUser) {
           setCurrentUser(JSON.parse(savedCurrentUser));
         }
@@ -978,7 +978,7 @@ export default function Home() {
 
     if (foundUser) {
       setCurrentUser(foundUser);
-      localStorage.setItem("autofix_current_user", JSON.stringify(foundUser));
+      sessionStorage.setItem("autofix_current_user", JSON.stringify(foundUser));
     } else {
       alert("Invalid Username or PIN.");
     }
@@ -986,7 +986,7 @@ export default function Home() {
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem("autofix_current_user");
+    sessionStorage.removeItem("autofix_current_user");
   };
 
   const handleDeleteJob = (jobId) => {
