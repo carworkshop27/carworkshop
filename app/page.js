@@ -132,6 +132,18 @@ const DAMAGE_TYPES = {
 
 const getDamageInfo = (status) => DAMAGE_TYPES[status] || DAMAGE_TYPES["ok"];
 
+const WORK_CYCLE_STEPS = [
+  { id: "estimation", label: "Estimation" },
+  { id: "preparation-demountation", label: "Preparation/Demountation" },
+  { id: "denting", label: "Denting" },
+  { id: "mechanical-work", label: "Mechanical Work" },
+  { id: "electrical-work", label: "Electrical Work" },
+  { id: "painting-preparation", label: "Painting Preparation" },
+  { id: "painting", label: "Painting" },
+  { id: "polishing", label: "Polishing" },
+  { id: "handling-completion", label: "Handling/Completion" },
+];
+
 const DEFAULT_PANELS = [
   {
     id: "front-bumper",
@@ -1136,6 +1148,31 @@ export default function Home() {
     }
   };
 
+  const toggleWorkCycleStep = (jobId, stepId) => {
+    const updatedJobs = jobs.map((j) => {
+      if (j.id !== jobId) return j;
+
+      const currentWorkCycle = j.workCycle || {};
+
+      return {
+        ...j,
+        workCycle: {
+          ...currentWorkCycle,
+          [stepId]: !currentWorkCycle[stepId],
+        },
+      };
+    });
+
+    setJobs(updatedJobs);
+    localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+
+    const updatedJob = updatedJobs.find((j) => j.id === jobId);
+
+    if (detailedJobCard && detailedJobCard.id === jobId) {
+      setDetailedJobCard(updatedJob);
+    }
+  };
+
   const updateJobStatus = (jobId, newStatus, e) => {
     if (e) e.stopPropagation();
     if (currentUser?.role === "Cashier")
@@ -1668,6 +1705,57 @@ export default function Home() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* --- WORK CYCLE --- */}
+          <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
+            <div className="flex items-center space-x-2 mb-4 border-b border-slate-200 pb-3">
+              <CheckCircle2 className="w-5 h-5 text-blue-600" />
+              <h3 className="font-extrabold text-base text-slate-900">
+                Work Cycle
+              </h3>
+            </div>
+
+            <div className="space-y-2">
+              {WORK_CYCLE_STEPS.map((step, index) => {
+                const isCompleted =
+                  detailedJobCard.workCycle?.[step.id] || false;
+
+                return (
+                  <label
+                    key={step.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                      isCompleted
+                        ? "bg-emerald-50 border-emerald-300"
+                        : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isCompleted}
+                      onChange={() =>
+                        toggleWorkCycleStep(detailedJobCard.id, step.id)
+                      }
+                      className="w-5 h-5 accent-blue-600 cursor-pointer"
+                    />
+
+                    <span
+                      className={`text-sm font-extrabold ${
+                        isCompleted ? "text-emerald-900" : "text-slate-900"
+                      }`}
+                    >
+                      {index + 1}. {step.label}
+                    </span>
+
+                    {isCompleted && (
+                      <span className="ml-auto text-xs font-black text-emerald-700 uppercase">
+                        Completed
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
