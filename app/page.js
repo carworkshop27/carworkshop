@@ -953,11 +953,6 @@ export default function Home() {
         const savedUsers = localStorage.getItem("autofix_users_db");
         if (savedUsers) setRegisteredUsers(JSON.parse(savedUsers));
 
-        const savedCurrentUser = sessionStorage.getItem("autofix_current_user");
-        if (savedCurrentUser) {
-          setCurrentUser(JSON.parse(savedCurrentUser));
-        }
-
         const savedJobs = localStorage.getItem("autofix_offline_db");
         if (savedJobs) {
           const parsedJobs = JSON.parse(savedJobs);
@@ -990,7 +985,6 @@ export default function Home() {
 
     if (foundUser) {
       setCurrentUser(foundUser);
-      sessionStorage.setItem("autofix_current_user", JSON.stringify(foundUser));
     } else {
       alert("Invalid Username or PIN.");
     }
@@ -1122,12 +1116,33 @@ export default function Home() {
     const updatedPanels = panels.map((p) =>
       p.id === panelId ? { ...p, status: damageType } : p,
     );
+
     setPanels(updatedPanels);
 
     if (selectedJobId) {
       const updatedJobs = jobs.map((j) =>
         j.id === selectedJobId ? { ...j, panels: updatedPanels } : j,
       );
+
+      setJobs(updatedJobs);
+      localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+    }
+  };
+
+  const updatePanelRepairCost = (panelId, cost) => {
+    const numericCost = cost === "" ? "" : Number(cost);
+
+    const updatedPanels = panels.map((p) =>
+      p.id === panelId ? { ...p, customRepairCost: numericCost } : p,
+    );
+
+    setPanels(updatedPanels);
+
+    if (selectedJobId) {
+      const updatedJobs = jobs.map((j) =>
+        j.id === selectedJobId ? { ...j, panels: updatedPanels } : j,
+      );
+
       setJobs(updatedJobs);
       localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
     }
@@ -1314,10 +1329,10 @@ export default function Home() {
       id: uniqueId,
       owner: formData.owner,
       phone: formData.phone || "N/A",
-      company: formData.company || "Toyota",
-      make: formData.make || "Camry",
-      year: formData.year || "2023",
-      color: formData.color || "White",
+      company: formData.company || "",
+      make: formData.make || "",
+      year: formData.year || "",
+      color: formData.color || "",
       model: formData.model,
       plate: formData.plate.toUpperCase(),
       status: formData.status,
@@ -1339,10 +1354,10 @@ export default function Home() {
       owner: "",
       phone: "",
       model: "",
-      company: "Toyota",
-      make: "Camry",
-      year: "2023",
-      color: "Pearl White",
+      company: "",
+      make: "",
+      year: "",
+      color: "",
       plate: "",
       issue: "",
       status: "Inspection & Body Check",
@@ -1489,7 +1504,11 @@ export default function Home() {
     const jobPartsList = detailedJobCard.parts || [];
 
     const repairCost = damagedPanelsList.reduce(
-      (sum, p) => sum + getDamageInfo(p.status).cost,
+      (sum, p) =>
+        sum +
+        (p.customRepairCost !== undefined && p.customRepairCost !== ""
+          ? Number(p.customRepairCost)
+          : getDamageInfo(p.status).cost),
       0,
     );
     const partsCost = jobPartsList.reduce((sum, pt) => sum + pt.price, 0);
@@ -1626,7 +1645,7 @@ export default function Home() {
                       Company / Make
                     </span>
                     <p className="text-sm font-black text-slate-900">
-                      {detailedJobCard.company || "Toyota"}{" "}
+                      {detailedJobCard.company || ""}{" "}
                       {detailedJobCard.make || ""}
                     </p>
                   </div>
@@ -1635,7 +1654,7 @@ export default function Home() {
                       Model & Year
                     </span>
                     <p className="text-sm font-black text-slate-900">
-                      {detailedJobCard.model} ({detailedJobCard.year || "2023"})
+                      {detailedJobCard.model} ({detailedJobCard.year || ""})
                     </p>
                   </div>
                   <div>
@@ -1644,7 +1663,7 @@ export default function Home() {
                     </span>
                     <p className="text-sm font-black text-slate-900 flex items-center gap-1 mt-0.5">
                       <Palette className="w-4 h-4 text-purple-600" />{" "}
-                      {detailedJobCard.color || "Pearl White"}
+                      {detailedJobCard.color || ""}
                     </p>
                   </div>
                   <div>
@@ -1652,7 +1671,7 @@ export default function Home() {
                       Plate Number
                     </span>
                     <p className="text-sm font-mono font-black text-blue-700">
-                      {detailedJobCard.plate}
+                      {detailedJobCard.plate || ""}
                     </p>
                   </div>
                 </div>
@@ -1698,7 +1717,12 @@ export default function Home() {
                         </div>
                       </div>
                       <span className="font-black text-slate-900">
-                        ⃁{info.cost.toFixed(2)}
+                        ⃁
+                        {(p.customRepairCost !== undefined &&
+                        p.customRepairCost !== ""
+                          ? Number(p.customRepairCost)
+                          : info.cost
+                        ).toFixed(2)}
                       </span>
                     </div>
                   );
@@ -1851,6 +1875,7 @@ export default function Home() {
         setSelectedPanelId={setSelectedPanelId}
         selectedPanel={selectedPanel}
         updatePanelDamage={updatePanelDamage}
+        updatePanelRepairCost={updatePanelRepairCost}
         updatePanelTechnician={updatePanelTechnician}
         filteredJobs={filteredJobs}
         inventory={inventory}
