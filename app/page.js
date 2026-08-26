@@ -1153,15 +1153,57 @@ export default function Home() {
     const updatedPanels = panels.map((p) =>
       p.id === panelId ? { ...p, assignedTech: techName } : p,
     );
+
     setPanels(updatedPanels);
 
     if (selectedJobId) {
       const updatedJobs = jobs.map((j) =>
         j.id === selectedJobId ? { ...j, panels: updatedPanels } : j,
       );
+
       setJobs(updatedJobs);
       localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
     }
+  };
+
+  const addPanel = (panelName) => {
+    const trimmedName = panelName?.trim();
+
+    if (!trimmedName) {
+      alert("Please enter a panel name.");
+      return false;
+    }
+
+    const newPanel = {
+      id: `custom-panel-${Date.now()}`,
+      name: trimmedName,
+      status: "ok",
+      assignedTech: "",
+      customRepairCost: "",
+      isCustom: true,
+    };
+
+    const updatedPanels = [...panels, newPanel];
+
+    setPanels(updatedPanels);
+
+    if (selectedJobId) {
+      const updatedJobs = jobs.map((j) =>
+        j.id === selectedJobId
+          ? {
+              ...j,
+              panels: updatedPanels,
+            }
+          : j,
+      );
+
+      setJobs(updatedJobs);
+      localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+    }
+
+    setSelectedPanelId(newPanel.id);
+
+    return true;
   };
 
   const toggleWorkCycleStep = (jobId, stepId) => {
@@ -1923,6 +1965,7 @@ export default function Home() {
         updatePanelDamage={updatePanelDamage}
         updatePanelRepairCost={updatePanelRepairCost}
         updatePanelTechnician={updatePanelTechnician}
+        addPanel={addPanel}
         filteredJobs={filteredJobs}
         inventory={inventory}
         totalVehicles={totalVehicles}

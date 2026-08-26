@@ -393,6 +393,7 @@ export default function PanelInspection({
   updatePanelDamage,
   updatePanelRepairCost,
   updatePanelTechnician,
+  addPanel,
 }) {
   const getPanelIcon = (panelId) => {
     switch (panelId) {
@@ -645,6 +646,39 @@ export default function PanelInspection({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Panel Actions */}
+      <div className="mt-5 flex items-center justify-end gap-3 border-t border-slate-200 pt-5">
+        <button
+          type="button"
+          onClick={() => {
+            const panelName = window.prompt("Enter panel name:");
+
+            if (panelName?.trim()) {
+              addPanel(panelName.trim());
+            }
+          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-extrabold px-5 py-2.5 rounded-lg shadow-sm transition-colors"
+        >
+          + Add Panel
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            const panelName = window.prompt(
+              "Quick Add Panel\n\nEnter the panel name:",
+            );
+
+            if (panelName?.trim()) {
+              addPanel(panelName.trim());
+            }
+          }}
+          className="bg-white hover:bg-slate-50 text-slate-800 text-sm font-extrabold px-5 py-2.5 rounded-lg border border-slate-300 shadow-sm transition-colors"
+        >
+          ⚡ Quick Add
+        </button>
       </div>
     </div>
   );
