@@ -391,6 +391,7 @@ export default function PanelInspection({
   damageTypes,
   selectedPanel,
   updatePanelDamage,
+  updatePanelRepairCost,
   updatePanelTechnician,
 }) {
   const getPanelIcon = (panelId) => {
@@ -600,12 +601,40 @@ export default function PanelInspection({
                   Estimated Repair Cost
                 </span>
 
-                <span className="text-lg font-black text-slate-900">
-                  ⃁
-                  {(
-                    damageTypes[selectedPanel.status] || damageTypes.ok
-                  ).cost.toLocaleString()}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-lg font-black text-slate-900">⃁</span>
+
+                  <input
+                    type="number"
+                    min="300"
+                    max="455"
+                    step="5"
+                    value={
+                      selectedPanel.customRepairCost !== undefined &&
+                      selectedPanel.customRepairCost !== ""
+                        ? selectedPanel.customRepairCost
+                        : (damageTypes[selectedPanel.status] || damageTypes.ok)
+                            .cost
+                    }
+                    onChange={(e) =>
+                      updatePanelRepairCost(selectedPanel.id, e.target.value)
+                    }
+                    onBlur={(e) => {
+                      const value = Number(e.target.value);
+
+                      if (!Number.isFinite(value)) {
+                        updatePanelRepairCost(selectedPanel.id, 300);
+                        return;
+                      }
+
+                      updatePanelRepairCost(
+                        selectedPanel.id,
+                        Math.min(455, Math.max(300, Math.round(value))),
+                      );
+                    }}
+                    className="w-28 text-right text-lg font-black text-slate-900 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
               </div>
             </div>
           ) : (

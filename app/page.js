@@ -686,6 +686,7 @@ export default function Home() {
   const [formData, setFormData] = useState({
     owner: "",
     phone: "",
+    email: "",
     model: "",
     company: "",
     make: "",
@@ -1325,10 +1326,13 @@ export default function Home() {
       return alert("Please fill in required fields.");
 
     const uniqueId = `JOB-${Math.floor(1000 + Math.random() * 9000)}`;
+    const now = new Date();
+
     const newJob = {
       id: uniqueId,
       owner: formData.owner,
       phone: formData.phone || "N/A",
+      email: formData.email || "",
       company: formData.company || "",
       make: formData.make || "",
       year: formData.year || "",
@@ -1338,7 +1342,12 @@ export default function Home() {
       status: formData.status,
       paymentStatus: formData.paymentStatus,
       issue: formData.issue || "General Service & Inspection",
-      date: new Date().toLocaleDateString(),
+      date: now.toLocaleDateString(),
+      intakeDate: now.toLocaleDateString(),
+      intakeTime: now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
       panels: DEFAULT_PANELS,
       parts: [],
     };
@@ -1353,6 +1362,7 @@ export default function Home() {
     setFormData({
       owner: "",
       phone: "",
+      email: "",
       model: "",
       company: "",
       make: "",
@@ -1566,21 +1576,25 @@ export default function Home() {
         </header>
 
         <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          {/* --- PAYMENT STATUS --- */}
           <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="bg-blue-100 p-3 rounded-xl text-blue-700">
                 <CreditCard className="w-6 h-6" />
               </div>
+
               <div>
                 <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-                  Payment Status Bar
+                  Payment Status
                 </p>
+
                 <div className="flex items-center gap-2 mt-1">
                   <span
                     className={`text-xs font-black px-3 py-1 rounded-full uppercase border shadow-sm ${payStatusColor}`}
                   >
                     {currentPayStatus}
                   </span>
+
                   <button
                     onClick={() => togglePaymentStatus(detailedJobCard.id)}
                     className="text-xs font-bold text-blue-700 hover:underline bg-slate-100 px-3 py-1 rounded-lg border border-slate-300"
@@ -1590,91 +1604,123 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
             <div className="text-right">
               <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
                 Total Invoice Cost
               </p>
+
               <h3 className="text-3xl font-black text-slate-900">
                 ⃁{totalJobCost.toFixed(2)}
               </h3>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm flex flex-col justify-between">
+          {/* --- JOB CARD HEADER --- */}
+          <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-md">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-5">
               <div>
-                <div className="flex items-center space-x-2 mb-4 border-b border-slate-200 pb-3">
-                  <User className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-extrabold text-base text-slate-900">
-                    Customer Information
-                  </h3>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-400 uppercase">
-                      Full Name
-                    </span>
-                    <p className="text-base font-black text-slate-900">
-                      {detailedJobCard.owner}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-400 uppercase">
-                      Mobile Number
-                    </span>
-                    <p className="text-base font-black text-slate-900 flex items-center gap-1.5 mt-0.5">
-                      <Phone className="w-4 h-4 text-emerald-600" />{" "}
-                      {detailedJobCard.phone}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-xs font-extrabold text-blue-600 uppercase tracking-widest">
+                  Job Card
+                </p>
+                <h2 className="text-2xl font-black text-slate-900">
+                  {detailedJobCard.id}
+                </h2>
+              </div>
+
+              <div className="text-right">
+                <p className="text-xs font-extrabold text-slate-400 uppercase">
+                  Date & Time
+                </p>
+                <p className="text-sm font-black text-slate-900">
+                  {detailedJobCard.intakeDate || detailedJobCard.date || ""}
+                </p>
+                <p className="text-sm font-bold text-slate-600">
+                  {detailedJobCard.intakeTime || ""}
+                </p>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm flex flex-col justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">
               <div>
-                <div className="flex items-center space-x-2 mb-4 border-b border-slate-200 pb-3">
-                  <Car className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-extrabold text-base text-slate-900">
-                    Vehicle Specifications
-                  </h3>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-400 uppercase">
-                      Company / Make
-                    </span>
-                    <p className="text-sm font-black text-slate-900">
-                      {detailedJobCard.company || ""}{" "}
-                      {detailedJobCard.make || ""}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-400 uppercase">
-                      Model & Year
-                    </span>
-                    <p className="text-sm font-black text-slate-900">
-                      {detailedJobCard.model} ({detailedJobCard.year || ""})
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-400 uppercase">
-                      Car Color
-                    </span>
-                    <p className="text-sm font-black text-slate-900 flex items-center gap-1 mt-0.5">
-                      <Palette className="w-4 h-4 text-purple-600" />{" "}
-                      {detailedJobCard.color || ""}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-400 uppercase">
-                      Plate Number
-                    </span>
-                    <p className="text-sm font-mono font-black text-blue-700">
-                      {detailedJobCard.plate || ""}
-                    </p>
-                  </div>
-                </div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Customer Name
+                </span>
+                <p className="text-base font-black text-slate-900 mt-1">
+                  {detailedJobCard.owner || ""}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Customer Mobile
+                </span>
+                <p className="text-base font-black text-slate-900 mt-1">
+                  {detailedJobCard.phone || ""}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Customer Email
+                </span>
+                <p className="text-base font-black text-slate-900 mt-1 break-all">
+                  {detailedJobCard.email || "N/A"}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Car Brand / Company
+                </span>
+                <p className="text-base font-black text-slate-900 mt-1">
+                  {detailedJobCard.company || ""}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Make / Model
+                </span>
+                <p className="text-base font-black text-slate-900 mt-1">
+                  {detailedJobCard.make || detailedJobCard.model || ""}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Model Year
+                </span>
+                <p className="text-base font-black text-slate-900 mt-1">
+                  {detailedJobCard.year || ""}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Car No.
+                </span>
+                <p className="text-base font-mono font-black text-blue-700 mt-1">
+                  {detailedJobCard.plate || ""}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Car Color
+                </span>
+                <p className="text-base font-black text-slate-900 mt-1">
+                  {detailedJobCard.color || ""}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-400 uppercase">
+                  Initial Status
+                </span>
+                <p className="text-base font-black text-slate-900 mt-1">
+                  {detailedJobCard.status || ""}
+                </p>
               </div>
             </div>
           </div>
@@ -2095,7 +2141,7 @@ export default function Home() {
               </button>
             </div>
             <form onSubmit={handleIntakeSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-extrabold text-slate-800 mb-1">
                     Customer Name *
@@ -2111,6 +2157,7 @@ export default function Home() {
                     className="w-full px-3 py-2 text-sm font-bold text-slate-900 border border-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
+
                 <div>
                   <label className="block text-xs font-extrabold text-slate-800 mb-1">
                     Mobile Number *
@@ -2118,10 +2165,25 @@ export default function Home() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. +1 555-0199"
+                    placeholder="e.g. +966 5X XXX XXXX"
                     value={formData.phone}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm font-bold text-slate-900 border border-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-extrabold text-slate-800 mb-1">
+                    Customer Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="e.g. customer@email.com"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
                     }
                     className="w-full px-3 py-2 text-sm font-bold text-slate-900 border border-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />

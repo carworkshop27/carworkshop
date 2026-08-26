@@ -22,6 +22,7 @@ export default function Dashboard({
   damageTypes,
   selectedPanel,
   updatePanelDamage,
+  updatePanelRepairCost,
   updatePanelTechnician,
   filteredJobs,
   inventory,
@@ -97,6 +98,7 @@ export default function Dashboard({
           damageTypes={damageTypes}
           selectedPanel={selectedPanel}
           updatePanelDamage={updatePanelDamage}
+          updatePanelRepairCost={updatePanelRepairCost}
           updatePanelTechnician={updatePanelTechnician}
         />
 
