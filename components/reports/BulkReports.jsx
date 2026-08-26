@@ -10,48 +10,121 @@ export default function BulkReports({
   handleExportSalesPDF,
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h4 className="font-bold text-slate-900 text-sm">
-          Bulk Reports & Data Export
-        </h4>
-        <p className="text-xs text-slate-500">
-          Download complete workshop registers with current date naming tags.
-        </p>
-      </div>
+    <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-6 shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+        {/* Report Description */}
+        <div>
+          <h4 className="text-base font-black text-slate-900">
+            Bulk Reports & Data Export
+          </h4>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <button
-          onClick={handleExportJobCardsExcel}
-          className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow"
-        >
-          <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
-          Job Cards (Excel)
-        </button>
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Download complete workshop registers with current date naming tags.
+          </p>
+        </div>
 
-        <button
-          onClick={handleExportJobCardsPDF}
-          className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow"
-        >
-          <FileDown className="w-4 h-4 text-blue-400" />
-          Job Cards (PDF)
-        </button>
+        {/* Export Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Job Cards - Excel */}
+          <button
+            type="button"
+            onClick={handleExportJobCardsExcel}
+            className="
+              bg-slate-800
+              hover:bg-slate-900
+              active:scale-[0.98]
+              text-white
+              text-sm
+              font-bold
+              px-4
+              py-2.5
+              rounded-xl
+              flex
+              items-center
+              gap-2
+              shadow-sm
+              transition-all
+            "
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+            <span>Job Cards (Excel)</span>
+          </button>
 
-        <button
-          onClick={handleExportSalesExcel}
-          className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow"
-        >
-          <FileSpreadsheet className="w-4 h-4" />
-          Sales History (Excel)
-        </button>
+          {/* Job Cards - PDF */}
+          <button
+            type="button"
+            onClick={handleExportJobCardsPDF}
+            className="
+              bg-slate-800
+              hover:bg-slate-900
+              active:scale-[0.98]
+              text-white
+              text-sm
+              font-bold
+              px-4
+              py-2.5
+              rounded-xl
+              flex
+              items-center
+              gap-2
+              shadow-sm
+              transition-all
+            "
+          >
+            <FileDown className="w-4 h-4 text-blue-400" />
+            <span>Job Cards (PDF)</span>
+          </button>
 
-        <button
-          onClick={handleExportSalesPDF}
-          className="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow"
-        >
-          <FileDown className="w-4 h-4" />
-          Sales History (PDF)
-        </button>
+          {/* Sales History - Excel */}
+          <button
+            type="button"
+            onClick={handleExportSalesExcel}
+            className="
+              bg-emerald-600
+              hover:bg-emerald-700
+              active:scale-[0.98]
+              text-white
+              text-sm
+              font-bold
+              px-4
+              py-2.5
+              rounded-xl
+              flex
+              items-center
+              gap-2
+              shadow-sm
+              transition-all
+            "
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Sales History (Excel)</span>
+          </button>
+
+          {/* Sales History - PDF */}
+          <button
+            type="button"
+            onClick={handleExportSalesPDF}
+            className="
+              bg-blue-600
+              hover:bg-blue-700
+              active:scale-[0.98]
+              text-white
+              text-sm
+              font-bold
+              px-4
+              py-2.5
+              rounded-xl
+              flex
+              items-center
+              gap-2
+              shadow-sm
+              transition-all
+            "
+          >
+            <FileDown className="w-4 h-4" />
+            <span>Sales History (PDF)</span>
+          </button>
+        </div>
       </div>
     </div>
   );
