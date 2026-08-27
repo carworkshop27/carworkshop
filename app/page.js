@@ -1070,6 +1070,7 @@ export default function Home() {
       const updatedUsers = registeredUsers.filter((u) => u.id !== userId);
       setRegisteredUsers(updatedUsers);
       localStorage.setItem("autofix_users_db", JSON.stringify(updatedUsers));
+      alert(`Successfully deleted user: ${userToDelete?.name}!`);
     }
   };
 
@@ -1091,14 +1092,18 @@ export default function Home() {
 
   const generateSmsText = (job) => {
     if (!job) return "";
+
     const damageCost = (job.panels || []).reduce(
       (sum, p) => sum + getDamageInfo(p.status).cost,
       0,
     );
+
     const partsCost = (job.parts || []).reduce((sum, pt) => sum + pt.price, 0);
+
     const grandTotal = damageCost + partsCost;
 
     let text = `Hello ${job.owner}, here is an update from AutoFix Pro regarding your vehicle (${job.model} - ${job.plate}).\n\n`;
+
     text += `Current Workshop Status: ${job.status.toUpperCase()}\n`;
     text += `Total Repair Estimate: ⃁${grandTotal.toFixed(2)}\n`;
     text += `Payment Status: ${job.paymentStatus || "Unpaid"}\n\n`;
@@ -1110,59 +1115,109 @@ export default function Home() {
     }
 
     text += `Thank you for choosing AutoFix Pro!`;
+
     return text;
   };
 
-  const updatePanelDamage = (panelId, damageType) => {
-    const updatedPanels = panels.map((p) =>
-      p.id === panelId ? { ...p, status: damageType } : p,
+  const updatePanelDamage = (panelId, newStatus) => {
+    const updatedPanels = panels.map((panel) =>
+      panel.id === panelId
+        ? {
+            ...panel,
+            status: newStatus,
+          }
+        : panel,
     );
 
     setPanels(updatedPanels);
 
     if (selectedJobId) {
-      const updatedJobs = jobs.map((j) =>
-        j.id === selectedJobId ? { ...j, panels: updatedPanels } : j,
+      const updatedJobs = jobs.map((job) =>
+        job.id === selectedJobId
+          ? {
+              ...job,
+              panels: updatedPanels,
+            }
+          : job,
       );
 
       setJobs(updatedJobs);
       localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+
+      if (detailedJobCard?.id === selectedJobId) {
+        setDetailedJobCard({
+          ...detailedJobCard,
+          panels: updatedPanels,
+        });
+      }
     }
   };
 
-  const updatePanelRepairCost = (panelId, cost) => {
-    const numericCost = cost === "" ? "" : Number(cost);
-
-    const updatedPanels = panels.map((p) =>
-      p.id === panelId ? { ...p, customRepairCost: numericCost } : p,
+  const updatePanelRepairCost = (panelId, newCost) => {
+    const updatedPanels = panels.map((panel) =>
+      panel.id === panelId
+        ? {
+            ...panel,
+            customRepairCost: newCost,
+          }
+        : panel,
     );
 
     setPanels(updatedPanels);
 
     if (selectedJobId) {
-      const updatedJobs = jobs.map((j) =>
-        j.id === selectedJobId ? { ...j, panels: updatedPanels } : j,
+      const updatedJobs = jobs.map((job) =>
+        job.id === selectedJobId
+          ? {
+              ...job,
+              panels: updatedPanels,
+            }
+          : job,
       );
 
       setJobs(updatedJobs);
       localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+
+      if (detailedJobCard?.id === selectedJobId) {
+        setDetailedJobCard({
+          ...detailedJobCard,
+          panels: updatedPanels,
+        });
+      }
     }
   };
 
-  const updatePanelTechnician = (panelId, techName) => {
-    const updatedPanels = panels.map((p) =>
-      p.id === panelId ? { ...p, assignedTech: techName } : p,
+  const updatePanelTechnician = (panelId, technician) => {
+    const updatedPanels = panels.map((panel) =>
+      panel.id === panelId
+        ? {
+            ...panel,
+            assignedTech: technician,
+          }
+        : panel,
     );
 
     setPanels(updatedPanels);
 
     if (selectedJobId) {
-      const updatedJobs = jobs.map((j) =>
-        j.id === selectedJobId ? { ...j, panels: updatedPanels } : j,
+      const updatedJobs = jobs.map((job) =>
+        job.id === selectedJobId
+          ? {
+              ...job,
+              panels: updatedPanels,
+            }
+          : job,
       );
 
       setJobs(updatedJobs);
       localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+
+      if (detailedJobCard?.id === selectedJobId) {
+        setDetailedJobCard({
+          ...detailedJobCard,
+          panels: updatedPanels,
+        });
+      }
     }
   };
 
@@ -1199,6 +1254,14 @@ export default function Home() {
 
       setJobs(updatedJobs);
       localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+
+      // Keep the Full Job Card view synchronized
+      if (detailedJobCard?.id === selectedJobId) {
+        setDetailedJobCard({
+          ...detailedJobCard,
+          panels: updatedPanels,
+        });
+      }
     }
 
     setSelectedPanelId(newPanel.id);
