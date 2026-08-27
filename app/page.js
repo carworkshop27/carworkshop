@@ -9,6 +9,7 @@ import dynamic from "next/dynamic";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import NewJobIntake from "../components/intake/NewJobIntake";
 import {
   Wrench,
   Search,
