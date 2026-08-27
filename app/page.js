@@ -2005,6 +2005,26 @@ export default function Home() {
     );
   }
 
+  if (activeScreen === "new-job-intake") {
+    return (
+      <NewJobIntake
+        formData={formData}
+        setFormData={setFormData}
+        handleIntakeSubmit={handleIntakeSubmit}
+        setActiveScreen={setActiveScreen}
+        panels={panels}
+        selectedPanelId={selectedPanelId}
+        setSelectedPanelId={setSelectedPanelId}
+        damageTypes={DAMAGE_TYPES}
+        selectedPanel={selectedPanel}
+        updatePanelDamage={updatePanelDamage}
+        updatePanelRepairCost={updatePanelRepairCost}
+        updatePanelTechnician={updatePanelTechnician}
+        addPanel={addPanel}
+      />
+    );
+  }
+
   if (activeScreen === "inventory-list") {
     return (
       <InventoryList
