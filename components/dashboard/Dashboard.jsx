@@ -100,7 +100,7 @@ export default function Dashboard({
     {
       label: "New Job / Intake",
       icon: Plus,
-      action: () => setIsModalOpen(true),
+      action: () => setActiveScreen("new-job-intake"),
     },
     {
       label: "Job Cards",
