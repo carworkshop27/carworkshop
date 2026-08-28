@@ -59,6 +59,8 @@ export default function Dashboard({
   handleExportSalesPDF,
   handleLogout,
   handleOpenFullJobCard,
+  handleConfirmElectricalItem,
+  handleConfirmMechanicalItem,
   handleOpenSmsModal,
   handlePurchaseOrderSubmit,
   handleResetData,
@@ -105,7 +107,7 @@ export default function Dashboard({
     {
       label: "Job Cards",
       icon: ClipboardList,
-      action: () => scrollToSection("active-vehicles"),
+      action: () => setActiveScreen("job-cards"),
     },
     {
       label: "Calendar",
@@ -124,7 +126,7 @@ export default function Dashboard({
     {
       label: "Vehicles",
       icon: Car,
-      action: () => scrollToSection("active-vehicles"),
+      action: () => setActiveScreen("job-cards"),
     },
     {
       label: "Inventory",
@@ -190,21 +192,6 @@ export default function Dashboard({
           "
         >
           {/* Brand */}
-          <div className="px-5 py-6 border-b border-slate-800">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg">
-                <Car className="w-6 h-6 text-white" />
-              </div>
-
-              <div>
-                <h2 className="text-lg font-black tracking-tight">AUTOFIX</h2>
-
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                  Workshop System
-                </p>
-              </div>
-            </div>
-          </div>
 
           {/* Navigation */}
           <nav className="flex-1 px-3 py-5 space-y-1">
@@ -326,14 +313,14 @@ export default function Dashboard({
               ELECTRICAL
           ===================================================== */}
           <section id="electrical-panel" className="scroll-mt-24">
-            <ElectricalPanel />
+            <ElectricalPanel onConfirmItem={handleConfirmElectricalItem} />
           </section>
 
           {/* =====================================================
               MECHANICAL
           ===================================================== */}
           <section id="mechanical-panel" className="scroll-mt-24">
-            <MechanicalPanel />
+            <MechanicalPanel onConfirmItem={handleConfirmMechanicalItem} />
           </section>
 
           {/* =====================================================

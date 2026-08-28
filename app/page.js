@@ -669,6 +669,9 @@ export default function Home() {
   const [activeScreen, setActiveScreen] = useState("dashboard");
   const [detailedJobCard, setDetailedJobCard] = useState(null);
 
+  const [electricalItems, setElectricalItems] = useState([]);
+  const [mechanicalItems, setMechanicalItems] = useState([]);
+
   // SMS / WhatsApp Simulator Modal State
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
   const [smsJobData, setSmsJobData] = useState(null);
@@ -1084,6 +1087,38 @@ export default function Home() {
   const handleOpenFullJobCard = (job) => {
     setDetailedJobCard(job);
     setActiveScreen("full-job-card");
+  };
+
+  const handleConfirmElectricalItem = (item) => {
+    setElectricalItems((currentItems) => {
+      const exists = currentItems.some(
+        (currentItem) => currentItem.id === item.id,
+      );
+
+      if (exists) {
+        return currentItems.map((currentItem) =>
+          currentItem.id === item.id ? item : currentItem,
+        );
+      }
+
+      return [...currentItems, item];
+    });
+  };
+
+  const handleConfirmMechanicalItem = (item) => {
+    setMechanicalItems((currentItems) => {
+      const exists = currentItems.some(
+        (currentItem) => currentItem.id === item.id,
+      );
+
+      if (exists) {
+        return currentItems.map((currentItem) =>
+          currentItem.id === item.id ? item : currentItem,
+        );
+      }
+
+      return [...currentItems, item];
+    });
   };
 
   const handleOpenSmsModal = (job, e) => {
@@ -1884,6 +1919,122 @@ export default function Home() {
             )}
           </div>
 
+          {/* --- ELECTRICAL PANEL --- */}
+          <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
+              <h3 className="font-extrabold text-base text-slate-900">
+                Electrical Panel
+              </h3>
+            </div>
+
+            {electricalItems.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                No electrical items confirmed.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {electricalItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-1 md:grid-cols-4 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">
+                        Serial / Item No.
+                      </p>
+                      <p className="font-semibold text-slate-900">
+                        {item.itemNo}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">
+                        Part Name
+                      </p>
+                      <p className="font-semibold text-slate-900">
+                        {item.partName}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">
+                        Fault / Description
+                      </p>
+                      <p className="font-semibold text-slate-900">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">Cost</p>
+                      <p className="font-semibold text-slate-900">
+                        {Number(item.cost || 0).toFixed(2)} ⃁
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* --- MECHANICAL PANEL --- */}
+          <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
+              <h3 className="font-extrabold text-base text-slate-900">
+                Mechanical Panel
+              </h3>
+            </div>
+
+            {mechanicalItems.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                No mechanical items confirmed.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {mechanicalItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-1 md:grid-cols-4 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">
+                        Serial / Item No.
+                      </p>
+                      <p className="font-semibold text-slate-900">
+                        {item.itemNo}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">
+                        Part Name
+                      </p>
+                      <p className="font-semibold text-slate-900">
+                        {item.partName}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">
+                        Fault / Description
+                      </p>
+                      <p className="font-semibold text-slate-900">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">Cost</p>
+                      <p className="font-semibold text-slate-900">
+                        {Number(item.cost || 0).toFixed(2)} ⃁
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* --- WORK CYCLE --- */}
           <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
             <div className="flex items-center space-x-2 mb-4 border-b border-slate-200 pb-3">
@@ -2037,8 +2188,10 @@ export default function Home() {
         selectedJobId={selectedJobId}
         handleSelectJob={handleSelectJob}
         togglePaymentStatus={togglePaymentStatus}
-        handleOpenSmsModal={handleOpenSmsModal}
         handleOpenFullJobCard={handleOpenFullJobCard}
+        handleConfirmElectricalItem={handleConfirmElectricalItem}
+        handleConfirmMechanicalItem={handleConfirmMechanicalItem}
+        handleOpenSmsModal={handleOpenSmsModal}
         updateJobStatus={updateJobStatus}
         handleDeleteJob={handleDeleteJob}
         setActiveScreen={setActiveScreen}
@@ -2089,6 +2242,8 @@ export default function Home() {
         handleExportSalesPDF={handleExportSalesPDF}
         handleLogout={handleLogout}
         handleOpenFullJobCard={handleOpenFullJobCard}
+        handleConfirmElectricalItem={handleConfirmElectricalItem}
+        handleConfirmMechanicalItem={handleConfirmMechanicalItem}
         handleOpenSmsModal={handleOpenSmsModal}
         isSmsModalOpen={isSmsModalOpen}
         smsJobData={smsJobData}

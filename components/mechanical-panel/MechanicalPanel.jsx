@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
-export default function MechanicalPanel() {
+export default function MechanicalPanel({ onConfirmItem }) {
   const [items, setItems] = useState([
     {
       id: 1,
@@ -11,6 +11,7 @@ export default function MechanicalPanel() {
       partName: "",
       description: "",
       cost: "",
+      confirmed: false,
     },
   ]);
 
@@ -44,9 +45,30 @@ export default function MechanicalPanel() {
   const handleChange = (id, field, value) => {
     setItems((currentItems) =>
       currentItems.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
+        item.id === id ? { ...item, [field]: value, confirmed: false } : item,
       ),
     );
+  };
+
+  const handleConfirmItem = (item) => {
+    if (!item.partName.trim() || !item.description.trim() || item.cost === "") {
+      alert("Please complete the current row before confirming.");
+      return;
+    }
+
+    const confirmedItem = {
+      ...item,
+      confirmed: true,
+      cost: Number(item.cost) || 0,
+    };
+
+    setItems((currentItems) =>
+      currentItems.map((currentItem) =>
+        currentItem.id === item.id ? confirmedItem : currentItem,
+      ),
+    );
+
+    onConfirmItem?.(confirmedItem);
   };
 
   const handleAddNew = () => {
@@ -71,6 +93,7 @@ export default function MechanicalPanel() {
         partName: "",
         description: "",
         cost: "",
+        confirmed: false,
       },
     ]);
 
@@ -341,6 +364,20 @@ export default function MechanicalPanel() {
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
+            </div>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => handleConfirmItem(item)}
+                className={`rounded-lg px-5 py-2.5 text-sm font-bold shadow-sm transition ${
+                  item.confirmed
+                    ? "border border-emerald-300 bg-emerald-100 text-emerald-800"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+              >
+                {item.confirmed ? "✓ Confirmed" : "✓ Confirm"}
+              </button>
             </div>
           </div>
         ))}

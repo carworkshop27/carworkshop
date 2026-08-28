@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { Check } from "lucide-react";
 
-export default function ElectricalPanel() {
+export default function ElectricalPanel({ onConfirmItem }) {
   const [items, setItems] = useState([
     {
       id: 1,
@@ -11,6 +12,7 @@ export default function ElectricalPanel() {
       partName: "",
       description: "",
       cost: "",
+      confirmed: false,
     },
   ]);
 
@@ -44,9 +46,30 @@ export default function ElectricalPanel() {
   const handleChange = (id, field, value) => {
     setItems((currentItems) =>
       currentItems.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
+        item.id === id ? { ...item, [field]: value, confirmed: false } : item,
       ),
     );
+  };
+
+  const handleConfirmRow = (item) => {
+    if (!item.partName.trim() || !item.description.trim() || item.cost === "") {
+      alert("Please complete the current row before confirming it.");
+      return;
+    }
+
+    const confirmedItem = {
+      ...item,
+      confirmed: true,
+      cost: Number(item.cost) || 0,
+    };
+
+    setItems((currentItems) =>
+      currentItems.map((currentItem) =>
+        currentItem.id === item.id ? confirmedItem : currentItem,
+      ),
+    );
+
+    onConfirmItem?.(confirmedItem);
   };
 
   const handleAddNew = () => {
@@ -71,13 +94,11 @@ export default function ElectricalPanel() {
         partName: "",
         description: "",
         cost: "",
+        confirmed: false,
       },
     ]);
 
-    // Make the newly created row the active row
     setActiveItemId(newId);
-
-    // Close the part-name list if it is open
     setShowPartList(false);
   };
 
@@ -127,7 +148,6 @@ export default function ElectricalPanel() {
       currentParts.filter((part) => part.id !== partId),
     );
 
-    // Clear this part from any current inspection rows using it
     setItems((currentItems) =>
       currentItems.map((item) =>
         item.partName === partName ? { ...item, partName: "" } : item,
@@ -333,6 +353,22 @@ export default function ElectricalPanel() {
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
+            </div>
+
+            {/* Confirm Row */}
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => handleConfirmRow(item)}
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold shadow-sm transition ${
+                  item.confirmed
+                    ? "border border-emerald-300 bg-emerald-100 text-emerald-800"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+              >
+                <Check className="h-4 w-4" />
+                {item.confirmed ? "Confirmed" : "Confirm"}
+              </button>
             </div>
           </div>
         ))}
