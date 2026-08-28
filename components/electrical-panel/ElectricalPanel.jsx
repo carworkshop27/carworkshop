@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { Check } from "lucide-react";
 
-export default function ElectricalPanel({ onConfirmItem }) {
+export default function ElectricalPanel({ onConfirmItem, onItemsChange }) {
   const [items, setItems] = useState([
     {
       id: 1,
@@ -44,11 +44,12 @@ export default function ElectricalPanel({ onConfirmItem }) {
   }, []);
 
   const handleChange = (id, field, value) => {
-    setItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === id ? { ...item, [field]: value, confirmed: false } : item,
-      ),
+    const updatedItems = items.map((item) =>
+      item.id === id ? { ...item, [field]: value, confirmed: false } : item,
     );
+
+    setItems(updatedItems);
+    onItemsChange?.(updatedItems);
   };
 
   const handleConfirmRow = (item) => {
@@ -86,17 +87,19 @@ export default function ElectricalPanel({ onConfirmItem }) {
 
     const newId = Date.now();
 
-    setItems((currentItems) => [
-      ...currentItems,
-      {
-        id: newId,
-        itemNo: "",
-        partName: "",
-        description: "",
-        cost: "",
-        confirmed: false,
-      },
-    ]);
+    const newItem = {
+      id: newId,
+      itemNo: "",
+      partName: "",
+      description: "",
+      cost: "",
+      confirmed: false,
+    };
+
+    const updatedItems = [...items, newItem];
+
+    setItems(updatedItems);
+    onItemsChange?.(updatedItems);
 
     setActiveItemId(newId);
     setShowPartList(false);
@@ -108,7 +111,10 @@ export default function ElectricalPanel({ onConfirmItem }) {
       return;
     }
 
-    setItems((currentItems) => currentItems.filter((item) => item.id !== id));
+    const updatedItems = items.filter((item) => item.id !== id);
+
+    setItems(updatedItems);
+    onItemsChange?.(updatedItems);
 
     if (activeItemId === id) {
       const remainingItem = items.find((item) => item.id !== id);

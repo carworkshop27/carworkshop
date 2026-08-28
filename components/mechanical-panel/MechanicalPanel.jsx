@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
-export default function MechanicalPanel({ onConfirmItem }) {
+export default function MechanicalPanel({ onConfirmItem, onItemsChange }) {
   const [items, setItems] = useState([
     {
       id: 1,
@@ -43,11 +43,12 @@ export default function MechanicalPanel({ onConfirmItem }) {
   }, []);
 
   const handleChange = (id, field, value) => {
-    setItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === id ? { ...item, [field]: value, confirmed: false } : item,
-      ),
+    const updatedItems = items.map((item) =>
+      item.id === id ? { ...item, [field]: value, confirmed: false } : item,
     );
+
+    setItems(updatedItems);
+    onItemsChange?.(updatedItems);
   };
 
   const handleConfirmItem = (item) => {
@@ -85,22 +86,21 @@ export default function MechanicalPanel({ onConfirmItem }) {
 
     const newId = Date.now();
 
-    setItems((currentItems) => [
-      ...currentItems,
-      {
-        id: newId,
-        itemNo: "",
-        partName: "",
-        description: "",
-        cost: "",
-        confirmed: false,
-      },
-    ]);
+    const newItem = {
+      id: newId,
+      itemNo: "",
+      partName: "",
+      description: "",
+      cost: "",
+      confirmed: false,
+    };
 
-    // Make the newly created row the active row
+    const updatedItems = [...items, newItem];
+
+    setItems(updatedItems);
+    onItemsChange?.(updatedItems);
+
     setActiveItemId(newId);
-
-    // Close the part-name list if it is open
     setShowPartList(false);
   };
 
@@ -110,7 +110,10 @@ export default function MechanicalPanel({ onConfirmItem }) {
       return;
     }
 
-    setItems((currentItems) => currentItems.filter((item) => item.id !== id));
+    const updatedItems = items.filter((item) => item.id !== id);
+
+    setItems(updatedItems);
+    onItemsChange?.(updatedItems);
 
     if (activeItemId === id) {
       const remainingItem = items.find((item) => item.id !== id);

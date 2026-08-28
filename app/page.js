@@ -1492,6 +1492,8 @@ export default function Home() {
       }),
       panels: DEFAULT_PANELS,
       parts: [],
+      electricalItems: electricalItems || [],
+      mechanicalItems: mechanicalItems || [],
     };
 
     const updatedJobs = [newJob, ...jobs];
@@ -1813,19 +1815,19 @@ export default function Home() {
 
               <div>
                 <span className="text-xs font-extrabold text-slate-400 uppercase">
-                  Car Brand / Company
+                  Car Make / Brand
                 </span>
                 <p className="text-base font-black text-slate-900 mt-1">
-                  {detailedJobCard.company || ""}
+                  {detailedJobCard.make || "N/A"}
                 </p>
               </div>
 
               <div>
                 <span className="text-xs font-extrabold text-slate-400 uppercase">
-                  Make / Model
+                  Model
                 </span>
                 <p className="text-base font-black text-slate-900 mt-1">
-                  {detailedJobCard.make || detailedJobCard.model || ""}
+                  {detailedJobCard.model || "N/A"}
                 </p>
               </div>
 
@@ -1933,7 +1935,7 @@ export default function Home() {
               </p>
             ) : (
               <div className="space-y-3">
-                {electricalItems.map((item) => (
+                {(detailedJobCard?.electricalItems || []).map((item) => (
                   <div
                     key={item.id}
                     className="grid grid-cols-1 md:grid-cols-4 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4"
@@ -1991,7 +1993,7 @@ export default function Home() {
               </p>
             ) : (
               <div className="space-y-3">
-                {mechanicalItems.map((item) => (
+                {(detailedJobCard?.mechanicalItems || []).map((item) => (
                   <div
                     key={item.id}
                     className="grid grid-cols-1 md:grid-cols-4 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4"
@@ -2164,6 +2166,10 @@ export default function Home() {
         setFormData={setFormData}
         handleIntakeSubmit={handleIntakeSubmit}
         setActiveScreen={setActiveScreen}
+        onElectricalItemsChange={setElectricalItems}
+        onMechanicalItemsChange={setMechanicalItems}
+        handleConfirmElectricalItem={handleConfirmElectricalItem}
+        handleConfirmMechanicalItem={handleConfirmMechanicalItem}
         panels={panels}
         selectedPanelId={selectedPanelId}
         setSelectedPanelId={setSelectedPanelId}

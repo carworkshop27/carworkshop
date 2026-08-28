@@ -15,11 +15,19 @@ import {
   Zap,
 } from "lucide-react";
 
+import ElectricalPanel from "../electrical-panel/ElectricalPanel";
+import MechanicalPanel from "../mechanical-panel/MechanicalPanel";
+
 export default function NewJobIntake({
   formData,
   setFormData,
   handleIntakeSubmit,
   setActiveScreen,
+
+  handleConfirmElectricalItem,
+  handleConfirmMechanicalItem,
+  onElectricalItemsChange,
+  onMechanicalItemsChange,
 
   panels = [],
   selectedPanelId,
@@ -531,6 +539,22 @@ export default function NewJobIntake({
               </div>
             </div>
           </section>
+
+          {/* =======================================================
+              ELECTRICAL PANEL
+          ======================================================= */}
+          <ElectricalPanel
+            onConfirmItem={handleConfirmElectricalItem}
+            onItemsChange={onElectricalItemsChange}
+          />
+
+          {/* =======================================================
+              MECHANICAL PANEL
+          ======================================================= */}
+          <MechanicalPanel
+            onConfirmItem={handleConfirmMechanicalItem}
+            onItemsChange={onMechanicalItemsChange}
+          />
 
           {/* =======================================================
               SAVE BAR
