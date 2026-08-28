@@ -10,6 +10,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import NewJobIntake from "../components/intake/NewJobIntake";
+import JobCards from "../components/jobs/JobCards";
 import {
   Wrench,
   Search,
@@ -2021,6 +2022,26 @@ export default function Home() {
         updatePanelRepairCost={updatePanelRepairCost}
         updatePanelTechnician={updatePanelTechnician}
         addPanel={addPanel}
+      />
+    );
+  }
+
+  if (activeScreen === "job-cards") {
+    return (
+      <JobCards
+        searchTerm={searchTerm}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        isLoading={isLoading}
+        filteredJobs={filteredJobs}
+        selectedJobId={selectedJobId}
+        handleSelectJob={handleSelectJob}
+        togglePaymentStatus={togglePaymentStatus}
+        handleOpenSmsModal={handleOpenSmsModal}
+        handleOpenFullJobCard={handleOpenFullJobCard}
+        updateJobStatus={updateJobStatus}
+        handleDeleteJob={handleDeleteJob}
+        setActiveScreen={setActiveScreen}
       />
     );
   }
