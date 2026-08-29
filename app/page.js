@@ -688,6 +688,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState("list");
   const [activeScreen, setActiveScreen] = useState("dashboard");
   const [detailedJobCard, setDetailedJobCard] = useState(null);
+  const [printJobCard, setPrintJobCard] = useState(false);
 
   const [electricalItems, setElectricalItems] = useState([]);
   const [mechanicalItems, setMechanicalItems] = useState([]);
@@ -1131,10 +1132,24 @@ export default function Home() {
     setPanels(job.panels || DEFAULT_PANELS);
   };
 
-  const handleOpenFullJobCard = (job) => {
+  const handleOpenFullJobCard = (job, shouldPrint = false) => {
     setDetailedJobCard(job);
+    setPrintJobCard(shouldPrint);
     setActiveScreen("full-job-card");
   };
+
+  useEffect(() => {
+    if (!printJobCard || activeScreen !== "full-job-card" || !detailedJobCard) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      window.print();
+      setPrintJobCard(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [printJobCard, activeScreen, detailedJobCard]);
 
   const handleConfirmElectricalItem = (item) => {
     setElectricalItems((currentItems) => {
@@ -1801,7 +1816,7 @@ export default function Home() {
 
         <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
           {/* --- PAYMENT STATUS --- */}
-          <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="print:hidden bg-white rounded-2xl border border-slate-300 p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="bg-blue-100 p-3 rounded-xl text-blue-700">
                 <CreditCard className="w-6 h-6" />

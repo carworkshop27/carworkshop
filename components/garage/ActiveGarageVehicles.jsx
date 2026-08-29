@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   Loader2,
   MessageSquare,
+  Printer,
   CheckCircle2,
   X,
 } from "lucide-react";
@@ -158,6 +159,18 @@ export default function ActiveGarageVehicles({
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
                               SMS
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenFullJobCard(job, true);
+                              }}
+                              title="Print Job Card"
+                              className="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                              Print
                             </button>
 
                             <button
