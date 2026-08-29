@@ -723,6 +723,30 @@ export default function Home() {
     paymentStatus: "Unpaid",
   });
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const savedIssue = localStorage.getItem("autofix_intake_issue_draft");
+
+      if (savedIssue !== null) {
+        setFormData((prev) => ({
+          ...prev,
+          issue: savedIssue,
+        }));
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleFormDataChange = (nextFormData) => {
+    setFormData(nextFormData);
+
+    localStorage.setItem(
+      "autofix_intake_issue_draft",
+      nextFormData.issue || "",
+    );
+  };
+
   const activeJob = jobs.find((j) => j.id === selectedJobId);
 
   const getFormattedDateString = () => {
@@ -1526,6 +1550,7 @@ export default function Home() {
     setSelectedJobId(uniqueId);
     setPanels(DEFAULT_PANELS);
     setIsModalOpen(false);
+    localStorage.removeItem("autofix_intake_issue_draft");
     setFormData({
       owner: "",
       phone: "",
@@ -2202,6 +2227,20 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* --- JOB NOTES --- */}
+          <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm">
+            <div className="flex items-center space-x-2 mb-4 border-b border-slate-200 pb-3">
+              <MessageSquare className="w-5 h-5 text-blue-600" />
+              <h3 className="font-extrabold text-base text-slate-900">
+                Job Notes / Reported Issue
+              </h3>
+            </div>
+
+            <p className="text-sm font-semibold leading-6 text-slate-700 whitespace-pre-wrap">
+              {detailedJobCard.issue || "No job notes recorded."}
+            </p>
+          </div>
         </main>
 
         <SmsNotificationModal
@@ -2218,7 +2257,7 @@ export default function Home() {
     return (
       <NewJobIntake
         formData={formData}
-        setFormData={setFormData}
+        setFormData={handleFormDataChange}
         handleIntakeSubmit={handleIntakeSubmit}
         setActiveScreen={setActiveScreen}
         onElectricalItemsChange={setElectricalItems}
