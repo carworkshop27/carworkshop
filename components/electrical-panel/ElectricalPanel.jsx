@@ -218,7 +218,7 @@ export default function ElectricalPanel({ onConfirmItem, onItemsChange }) {
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-visible">
-      <div className="px-6 py-5 border-b border-slate-200">
+      <div className="px-5 py-4 border-b border-slate-200">
         <h2 className="text-xl font-bold text-slate-900">Electrical Panel</h2>
 
         <p className="mt-1 text-sm text-slate-500">
@@ -226,11 +226,11 @@ export default function ElectricalPanel({ onConfirmItem, onItemsChange }) {
         </p>
       </div>
 
-      <div className="p-6 space-y-4">
+      <div className="p-5 space-y-3">
         {items.map((item, index) => (
           <div
             key={item.id}
-            className="relative rounded-xl border border-slate-200 bg-slate-50 p-4 pr-14"
+            className="relative rounded-xl border border-slate-200 bg-slate-50 p-3 pr-12"
           >
             <button
               type="button"
@@ -241,7 +241,7 @@ export default function ElectricalPanel({ onConfirmItem, onItemsChange }) {
               ×
             </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               {/* Serial / Item No. */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
@@ -362,11 +362,11 @@ export default function ElectricalPanel({ onConfirmItem, onItemsChange }) {
             </div>
 
             {/* Confirm Row */}
-            <div className="mt-4 flex justify-end">
+            <div className="mt-3 flex justify-end">
               <button
                 type="button"
                 onClick={() => handleConfirmRow(item)}
-                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold shadow-sm transition ${
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold shadow-sm transition ${
                   item.confirmed
                     ? "border border-emerald-300 bg-emerald-100 text-emerald-800"
                     : "bg-emerald-600 text-white hover:bg-emerald-700"
@@ -380,13 +380,13 @@ export default function ElectricalPanel({ onConfirmItem, onItemsChange }) {
         ))}
 
         {/* Buttons + Total */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-3">
             {/* Add New */}
             <button
               type="button"
               onClick={handleAddNew}
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
             >
               + Add New
             </button>
@@ -396,7 +396,7 @@ export default function ElectricalPanel({ onConfirmItem, onItemsChange }) {
               <button
                 type="button"
                 onClick={() => setShowAddPartModal(true)}
-                className="rounded-lg border border-blue-600 bg-white px-5 py-2.5 text-sm font-bold text-blue-600 shadow-sm transition hover:bg-blue-50"
+                className="rounded-lg border border-blue-600 bg-white px-4 py-2 text-xs font-bold text-blue-600 shadow-sm transition hover:bg-blue-50"
               >
                 + Add Part Name
               </button>

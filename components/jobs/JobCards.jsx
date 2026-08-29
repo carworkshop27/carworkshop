@@ -2,6 +2,7 @@
 
 import React from "react";
 import ActiveGarageVehicles from "../garage/ActiveGarageVehicles";
+import BulkReports from "../reports/BulkReports";
 
 export default function JobCards({
   searchTerm,
@@ -17,6 +18,10 @@ export default function JobCards({
   updateJobStatus,
   handleDeleteJob,
   setActiveScreen,
+  handleExportJobCardsExcel,
+  handleExportJobCardsPDF,
+  handleExportSalesExcel,
+  handleExportSalesPDF,
 }) {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -42,6 +47,13 @@ export default function JobCards({
       </header>
 
       <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+        <BulkReports
+          handleExportJobCardsExcel={handleExportJobCardsExcel}
+          handleExportJobCardsPDF={handleExportJobCardsPDF}
+          handleExportSalesExcel={handleExportSalesExcel}
+          handleExportSalesPDF={handleExportSalesPDF}
+        />
+
         <ActiveGarageVehicles
           searchTerm={searchTerm}
           viewMode={viewMode}

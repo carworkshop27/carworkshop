@@ -11,6 +11,7 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import NewJobIntake from "../components/intake/NewJobIntake";
 import JobCards from "../components/jobs/JobCards";
+import PartsOrders from "../components/parts-orders/PartsOrders";
 import {
   Wrench,
   Search,
@@ -646,6 +647,26 @@ const INITIAL_USERS = [
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const savedUser = sessionStorage.getItem("autofix_current_user");
+
+      if (savedUser) {
+        try {
+          setCurrentUser(JSON.parse(savedUser));
+        } catch {
+          sessionStorage.removeItem("autofix_current_user");
+        }
+      }
+
+      setAuthReady(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const [loginInput, setLoginInput] = useState({ username: "", pin: "" });
 
   const [registeredUsers, setRegisteredUsers] = useState(INITIAL_USERS);
@@ -664,8 +685,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState("board");
-
+  const [viewMode, setViewMode] = useState("list");
   const [activeScreen, setActiveScreen] = useState("dashboard");
   const [detailedJobCard, setDetailedJobCard] = useState(null);
 
@@ -983,6 +1003,7 @@ export default function Home() {
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
+
     const foundUser = registeredUsers.find(
       (u) =>
         u.username.toLowerCase() === loginInput.username.trim().toLowerCase() &&
@@ -991,8 +1012,10 @@ export default function Home() {
 
     if (foundUser) {
       setCurrentUser(foundUser);
+      sessionStorage.setItem("autofix_current_user", JSON.stringify(foundUser));
+      setActiveScreen("dashboard");
     } else {
-      alert("Invalid Username or PIN.");
+      alert("Invalid username or PIN.");
     }
   };
 
@@ -1635,12 +1658,28 @@ export default function Home() {
       (sum, p) => sum + getDamageInfo(p.status).cost,
       0,
     );
+
     const jobPartsCost = (job.parts || []).reduce(
-      (sum, pt) => sum + pt.price,
+      (sum, pt) => sum + Number(pt.price || 0),
       0,
     );
-    return acc + jobDamageCost + jobPartsCost;
+
+    const electricalCost = (job.electricalItems || []).reduce(
+      (sum, item) => sum + Number(item.cost || 0),
+      0,
+    );
+
+    const mechanicalCost = (job.mechanicalItems || []).reduce(
+      (sum, item) => sum + Number(item.cost || 0),
+      0,
+    );
+
+    return acc + jobDamageCost + jobPartsCost + electricalCost + mechanicalCost;
   }, 0);
+
+  if (!authReady) {
+    return null;
+  }
 
   if (!currentUser) {
     return (
@@ -1665,8 +1704,24 @@ export default function Home() {
           : getDamageInfo(p.status).cost),
       0,
     );
-    const partsCost = jobPartsList.reduce((sum, pt) => sum + pt.price, 0);
-    const totalJobCost = repairCost + partsCost;
+
+    const partsCost = jobPartsList.reduce(
+      (sum, pt) => sum + Number(pt.price || 0),
+      0,
+    );
+
+    const electricalCost = (detailedJobCard.electricalItems || []).reduce(
+      (sum, item) => sum + Number(item.cost || 0),
+      0,
+    );
+
+    const mechanicalCost = (detailedJobCard.mechanicalItems || []).reduce(
+      (sum, item) => sum + Number(item.cost || 0),
+      0,
+    );
+
+    const totalJobCost =
+      repairCost + partsCost + electricalCost + mechanicalCost;
 
     const currentPayStatus = detailedJobCard.paymentStatus || "Unpaid";
     const payStatusColor =
@@ -1929,7 +1984,7 @@ export default function Home() {
               </h3>
             </div>
 
-            {electricalItems.length === 0 ? (
+            {(detailedJobCard?.electricalItems || []).length === 0 ? (
               <p className="text-sm text-slate-500">
                 No electrical items confirmed.
               </p>
@@ -1987,7 +2042,7 @@ export default function Home() {
               </h3>
             </div>
 
-            {mechanicalItems.length === 0 ? (
+            {(detailedJobCard?.mechanicalItems || []).length === 0 ? (
               <p className="text-sm text-slate-500">
                 No mechanical items confirmed.
               </p>
@@ -2201,6 +2256,10 @@ export default function Home() {
         updateJobStatus={updateJobStatus}
         handleDeleteJob={handleDeleteJob}
         setActiveScreen={setActiveScreen}
+        handleExportJobCardsExcel={handleExportJobCardsExcel}
+        handleExportJobCardsPDF={handleExportJobCardsPDF}
+        handleExportSalesExcel={handleExportSalesExcel}
+        handleExportSalesPDF={handleExportSalesPDF}
       />
     );
   }
@@ -2215,6 +2274,26 @@ export default function Home() {
       />
     );
   }
+
+  if (activeScreen === "parts-orders") {
+    return (
+      <PartsOrders
+        currentUser={currentUser}
+        inventory={inventory}
+        activeJob={activeJob}
+        selectedPartId={selectedPartId}
+        partQuantity={partQuantity}
+        purchaseForm={purchaseForm}
+        handleAddPartToJob={handleAddPartToJob}
+        handlePurchaseOrderSubmit={handlePurchaseOrderSubmit}
+        setPartQuantity={setPartQuantity}
+        setPurchaseForm={setPurchaseForm}
+        setSelectedPartId={setSelectedPartId}
+        setActiveScreen={setActiveScreen}
+      />
+    );
+  }
+
   return (
     <>
       <Dashboard

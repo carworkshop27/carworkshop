@@ -12,18 +12,10 @@ import {
   Settings,
   ClipboardList,
   Plus,
-  Layers,
-  BarChart3,
 } from "lucide-react";
 
 import SmsNotificationModal from "../notifications/SmsNotificationModal";
-import SparePartsInventory from "../spare-parts/SparePartsInventory";
-import ActiveGarageVehicles from "../garage/ActiveGarageVehicles";
 import DashboardHeader from "./DashboardHeader";
-import PanelInspection from "../panel-inspection/PanelInspection";
-import ElectricalPanel from "../electrical-panel/ElectricalPanel";
-import MechanicalPanel from "../mechanical-panel/MechanicalPanel";
-import BulkReports from "../reports/BulkReports";
 import DashboardStats from "../dashboard-stats/DashboardStats";
 import DashboardActions from "./DashboardActions";
 
@@ -136,7 +128,7 @@ export default function Dashboard({
     {
       label: "Parts Orders",
       icon: ShoppingCart,
-      action: () => scrollToSection("spare-parts"),
+      action: () => setActiveScreen("parts-orders"),
     },
     {
       label: "Reports",
@@ -280,50 +272,6 @@ export default function Dashboard({
           </section>
 
           {/* =====================================================
-              REPORTS
-          ===================================================== */}
-          <section id="reports" className="scroll-mt-24">
-            <BulkReports
-              handleExportJobCardsExcel={handleExportJobCardsExcel}
-              handleExportJobCardsPDF={handleExportJobCardsPDF}
-              handleExportSalesExcel={handleExportSalesExcel}
-              handleExportSalesPDF={handleExportSalesPDF}
-            />
-          </section>
-
-          {/* =====================================================
-              PANEL INSPECTION
-          ===================================================== */}
-          <section id="panel-inspection" className="scroll-mt-24">
-            <PanelInspection
-              activeJob={activeJob}
-              panels={panels}
-              selectedPanelId={selectedPanelId}
-              setSelectedPanelId={setSelectedPanelId}
-              damageTypes={damageTypes}
-              selectedPanel={selectedPanel}
-              updatePanelDamage={updatePanelDamage}
-              updatePanelRepairCost={updatePanelRepairCost}
-              updatePanelTechnician={updatePanelTechnician}
-              addPanel={addPanel}
-            />
-          </section>
-
-          {/* =====================================================
-              ELECTRICAL
-          ===================================================== */}
-          <section id="electrical-panel" className="scroll-mt-24">
-            <ElectricalPanel onConfirmItem={handleConfirmElectricalItem} />
-          </section>
-
-          {/* =====================================================
-              MECHANICAL
-          ===================================================== */}
-          <section id="mechanical-panel" className="scroll-mt-24">
-            <MechanicalPanel onConfirmItem={handleConfirmMechanicalItem} />
-          </section>
-
-          {/* =====================================================
               DASHBOARD STATISTICS
           ===================================================== */}
           <section id="statistics" className="scroll-mt-24">
@@ -331,45 +279,6 @@ export default function Dashboard({
               totalVehicles={totalVehicles}
               totalRevenue={totalRevenue}
               readyForPickup={readyForPickup}
-            />
-          </section>
-
-          {/* =====================================================
-              ACTIVE VEHICLES / JOB CARDS
-          ===================================================== */}
-          <section id="active-vehicles" className="scroll-mt-24">
-            <ActiveGarageVehicles
-              searchTerm={searchTerm}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              isLoading={isLoading}
-              filteredJobs={filteredJobs}
-              selectedJobId={selectedJobId}
-              handleSelectJob={handleSelectJob}
-              togglePaymentStatus={togglePaymentStatus}
-              handleOpenSmsModal={handleOpenSmsModal}
-              handleOpenFullJobCard={handleOpenFullJobCard}
-              updateJobStatus={updateJobStatus}
-              handleDeleteJob={handleDeleteJob}
-            />
-          </section>
-
-          {/* =====================================================
-              SPARE PARTS
-          ===================================================== */}
-          <section id="spare-parts" className="scroll-mt-24">
-            <SparePartsInventory
-              currentUser={currentUser}
-              inventory={inventory}
-              activeJob={activeJob}
-              selectedPartId={selectedPartId}
-              partQuantity={partQuantity}
-              purchaseForm={purchaseForm}
-              handleAddPartToJob={handleAddPartToJob}
-              handlePurchaseOrderSubmit={handlePurchaseOrderSubmit}
-              setPartQuantity={setPartQuantity}
-              setPurchaseForm={setPurchaseForm}
-              setSelectedPartId={setSelectedPartId}
             />
           </section>
         </main>
