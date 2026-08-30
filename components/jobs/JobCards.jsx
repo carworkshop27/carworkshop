@@ -15,6 +15,7 @@ export default function JobCards({
   togglePaymentStatus,
   handleOpenSmsModal,
   handleOpenFullJobCard,
+  handleOpenInvoice,
   updateJobStatus,
   handleDeleteJob,
   setActiveScreen,
@@ -65,6 +66,7 @@ export default function JobCards({
           togglePaymentStatus={togglePaymentStatus}
           handleOpenSmsModal={handleOpenSmsModal}
           handleOpenFullJobCard={handleOpenFullJobCard}
+          handleOpenInvoice={handleOpenInvoice}
           updateJobStatus={updateJobStatus}
           handleDeleteJob={handleDeleteJob}
         />

@@ -21,6 +21,7 @@ export default function ActiveGarageVehicles({
   togglePaymentStatus,
   handleOpenSmsModal,
   handleOpenFullJobCard,
+  handleOpenInvoice,
   updateJobStatus,
   handleDeleteJob,
 }) {
@@ -171,6 +172,17 @@ export default function ActiveGarageVehicles({
                             >
                               <Printer className="w-3.5 h-3.5" />
                               Print
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenInvoice(job);
+                              }}
+                              title="Open Invoice"
+                              className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
+                            >
+                              Invoice
                             </button>
 
                             <button

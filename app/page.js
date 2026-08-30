@@ -12,6 +12,7 @@ import * as XLSX from "xlsx";
 import NewJobIntake from "../components/intake/NewJobIntake";
 import JobCards from "../components/jobs/JobCards";
 import PartsOrders from "../components/parts-orders/PartsOrders";
+import Invoice from "../components/invoices/Invoice";
 import {
   Wrench,
   Search,
@@ -693,6 +694,10 @@ export default function Home() {
   const [electricalItems, setElectricalItems] = useState([]);
   const [mechanicalItems, setMechanicalItems] = useState([]);
 
+  const [invoiceJob, setInvoiceJob] = useState(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [isTaxInvoice, setIsTaxInvoice] = useState(false);
+
   // SMS / WhatsApp Simulator Modal State
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
   const [smsJobData, setSmsJobData] = useState(null);
@@ -1136,6 +1141,12 @@ export default function Home() {
     setDetailedJobCard(job);
     setPrintJobCard(shouldPrint);
     setActiveScreen("full-job-card");
+  };
+
+  const handleOpenInvoice = (job, taxInvoice = false) => {
+    setInvoiceJob(job);
+    setIsTaxInvoice(taxInvoice);
+    setActiveScreen("invoice");
   };
 
   useEffect(() => {
@@ -1731,6 +1742,21 @@ export default function Home() {
     );
   }
 
+  if (activeScreen === "invoice" && invoiceJob) {
+    return (
+      <div className="min-h-screen bg-slate-100 p-6">
+        <div className="max-w-5xl mx-auto">
+          <Invoice
+            job={invoiceJob}
+            getDamageInfo={getDamageInfo}
+            isTaxInvoice={isTaxInvoice}
+            onPrint={() => window.print()}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (activeScreen === "full-job-card" && detailedJobCard) {
     const jobPanels = detailedJobCard.panels || DEFAULT_PANELS;
     const damagedPanelsList = jobPanels.filter((p) => p.status !== "ok");
@@ -2311,6 +2337,7 @@ export default function Home() {
         handleSelectJob={handleSelectJob}
         togglePaymentStatus={togglePaymentStatus}
         handleOpenFullJobCard={handleOpenFullJobCard}
+        handleOpenInvoice={handleOpenInvoice}
         handleConfirmElectricalItem={handleConfirmElectricalItem}
         handleConfirmMechanicalItem={handleConfirmMechanicalItem}
         handleOpenSmsModal={handleOpenSmsModal}
