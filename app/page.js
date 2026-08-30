@@ -1763,6 +1763,13 @@ export default function Home() {
     const totalJobCost =
       repairCost + partsCost + electricalCost + mechanicalCost;
 
+    const invoiceSubtotal = totalJobCost;
+    const invoiceDiscount = 0;
+    const invoiceTaxableAmount = invoiceSubtotal - invoiceDiscount;
+    const invoiceVatRate = 15;
+    const invoiceVatAmount = invoiceTaxableAmount * (invoiceVatRate / 100);
+    const invoiceGrandTotal = invoiceTaxableAmount + invoiceVatAmount;
+
     const currentPayStatus = detailedJobCard.paymentStatus || "Unpaid";
     const payStatusColor =
       currentPayStatus === "Paid"
