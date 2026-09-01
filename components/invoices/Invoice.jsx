@@ -66,8 +66,8 @@ export default function Invoice({
         <div className="flex items-start justify-between">
           {/* COMPANY INFORMATION */}
           <div>
-            <h1 className="text-3xl font-black uppercase tracking-wide">
-              AutoFix Pro
+            <h1 className="text-4xl font-black tracking-tight text-slate-900">
+              Garage Altalaa Fahir
             </h1>
 
             <p className="text-sm font-semibold text-slate-500 mt-1">
@@ -355,7 +355,7 @@ export default function Invoice({
       {/* FOOTER */}
       <div className="mt-8 pt-5 border-t border-slate-300 text-center">
         <p className="text-xs font-semibold text-slate-500">
-          Thank you for choosing AutoFix Pro.
+          Thank you for choosing Garage Altalaa Fahir.
         </p>
 
         <p className="text-xs text-slate-400 mt-1">

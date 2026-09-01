@@ -1563,7 +1563,7 @@ export default function Home() {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      panels: DEFAULT_PANELS,
+      panels: panels,
       parts: [],
       electricalItems: electricalItems || [],
       mechanicalItems: mechanicalItems || [],

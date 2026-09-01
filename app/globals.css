@@ -96,3 +96,90 @@ body {
     display: none !important;
   }
 }
+
+/* =========================================================
+   TAX INVOICE - A4 ONE PAGE PRINT
+   ========================================================= */
+
+@page {
+  size: A4 portrait;
+  margin: 8mm;
+}
+
+@media print {
+  html,
+  body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: white !important;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide normal browser/UI elements */
+  button,
+  nav,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  /* Remove page padding */
+  main {
+    min-height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  /* Tax invoice page */
+  .tax-invoice-print {
+    width: 194mm !important;
+    max-width: 194mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    transform: scale(0.92);
+    transform-origin: top center;
+  }
+
+  /* Reduce vertical spacing */
+  .tax-invoice-print table {
+    font-size: 9px !important;
+  }
+
+  .tax-invoice-print th,
+  .tax-invoice-print td {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .tax-invoice-print h1,
+  .tax-invoice-print h2,
+  .tax-invoice-print h3 {
+    margin-top: 0 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .tax-invoice-print .print-tight {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* Never split invoice sections */
+  .tax-invoice-print table,
+  .tax-invoice-print tr,
+  .tax-invoice-print .invoice-section {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Do not create an extra page */
+  .tax-invoice-print {
+    page-break-after: avoid !important;
+  }
+}

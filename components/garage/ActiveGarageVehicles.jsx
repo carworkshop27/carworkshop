@@ -6,6 +6,7 @@ import {
   Loader2,
   MessageSquare,
   Printer,
+  ReceiptText,
   CheckCircle2,
   X,
 } from "lucide-react";
@@ -183,6 +184,18 @@ export default function ActiveGarageVehicles({
                               className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
                             >
                               Invoice
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = `/tax-invoice?jobId=${encodeURIComponent(job.id)}`;
+                              }}
+                              title="Open Tax Invoice"
+                              className="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
+                            >
+                              <ReceiptText className="w-3.5 h-3.5" />
+                              Tax Invoice
                             </button>
 
                             <button
