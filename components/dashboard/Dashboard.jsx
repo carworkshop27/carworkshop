@@ -16,7 +16,6 @@ import {
 
 import SmsNotificationModal from "../notifications/SmsNotificationModal";
 import DashboardHeader from "./DashboardHeader";
-import DashboardStats from "../dashboard-stats/DashboardStats";
 import DashboardActions from "./DashboardActions";
 
 export default function Dashboard({
@@ -84,6 +83,194 @@ export default function Dashboard({
       });
     }
   };
+
+  const jobs = Array.isArray(filteredJobs) ? filteredJobs : [];
+
+  const normalizeStatus = (status) => {
+    return String(status || "")
+      .toLowerCase()
+      .replace(/[\s-]+/g, "_");
+  };
+
+  const getJobStatusLabel = (status) => {
+    const normalized = normalizeStatus(status);
+
+    if (normalized === "inspection") return "Inspection";
+    if (normalized === "in_repair" || normalized === "repair")
+      return "In Repair";
+    if (normalized === "ready" || normalized === "ready_for_pickup") {
+      return "Ready";
+    }
+    if (normalized === "on_hold" || normalized === "hold") return "On Hold";
+    if (normalized === "completed" || normalized === "complete") {
+      return "Completed";
+    }
+
+    return status || "New";
+  };
+
+  const getStatusClass = (status) => {
+    const normalized = normalizeStatus(status);
+
+    if (normalized === "inspection") {
+      return "bg-blue-50 text-blue-600 border-blue-200";
+    }
+
+    if (normalized === "in_repair" || normalized === "repair") {
+      return "bg-orange-50 text-orange-600 border-orange-200";
+    }
+
+    if (
+      normalized === "ready" ||
+      normalized === "ready_for_pickup" ||
+      normalized === "completed" ||
+      normalized === "complete"
+    ) {
+      return "bg-emerald-50 text-emerald-600 border-emerald-200";
+    }
+
+    if (normalized === "on_hold" || normalized === "hold") {
+      return "bg-slate-100 text-slate-600 border-slate-300";
+    }
+
+    return "bg-slate-50 text-slate-600 border-slate-200";
+  };
+
+  const activeJobs = jobs.filter((job) => {
+    const status = normalizeStatus(job.status);
+
+    return (
+      status === "inspection" || status === "in_repair" || status === "repair"
+    );
+  }).length;
+
+  const readyJobs = jobs.filter((job) => {
+    const status = normalizeStatus(job.status);
+
+    return (
+      status === "ready" ||
+      status === "ready_for_pickup" ||
+      status === "completed" ||
+      status === "complete"
+    );
+  }).length;
+
+  const onHoldJobs = jobs.filter((job) => {
+    const status = normalizeStatus(job.status);
+
+    return status === "on_hold" || status === "hold";
+  }).length;
+
+  const inspectionJobs = jobs.filter(
+    (job) => normalizeStatus(job.status) === "inspection",
+  ).length;
+
+  const inRepairJobs = jobs.filter((job) => {
+    const status = normalizeStatus(job.status);
+
+    return status === "in_repair" || status === "repair";
+  }).length;
+
+  const uniqueCustomers = new Set(
+    jobs
+      .map(
+        (job) =>
+          job.customerId ||
+          job.customerEmail ||
+          job.customerMobile ||
+          job.customerName,
+      )
+      .filter(Boolean),
+  );
+
+  const customerCount = uniqueCustomers.size;
+
+  const paidJobs = jobs.filter((job) => {
+    const paymentStatus = String(job.paymentStatus || "").toLowerCase();
+
+    return paymentStatus === "paid" || job.paid === true || job.isPaid === true;
+  });
+
+  const paidRevenue = paidJobs.reduce((sum, job) => {
+    return (
+      sum +
+      Number(
+        job.totalAmount || job.total || job.totalRevenue || job.grandTotal || 0,
+      )
+    );
+  }, 0);
+
+  const unpaidRevenue = Math.max(Number(totalRevenue || 0) - paidRevenue, 0);
+
+  const recentJobs = [...jobs]
+    .sort((a, b) => {
+      const dateA = new Date(
+        a.updatedAt || a.createdAt || a.intakeDate || 0,
+      ).getTime();
+
+      const dateB = new Date(
+        b.updatedAt || b.createdAt || b.intakeDate || 0,
+      ).getTime();
+
+      return dateB - dateA;
+    })
+    .slice(0, 5);
+
+  const recentCustomersMap = new Map();
+
+  jobs.forEach((job) => {
+    const key =
+      job.customerId ||
+      job.customerEmail ||
+      job.customerMobile ||
+      job.customerName;
+
+    if (!key || recentCustomersMap.has(key)) return;
+
+    recentCustomersMap.set(key, {
+      name: job.customerName || "N/A",
+      mobile: job.customerMobile || "N/A",
+      email: job.customerEmail || "N/A",
+    });
+  });
+
+  const recentCustomers = Array.from(recentCustomersMap.values()).slice(0, 5);
+
+  const totalPaymentRevenue = paidRevenue + unpaidRevenue;
+
+  const paidPercentage =
+    totalPaymentRevenue > 0
+      ? Math.round((paidRevenue / totalPaymentRevenue) * 100)
+      : 0;
+
+  const unpaidPercentage = totalPaymentRevenue > 0 ? 100 - paidPercentage : 0;
+
+  const formatMoney = (amount) => {
+    return `⃁ ${Number(amount || 0).toLocaleString("en-SA", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "N/A";
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return String(dateValue);
+    }
+
+    return date.toLocaleDateString("en-GB");
+  };
+
+  const today = new Date();
+
+  const dashboardDate = today.toLocaleDateString("en-GB");
+  const dashboardTime = today.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   const sidebarItems = [
     {
@@ -261,26 +448,491 @@ export default function Dashboard({
           "
         >
           {/* =====================================================
-              DASHBOARD ACTIONS
+              DASHBOARD HEADER
           ===================================================== */}
-          <section>
-            <DashboardActions
-              activeJob={activeJob}
-              setActiveScreen={setActiveScreen}
-              setIsModalOpen={setIsModalOpen}
-            />
-          </section>
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl font-black text-slate-900">Dashboard</h1>
+
+              <p className="mt-1 text-sm font-medium text-slate-500">
+                Overview of workshop operations
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 shadow-sm">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Date
+                </p>
+
+                <p className="text-sm font-black text-slate-800 mt-1">
+                  {dashboardDate}
+                </p>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 shadow-sm">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Time
+                </p>
+
+                <p className="text-sm font-black text-slate-800 mt-1">
+                  {dashboardTime}
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* =====================================================
-              DASHBOARD STATISTICS
+              SUMMARY CARDS
           ===================================================== */}
-          <section id="statistics" className="scroll-mt-24">
-            <DashboardStats
-              totalVehicles={totalVehicles}
-              totalRevenue={totalRevenue}
-              readyForPickup={readyForPickup}
-            />
-          </section>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+            {/* Total Job Cards */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <ClipboardList className="w-6 h-6 text-blue-600" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Total Job Cards
+                  </p>
+
+                  <p className="text-2xl font-black text-slate-900 mt-1">
+                    {jobs.length}
+                  </p>
+
+                  <p className="text-xs text-slate-500 mt-1">All time</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Jobs */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <Car className="w-6 h-6 text-emerald-600" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Active Jobs
+                  </p>
+
+                  <p className="text-2xl font-black text-slate-900 mt-1">
+                    {activeJobs}
+                  </p>
+
+                  <p className="text-xs text-slate-500 mt-1">In progress</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Ready */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center">
+                  <ClipboardList className="w-6 h-6 text-orange-500" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Ready for Pickup
+                  </p>
+
+                  <p className="text-2xl font-black text-slate-900 mt-1">
+                    {readyJobs}
+                  </p>
+
+                  <p className="text-xs text-slate-500 mt-1">Completed</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Customers */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-purple-600" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Total Customers
+                  </p>
+
+                  <p className="text-2xl font-black text-slate-900 mt-1">
+                    {customerCount}
+                  </p>
+
+                  <p className="text-xs text-slate-500 mt-1">All time</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Revenue */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-red-500" />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Total Revenue
+                  </p>
+
+                  <p className="text-xl font-black text-slate-900 mt-1 truncate">
+                    {formatMoney(totalRevenue)}
+                  </p>
+
+                  <p className="text-xs text-slate-500 mt-1">All time</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* =====================================================
+              RECENT JOBS + PAYMENT OVERVIEW
+          ===================================================== */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-6">
+            {/* Recent Jobs */}
+            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-blue-600" />
+
+                  <h2 className="font-black text-blue-600">Recent Job Cards</h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveScreen("job-cards")}
+                  className="px-3 py-1.5 text-xs font-black text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50"
+                >
+                  View All
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 text-left">
+                      <th className="px-4 py-3 text-[11px] font-black uppercase text-slate-500">
+                        Job Card
+                      </th>
+
+                      <th className="px-4 py-3 text-[11px] font-black uppercase text-slate-500">
+                        Customer
+                      </th>
+
+                      <th className="px-4 py-3 text-[11px] font-black uppercase text-slate-500">
+                        Vehicle
+                      </th>
+
+                      <th className="px-4 py-3 text-[11px] font-black uppercase text-slate-500">
+                        Status
+                      </th>
+
+                      <th className="px-4 py-3 text-[11px] font-black uppercase text-slate-500">
+                        Date
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {recentJobs.map((job) => (
+                      <tr
+                        key={job.id}
+                        className="border-t border-slate-100 hover:bg-slate-50"
+                      >
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectJob(job.id)}
+                            className="font-bold text-blue-600 hover:underline"
+                          >
+                            {job.id || "N/A"}
+                          </button>
+                        </td>
+
+                        <td className="px-4 py-3 font-medium text-slate-700">
+                          {job.customerName || "N/A"}
+                        </td>
+
+                        <td className="px-4 py-3 text-slate-600">
+                          {job.carMake || job.make || ""} {job.model || ""}
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex px-2.5 py-1 rounded-full border text-[11px] font-black ${getStatusClass(
+                              job.status,
+                            )}`}
+                          >
+                            {getJobStatusLabel(job.status)}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3 text-slate-500">
+                          {formatDate(
+                            job.updatedAt || job.createdAt || job.intakeDate,
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {recentJobs.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan="5"
+                          className="px-4 py-10 text-center text-sm text-slate-400"
+                        >
+                          No job cards available.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-center px-5 py-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setActiveScreen("job-cards")}
+                  className="px-4 py-2 text-xs font-black text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50"
+                >
+                  View All Job Cards
+                </button>
+              </div>
+            </section>
+
+            {/* Payment Overview */}
+            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+
+                  <h2 className="font-black text-blue-600">
+                    Payment Status Overview
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-center justify-center gap-10 p-8">
+                <div
+                  className="w-52 h-52 rounded-full flex items-center justify-center"
+                  style={{
+                    background: `conic-gradient(
+                      #ef4444 0 ${unpaidPercentage}%,
+                      #10b981 ${unpaidPercentage}% 100%
+                    )`,
+                  }}
+                >
+                  <div className="w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center">
+                    <span className="text-xs font-black text-slate-400">
+                      TOTAL
+                    </span>
+
+                    <span className="text-lg font-black text-slate-900 mt-1">
+                      {formatMoney(totalPaymentRevenue)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-red-500" />
+
+                      <span className="font-black text-slate-700">Unpaid</span>
+                    </div>
+
+                    <p className="text-sm text-slate-500 mt-1 ml-5">
+                      {formatMoney(unpaidRevenue)} ({unpaidPercentage}%)
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-emerald-500" />
+
+                      <span className="font-black text-slate-700">Paid</span>
+                    </div>
+
+                    <p className="text-sm text-slate-500 mt-1 ml-5">
+                      {formatMoney(paidRevenue)} ({paidPercentage}%)
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveScreen("job-cards")}
+                    className="px-5 py-2 text-xs font-black text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50"
+                  >
+                    View Payments
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* =====================================================
+              JOB STATUS + RECENT CUSTOMERS
+          ===================================================== */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            {/* Jobs by Status */}
+            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-blue-600" />
+
+                  <h2 className="font-black text-blue-600">Jobs by Status</h2>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="flex items-end justify-around gap-5 h-64 border-b border-slate-200">
+                  {[
+                    {
+                      label: "Inspection",
+                      value: inspectionJobs,
+                      className: "bg-blue-500",
+                    },
+                    {
+                      label: "In Repair",
+                      value: inRepairJobs,
+                      className: "bg-orange-500",
+                    },
+                    {
+                      label: "Ready for Pickup",
+                      value: readyJobs,
+                      className: "bg-emerald-500",
+                    },
+                    {
+                      label: "On Hold",
+                      value: onHoldJobs,
+                      className: "bg-slate-500",
+                    },
+                  ].map((item) => {
+                    const maxValue = Math.max(
+                      inspectionJobs,
+                      inRepairJobs,
+                      readyJobs,
+                      onHoldJobs,
+                      1,
+                    );
+
+                    const height = Math.max(
+                      (item.value / maxValue) * 180,
+                      item.value > 0 ? 12 : 4,
+                    );
+
+                    return (
+                      <div
+                        key={item.label}
+                        className="flex-1 h-full flex flex-col items-center justify-end"
+                      >
+                        <span className="text-sm font-black text-slate-700 mb-2">
+                          {item.value}
+                        </span>
+
+                        <div
+                          className={`w-full max-w-16 rounded-t-lg ${item.className}`}
+                          style={{ height: `${height}px` }}
+                        />
+
+                        <span className="text-[11px] font-bold text-slate-500 text-center mt-3">
+                          {item.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+
+            {/* Recent Customers */}
+            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-600" />
+
+                  <h2 className="font-black text-blue-600">Recent Customers</h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => scrollToSection("active-vehicles")}
+                  className="px-3 py-1.5 text-xs font-black text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50"
+                >
+                  View All
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 text-left">
+                      <th className="px-4 py-3 text-[11px] font-black uppercase text-slate-500">
+                        Customer
+                      </th>
+
+                      <th className="px-4 py-3 text-[11px] font-black uppercase text-slate-500">
+                        Mobile
+                      </th>
+
+                      <th className="px-4 py-3 text-[11px] font-black uppercase text-slate-500">
+                        Email
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {recentCustomers.map((customer, index) => (
+                      <tr
+                        key={`${customer.email}-${index}`}
+                        className="border-t border-slate-100"
+                      >
+                        <td className="px-4 py-3 font-bold text-slate-700">
+                          {customer.name}
+                        </td>
+
+                        <td className="px-4 py-3 text-slate-600">
+                          {customer.mobile}
+                        </td>
+
+                        <td className="px-4 py-3 text-slate-600">
+                          {customer.email}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {recentCustomers.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan="3"
+                          className="px-4 py-10 text-center text-sm text-slate-400"
+                        >
+                          No customers available.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-center px-5 py-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => scrollToSection("active-vehicles")}
+                  className="px-4 py-2 text-xs font-black text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50"
+                >
+                  View All Customers
+                </button>
+              </div>
+            </section>
+          </div>
         </main>
       </div>
 
