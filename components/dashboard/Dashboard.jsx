@@ -85,6 +85,8 @@ export default function Dashboard({
     }
   };
 
+  const [accountsOpen, setAccountsOpen] = React.useState(false);
+
   const jobs = Array.isArray(filteredJobs) ? filteredJobs : [];
 
   const normalizeStatus = (status) => {
@@ -331,6 +333,11 @@ export default function Dashboard({
       action: () => setActiveScreen("job-cards"),
     },
     {
+      label: "Accounts",
+      icon: FileText,
+      action: () => setAccountsOpen((open) => !open),
+    },
+    {
       label: "Calendar",
       icon: CalendarDays,
       action: () => {
@@ -343,11 +350,6 @@ export default function Dashboard({
       action: () => {
         scrollToSection("active-vehicles");
       },
-    },
-    {
-      label: "Vehicles",
-      icon: Car,
-      action: () => setActiveScreen("job-cards"),
     },
     {
       label: "Inventory",
@@ -423,29 +425,124 @@ export default function Dashboard({
             {sidebarItems.map((item, index) => {
               const Icon = item.icon;
 
+              if (item.label === "Accounts") {
+                return (
+                  <div key={item.label}>
+                    <button
+                      type="button"
+                      onClick={item.action}
+                      className="
+            w-full
+            flex
+            items-center
+            justify-between
+            gap-3
+            px-3
+            py-2.5
+            rounded-xl
+            text-left
+            text-sm
+            font-bold
+            transition-all
+            text-slate-300
+            hover:bg-slate-800
+            hover:text-white
+          "
+                    >
+                      <span className="flex items-center gap-3">
+                        <Icon className="w-5 h-5 shrink-0" />
+                        <span>Accounts</span>
+                      </span>
+
+                      <span className="text-xs text-slate-400">
+                        {accountsOpen ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {accountsOpen && (
+                      <div className="ml-8 mt-1 space-y-1">
+                        <button
+                          type="button"
+                          className="
+                w-full
+                text-left
+                px-3
+                py-2
+                rounded-lg
+                text-sm
+                font-semibold
+                text-slate-400
+                hover:bg-slate-800
+                hover:text-white
+              "
+                        >
+                          Sales
+                        </button>
+
+                        <button
+                          type="button"
+                          className="
+                w-full
+                text-left
+                px-3
+                py-2
+                rounded-lg
+                text-sm
+                font-semibold
+                text-slate-400
+                hover:bg-slate-800
+                hover:text-white
+              "
+                        >
+                          Purchase
+                        </button>
+
+                        <button
+                          type="button"
+                          className="
+                w-full
+                text-left
+                px-3
+                py-2
+                rounded-lg
+                text-sm
+                font-semibold
+                text-slate-400
+                hover:bg-slate-800
+                hover:text-white
+              "
+                        >
+                          Expense
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={item.label}
                   type="button"
                   onClick={item.action}
                   className={`
-                    w-full
-                    flex
-                    items-center
-                    gap-3
-                    px-3
-                    py-2.5
-                    rounded-xl
-                    text-left
-                    text-sm
-                    font-bold
-                    transition-all
-                    ${
-                      index === 0
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                    }
-                  `}
+        w-full
+        flex
+        items-center
+        gap-3
+        px-3
+        py-2.5
+        rounded-xl
+        text-left
+        text-sm
+        font-bold
+        transition-all
+        ${
+          index === 0
+            ? "bg-blue-600 text-white shadow-md"
+            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+        }
+      `}
                 >
                   <Icon className="w-5 h-5 shrink-0" />
 
