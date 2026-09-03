@@ -680,6 +680,7 @@ export default function Home() {
   });
 
   const [jobs, setJobs] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [panels, setPanels] = useState(DEFAULT_PANELS);
   const [selectedPanelId, setSelectedPanelId] = useState("hood");
@@ -1029,6 +1030,27 @@ export default function Home() {
       setIsLoading(false);
     };
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const loadCustomers = async () => {
+      try {
+        const response = await fetch("/api/crm/customers");
+
+        const result = await response.json();
+
+        if (!response.ok || !Array.isArray(result)) {
+          console.error("Customer API Error:", result);
+          return;
+        }
+
+        setCustomers(result);
+      } catch (error) {
+        console.error("Failed to load customers:", error);
+      }
+    };
+
+    loadCustomers();
   }, []);
 
   const handleLoginSubmit = (e) => {
@@ -2398,6 +2420,7 @@ export default function Home() {
         updatePanelTechnician={updatePanelTechnician}
         addPanel={addPanel}
         filteredJobs={filteredJobs}
+        customers={customers}
         inventory={inventory}
         totalVehicles={totalVehicles}
         totalRevenue={totalRevenue}

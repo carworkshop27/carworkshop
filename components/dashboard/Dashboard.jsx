@@ -32,6 +32,7 @@ export default function Dashboard({
   updatePanelTechnician,
   addPanel,
   filteredJobs,
+  customers,
   inventory,
   totalVehicles,
   totalRevenue,
@@ -161,14 +162,27 @@ export default function Dashboard({
     return status === "on_hold" || status === "hold";
   }).length;
 
-  const inspectionJobs = jobs.filter(
-    (job) => normalizeStatus(job.status) === "inspection",
-  ).length;
-
-  const inRepairJobs = jobs.filter((job) => {
+  const inspectionJobs = jobs.filter((job) => {
     const status = normalizeStatus(job.status);
 
-    return status === "in_repair" || status === "repair";
+    return (
+      status === "inspection" ||
+      status === "inspection_&_body_check" ||
+      status === "inspection_and_body_check"
+    );
+  }).length;
+
+  const inRepairJobs = jobs.filter((job) => {
+    const rawStatus = String(job.status || "")
+      .trim()
+      .toLowerCase();
+    const status = normalizeStatus(job.status);
+
+    return (
+      status === "in_repair" ||
+      status === "repair" ||
+      rawStatus === "in repair / workshop"
+    );
   }).length;
 
   const uniqueCustomers = new Set(
@@ -178,7 +192,8 @@ export default function Dashboard({
           job.customerId ||
           job.customerEmail ||
           job.customerMobile ||
-          job.customerName,
+          job.customerName ||
+          job.owner,
       )
       .filter(Boolean),
   );
@@ -192,12 +207,42 @@ export default function Dashboard({
   });
 
   const paidRevenue = paidJobs.reduce((sum, job) => {
-    return (
-      sum +
-      Number(
-        job.totalAmount || job.total || job.totalRevenue || job.grandTotal || 0,
-      )
+    const panelCost = (job.panels || []).reduce((panelSum, panel) => {
+      const defaultCosts = {
+        ok: 0,
+        scratch: 150,
+        dent: 300,
+        replace: 600,
+        light_damage: 100,
+        medium_damage: 250,
+        large_damage: 400,
+        polish: 75,
+      };
+
+      const panelCost =
+        panel.customRepairCost !== undefined && panel.customRepairCost !== ""
+          ? Number(panel.customRepairCost)
+          : Number(defaultCosts[panel.status] || 0);
+
+      return panelSum + panelCost;
+    }, 0);
+
+    const partsCost = (job.parts || []).reduce(
+      (partsSum, part) => partsSum + Number(part.price || 0),
+      0,
     );
+
+    const electricalCost = (job.electricalItems || []).reduce(
+      (electricalSum, item) => electricalSum + Number(item.cost || 0),
+      0,
+    );
+
+    const mechanicalCost = (job.mechanicalItems || []).reduce(
+      (mechanicalSum, item) => mechanicalSum + Number(item.cost || 0),
+      0,
+    );
+
+    return sum + panelCost + partsCost + electricalCost + mechanicalCost;
   }, 0);
 
   const unpaidRevenue = Math.max(Number(totalRevenue || 0) - paidRevenue, 0);
@@ -216,25 +261,22 @@ export default function Dashboard({
     })
     .slice(0, 5);
 
-  const recentCustomersMap = new Map();
-
-  jobs.forEach((job) => {
-    const key =
-      job.customerId ||
-      job.customerEmail ||
-      job.customerMobile ||
-      job.customerName;
-
-    if (!key || recentCustomersMap.has(key)) return;
-
-    recentCustomersMap.set(key, {
-      name: job.customerName || "N/A",
-      mobile: job.customerMobile || "N/A",
-      email: job.customerEmail || "N/A",
-    });
-  });
-
-  const recentCustomers = Array.from(recentCustomersMap.values()).slice(0, 5);
+  const recentCustomers =
+    Array.isArray(customers) && customers.length > 0
+      ? customers.slice(0, 5).map((customer) => ({
+          name: customer.name || customer.customer_name || "N/A",
+          mobile:
+            customer.mobile ||
+            customer.phone ||
+            customer.customer_mobile ||
+            "N/A",
+          email: customer.email || customer.customer_email || "N/A",
+        }))
+      : jobs.slice(0, 5).map((job) => ({
+          name: job.owner || "N/A",
+          mobile: job.phone || "N/A",
+          email: job.email || "N/A",
+        }));
 
   const totalPaymentRevenue = paidRevenue + unpaidRevenue;
 
@@ -657,7 +699,7 @@ export default function Dashboard({
                         </td>
 
                         <td className="px-4 py-3 font-medium text-slate-700">
-                          {job.customerName || "N/A"}
+                          {job.owner || "N/A"}
                         </td>
 
                         <td className="px-4 py-3 text-slate-600">
