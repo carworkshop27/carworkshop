@@ -463,6 +463,7 @@ export default function Dashboard({
                       <div className="ml-8 mt-1 space-y-1">
                         <button
                           type="button"
+                          onClick={() => setActiveScreen("sales")}
                           className="
                 w-full
                 text-left

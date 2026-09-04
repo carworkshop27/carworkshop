@@ -11,6 +11,7 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import NewJobIntake from "../components/intake/NewJobIntake";
 import JobCards from "../components/jobs/JobCards";
+import Sales from "../components/accounts/Sales";
 import PartsOrders from "../components/parts-orders/PartsOrders";
 import Invoice from "../components/invoices/Invoice";
 import {
@@ -2460,6 +2461,10 @@ export default function Home() {
         setActiveScreen={setActiveScreen}
       />
     );
+  }
+
+  if (activeScreen === "sales") {
+    return <Sales setActiveScreen={setActiveScreen} />;
   }
 
   return (
