@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ShieldCheck, UserPlus, RefreshCw, LogOut } from "lucide-react";
+import { Search, ShieldCheck, UserPlus, LogOut } from "lucide-react";
 
 export default function DashboardHeader({
   currentUser,
@@ -121,34 +121,6 @@ export default function DashboardHeader({
               >
                 <UserPlus className="w-4 h-4" />
                 <span className="hidden xl:inline">Manage Users</span>
-              </button>
-            )}
-
-            {/* Reset Demo */}
-            {(currentUser.role === "Manager" ||
-              currentUser.role === "Super User") && (
-              <button
-                onClick={handleResetData}
-                title="Reset All Data"
-                className="
-                  h-10
-                  px-3
-                  rounded-xl
-                  bg-slate-100
-                  hover:bg-slate-200
-                  border
-                  border-slate-200
-                  text-slate-700
-                  text-xs
-                  font-bold
-                  flex
-                  items-center
-                  gap-2
-                  transition
-                "
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span className="hidden xl:inline">Reset Demo</span>
               </button>
             )}
 

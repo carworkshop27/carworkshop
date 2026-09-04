@@ -1004,31 +1004,42 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       setIsLoading(true);
+
       try {
         const savedUsers = localStorage.getItem("autofix_users_db");
         if (savedUsers) setRegisteredUsers(JSON.parse(savedUsers));
 
-        const savedJobs = localStorage.getItem("autofix_offline_db");
-        if (savedJobs) {
-          const parsedJobs = JSON.parse(savedJobs);
-          setJobs(parsedJobs);
-          if (parsedJobs.length > 0) {
-            setSelectedJobId(parsedJobs[0].id);
-            setPanels(parsedJobs[0].panels || DEFAULT_PANELS);
-          }
+        const jobsResponse = await fetch("/api/jobs");
+        const jobsResult = await jobsResponse.json();
+
+        if (!jobsResponse.ok || !Array.isArray(jobsResult)) {
+          throw new Error(jobsResult?.error || "Failed to load jobs");
         }
+
+        setJobs(jobsResult);
+
+        if (jobsResult.length > 0) {
+          setSelectedJobId(jobsResult[0].id);
+          setPanels(jobsResult[0].panels || DEFAULT_PANELS);
+        } else {
+          setSelectedJobId(null);
+          setPanels(DEFAULT_PANELS);
+        }
+
         const savedInventory = localStorage.getItem("autofix_inventory_db");
         if (savedInventory) setInventory(JSON.parse(savedInventory));
 
         const savedPOs = localStorage.getItem("autofix_purchase_orders_db");
         if (savedPOs) setPurchaseOrders(JSON.parse(savedPOs));
       } catch (err) {
-        console.error("Local Storage Error:", err);
+        console.error("Data Loading Error:", err);
       }
+
       setIsLoading(false);
     };
+
     loadData();
   }, []);
 
@@ -1076,7 +1087,7 @@ export default function Home() {
     sessionStorage.removeItem("autofix_current_user");
   };
 
-  const handleDeleteJob = (jobId) => {
+  const handleDeleteJob = async (jobId) => {
     const jobToDelete = jobs.find((job) => job.id === jobId);
 
     if (!jobToDelete) return;
@@ -1087,19 +1098,37 @@ export default function Home() {
 
     if (!confirmed) return;
 
-    const updatedJobs = jobs.filter((job) => job.id !== jobId);
+    try {
+      const response = await fetch(
+        `/api/jobs?id=${encodeURIComponent(jobId)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
-    setJobs(updatedJobs);
-    localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+      const result = await response.json();
 
-    if (selectedJobId === jobId) {
-      setSelectedJobId(updatedJobs.length > 0 ? updatedJobs[0].id : null);
-
-      if (updatedJobs.length > 0) {
-        setPanels(updatedJobs[0].panels || DEFAULT_PANELS);
-      } else {
-        setPanels(DEFAULT_PANELS);
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete job");
       }
+
+      const updatedJobs = jobs.filter((job) => job.id !== jobId);
+
+      setJobs(updatedJobs);
+      localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+
+      if (selectedJobId === jobId) {
+        setSelectedJobId(updatedJobs.length > 0 ? updatedJobs[0].id : null);
+
+        if (updatedJobs.length > 0) {
+          setPanels(updatedJobs[0].panels || DEFAULT_PANELS);
+        } else {
+          setPanels(DEFAULT_PANELS);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+      alert("Failed to delete job. Please try again.");
     }
   };
 
@@ -1557,8 +1586,9 @@ export default function Home() {
     });
   };
 
-  const handleIntakeSubmit = (e) => {
+  const handleIntakeSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.owner || !formData.plate || !formData.model)
       return alert("Please fill in required fields.");
 
@@ -1591,41 +1621,69 @@ export default function Home() {
       mechanicalItems: mechanicalItems || [],
     };
 
-    const updatedJobs = [newJob, ...jobs];
-    setJobs(updatedJobs);
-    localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+    try {
+      const response = await fetch("/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: newJob.id,
+          owner: newJob.owner,
+          phone: newJob.phone,
+          model: newJob.model,
+          plate: newJob.plate,
+          status: newJob.status,
+          issue: newJob.issue,
+          date: newJob.date,
+          panels: newJob.panels,
+          email: newJob.email,
+          company: newJob.company,
+          make: newJob.make,
+          year: newJob.year,
+          color: newJob.color,
+          payment_status: newJob.paymentStatus,
+          intake_date: newJob.intakeDate,
+          intake_time: newJob.intakeTime,
+          parts: newJob.parts,
+          electrical_items: newJob.electricalItems,
+          mechanical_items: newJob.mechanicalItems,
+        }),
+      });
 
-    setSelectedJobId(uniqueId);
-    setPanels(DEFAULT_PANELS);
-    setIsModalOpen(false);
-    localStorage.removeItem("autofix_intake_issue_draft");
-    setFormData({
-      owner: "",
-      phone: "",
-      email: "",
-      model: "",
-      company: "",
-      make: "",
-      year: "",
-      color: "",
-      plate: "",
-      issue: "",
-      status: "Inspection & Body Check",
-      paymentStatus: "Unpaid",
-    });
-  };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || "Failed to save job");
+      }
 
-  const handleResetData = () => {
-    if (currentUser?.role !== "Super User" && currentUser?.role !== "Manager")
-      return alert("Restricted.");
-    if (confirm("Reset all local records, purchase orders, and inventory?")) {
-      localStorage.removeItem("autofix_offline_db");
-      localStorage.removeItem("autofix_inventory_db");
-      localStorage.removeItem("autofix_purchase_orders_db");
-      setJobs([]);
-      setInventory(INITIAL_INVENTORY);
-      setPurchaseOrders([]);
-      window.location.reload();
+      const savedJob = await response.json();
+
+      const updatedJobs = [newJob, ...jobs];
+      setJobs(updatedJobs);
+      localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+
+      setSelectedJobId(savedJob.id || uniqueId);
+      setPanels(DEFAULT_PANELS);
+      setIsModalOpen(false);
+      localStorage.removeItem("autofix_intake_issue_draft");
+
+      setFormData({
+        owner: "",
+        phone: "",
+        email: "",
+        model: "",
+        company: "",
+        make: "",
+        year: "",
+        color: "",
+        plate: "",
+        issue: "",
+        status: "Inspection & Body Check",
+        paymentStatus: "Unpaid",
+      });
+    } catch (error) {
+      console.error("Failed to save job to Supabase:", error);
+      alert(`Failed to save Job Card to database: ${error.message}`);
     }
   };
 
@@ -2445,7 +2503,6 @@ export default function Home() {
         smsJobData={smsJobData}
         generateSmsText={generateSmsText}
         handlePurchaseOrderSubmit={handlePurchaseOrderSubmit}
-        handleResetData={handleResetData}
         handleSelectJob={handleSelectJob}
         togglePaymentStatus={togglePaymentStatus}
         handleDeleteJob={handleDeleteJob}
