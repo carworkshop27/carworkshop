@@ -49,6 +49,7 @@ export default function Sales({ setActiveScreen }) {
           {/* Daily Ledger */}
           <button
             type="button"
+            onClick={() => setActiveScreen("daily-ledger")}
             className="
               group
               bg-white

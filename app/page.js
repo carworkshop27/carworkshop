@@ -12,6 +12,7 @@ import * as XLSX from "xlsx";
 import NewJobIntake from "../components/intake/NewJobIntake";
 import JobCards from "../components/jobs/JobCards";
 import Sales from "../components/accounts/Sales";
+import DailyLedger from "../components/Sales/DailyLedger";
 import PartsOrders from "../components/parts-orders/PartsOrders";
 import Invoice from "../components/invoices/Invoice";
 import {
@@ -1019,11 +1020,29 @@ export default function Home() {
           throw new Error(jobsResult?.error || "Failed to load jobs");
         }
 
-        setJobs(jobsResult);
+        const savedJobs = localStorage.getItem("autofix_offline_db");
+        const localJobs = savedJobs ? JSON.parse(savedJobs) : [];
 
-        if (jobsResult.length > 0) {
-          setSelectedJobId(jobsResult[0].id);
-          setPanels(jobsResult[0].panels || DEFAULT_PANELS);
+        const jobsMap = new Map();
+
+        jobsResult.forEach((job) => {
+          jobsMap.set(job.id, job);
+        });
+
+        localJobs.forEach((job) => {
+          jobsMap.set(job.id, {
+            ...jobsMap.get(job.id),
+            ...job,
+          });
+        });
+
+        const mergedJobs = Array.from(jobsMap.values());
+
+        setJobs(mergedJobs);
+
+        if (mergedJobs.length > 0) {
+          setSelectedJobId(mergedJobs[0].id);
+          setPanels(mergedJobs[0].panels || DEFAULT_PANELS);
         } else {
           setSelectedJobId(null);
           setPanels(DEFAULT_PANELS);
@@ -1597,6 +1616,7 @@ export default function Home() {
     const now = new Date();
 
     const newJob = {
+      createdAt: now.toISOString(),
       id: uniqueId,
       owner: formData.owner,
       phone: formData.phone || "N/A",
@@ -2444,6 +2464,17 @@ export default function Home() {
     );
   }
 
+  if (activeScreen === "daily-ledger") {
+    return (
+      <DailyLedger
+        jobs={filteredJobs}
+        getDamageInfo={getDamageInfo}
+        handleOpenInvoice={handleOpenInvoice}
+        setActiveScreen={setActiveScreen}
+      />
+    );
+  }
+
   if (activeScreen === "parts-orders") {
     return (
       <PartsOrders
@@ -2465,6 +2496,17 @@ export default function Home() {
 
   if (activeScreen === "sales") {
     return <Sales setActiveScreen={setActiveScreen} />;
+  }
+
+  if (activeScreen === "daily-ledger") {
+    return (
+      <DailyLedger
+        jobs={filteredJobs}
+        getDamageInfo={getDamageInfo}
+        handleOpenInvoice={handleOpenInvoice}
+        setActiveScreen={setActiveScreen}
+      />
+    );
   }
 
   return (
