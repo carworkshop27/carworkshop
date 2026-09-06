@@ -95,6 +95,7 @@ export default function Sales({ setActiveScreen }) {
           {/* Monthly Ledger */}
           <button
             type="button"
+            onClick={() => setActiveScreen("monthly-ledger")}
             className="
               group
               bg-white

@@ -13,6 +13,7 @@ import NewJobIntake from "../components/intake/NewJobIntake";
 import JobCards from "../components/jobs/JobCards";
 import Sales from "../components/accounts/Sales";
 import DailyLedger from "../components/Sales/DailyLedger";
+import MonthlyLedger from "../components/Sales/MonthlyLedger";
 import PartsOrders from "../components/parts-orders/PartsOrders";
 import Invoice from "../components/invoices/Invoice";
 import {
@@ -2496,6 +2497,17 @@ export default function Home() {
 
   if (activeScreen === "sales") {
     return <Sales setActiveScreen={setActiveScreen} />;
+  }
+
+  if (activeScreen === "monthly-ledger") {
+    return (
+      <MonthlyLedger
+        jobs={filteredJobs}
+        getDamageInfo={getDamageInfo}
+        handleOpenInvoice={handleOpenInvoice}
+        setActiveScreen={setActiveScreen}
+      />
+    );
   }
 
   if (activeScreen === "daily-ledger") {

@@ -1,24 +1,40 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { FileText, ArrowLeft, CalendarDays } from "lucide-react";
 
-export default function DailyLedger({
+export default function MonthlyLedger({
   jobs,
   getDamageInfo,
   handleOpenInvoice,
   setActiveScreen,
 }) {
   const today = new Date();
-  const formattedToday = `${String(today.getMonth() + 1).padStart(2, "0")}/${String(
-    today.getDate(),
-  ).padStart(2, "0")}/${today.getFullYear()}`;
 
-  const [selectedDate, setSelectedDate] = useState(
-    today.toISOString().slice(0, 10),
+  const [selectedMonth, setSelectedMonth] = useState(
+    today.toISOString().slice(0, 7),
   );
 
-  const dateInputRef = useRef(null);
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+
+  const selectedYear = Number(selectedMonth.slice(0, 4));
+
+  const selectedMonthNumber = Number(selectedMonth.slice(5, 7));
+
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
   const calculateInvoice = (job) => {
     const repairCost = (job.panels || [])
@@ -72,29 +88,33 @@ export default function DailyLedger({
       return false;
     }
 
-    const jobDateString = `${String(jobDate.getMonth() + 1).padStart(2, "0")}/${String(
-      jobDate.getDate(),
-    ).padStart(2, "0")}/${jobDate.getFullYear()}`;
+    const jobMonth = `${jobDate.getFullYear()}-${String(
+      jobDate.getMonth() + 1,
+    ).padStart(2, "0")}`;
 
-    const selectedDateParts = selectedDate.split("-");
-    const selectedDateString = `${selectedDateParts[1]}/${selectedDateParts[2]}/${selectedDateParts[0]}`;
-
-    return jobDateString === selectedDateString;
+    return jobMonth === selectedMonth;
   });
 
   const totalEarnings = selectedJobs.reduce((total, job) => {
     return total + calculateInvoice(job).grandTotal;
   }, 0);
 
+  const formattedMonth = (() => {
+    const [year, month] = selectedMonth.split("-");
+    return `${month}/${year}`;
+  })();
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
       <main className="px-6 lg:px-8 py-8">
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-black text-slate-900">Daily Ledger</h1>
+            <h1 className="text-3xl font-black text-slate-900">
+              Monthly Ledger
+            </h1>
 
             <p className="mt-1 text-sm font-medium text-slate-500">
-              Daily sales and invoice transactions.
+              Monthly sales and invoice transactions.
             </p>
           </div>
 
@@ -112,26 +132,82 @@ export default function DailyLedger({
           <div className="relative">
             <button
               type="button"
-              onClick={() => dateInputRef.current?.showPicker?.()}
-              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+              onClick={() => setIsMonthPickerOpen((open) => !open)}
+              className="flex h-14 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 shadow-sm transition hover:border-blue-300 hover:shadow-md"
             >
               <CalendarDays className="h-5 w-5 text-blue-600" />
 
               <span className="text-sm font-bold text-slate-700">
-                {selectedDate.split("-").reverse().join("/")}
+                {formattedMonth}
               </span>
 
               <span className="ml-1 text-xs text-slate-500">▼</span>
             </button>
 
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              aria-label="Select date"
-            />
+            {isMonthPickerOpen && (
+              <div className="absolute left-0 top-full z-50 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedMonth(
+                        `${selectedYear - 1}-${String(selectedMonthNumber).padStart(2, "0")}`,
+                      );
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-lg font-bold text-slate-600 transition hover:bg-blue-50 hover:text-blue-600"
+                    aria-label="Previous year"
+                  >
+                    ‹
+                  </button>
+
+                  <span className="text-lg font-black text-slate-900">
+                    {selectedYear}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedMonth(
+                        `${selectedYear + 1}-${String(selectedMonthNumber).padStart(2, "0")}`,
+                      );
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-lg font-bold text-slate-600 transition hover:bg-blue-50 hover:text-blue-600"
+                    aria-label="Next year"
+                  >
+                    ›
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {months.map((month, index) => {
+                    const monthNumber = index + 1;
+                    const monthValue = `${selectedYear}-${String(
+                      monthNumber,
+                    ).padStart(2, "0")}`;
+
+                    const isSelected = monthNumber === selectedMonthNumber;
+
+                    return (
+                      <button
+                        key={month}
+                        type="button"
+                        onClick={() => {
+                          setSelectedMonth(monthValue);
+                          setIsMonthPickerOpen(false);
+                        }}
+                        className={`rounded-lg px-2 py-2.5 text-sm font-bold transition ${
+                          isSelected
+                            ? "bg-blue-600 text-white"
+                            : "text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+                        }`}
+                      >
+                        {month}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
