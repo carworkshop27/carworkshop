@@ -143,70 +143,72 @@ export default function ActiveGarageVehicles({
                             </button>
                           </td>
 
-                          <td className="py-4 px-6 text-right space-x-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteJob(job.id);
-                              }}
-                              title="Delete vehicle"
-                              className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 hover:bg-rose-200 hover:text-rose-900 border border-rose-300 transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                          <td className="py-4 px-6 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteJob(job.id);
+                                }}
+                                title="Delete vehicle"
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 hover:bg-rose-200 hover:text-rose-900 border border-rose-300 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
 
-                            <button
-                              onClick={(e) => handleOpenSmsModal(job, e)}
-                              className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
-                            >
-                              <MessageSquare className="w-3.5 h-3.5" />
-                              SMS
-                            </button>
+                              <button
+                                onClick={(e) => handleOpenSmsModal(job, e)}
+                                className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                SMS
+                              </button>
 
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenFullJobCard(job, true);
-                              }}
-                              title="Print Job Card"
-                              className="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
-                            >
-                              <Printer className="w-3.5 h-3.5" />
-                              Print
-                            </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenFullJobCard(job, true);
+                                }}
+                                title="Print Job Card"
+                                className="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                                Print
+                              </button>
 
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenInvoice(job);
-                              }}
-                              title="Open Invoice"
-                              className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
-                            >
-                              Invoice
-                            </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenInvoice(job);
+                                }}
+                                title="Open Invoice"
+                                className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
+                              >
+                                Invoice
+                              </button>
 
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.location.href = `/tax-invoice?jobId=${encodeURIComponent(job.id)}`;
-                              }}
-                              title="Open Tax Invoice"
-                              className="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
-                            >
-                              <ReceiptText className="w-3.5 h-3.5" />
-                              Tax Invoice
-                            </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.location.href = `/tax-invoice?jobId=${encodeURIComponent(job.id)}`;
+                                }}
+                                title="Open Tax Invoice"
+                                className="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-black text-xs rounded-lg shadow inline-flex items-center gap-1"
+                              >
+                                <ReceiptText className="w-3.5 h-3.5" />
+                                Tax Invoice
+                              </button>
 
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenFullJobCard(job);
-                              }}
-                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg shadow"
-                            >
-                              View Full Job Card
-                            </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenFullJobCard(job);
+                                }}
+                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg shadow"
+                              >
+                                View Full Job Card
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
