@@ -85,7 +85,7 @@ export default function PurchaseEntry({ setActiveScreen }) {
     }
   };
 
-  const handleSavePurchase = () => {
+  const handleSavePurchase = async () => {
     if (!supplier.trim()) {
       alert("Please enter the supplier / vendor name.");
       return;
@@ -96,25 +96,57 @@ export default function PurchaseEntry({ setActiveScreen }) {
       return;
     }
 
-    const purchase = {
-      purchaseNo: `PUR-${purchaseDate.replaceAll("-", "")}-${supplierInvoiceNo || "ENTRY"}`,
-      purchaseDate,
-      supplier,
-      supplierInvoiceNo,
-      paymentMethod,
-      paymentStatus,
-      vatIncluded,
-      items,
-      subtotal,
-      vat,
-      grandTotal,
-      invoiceFileName: invoiceFile?.name || null,
-      createdAt: new Date().toISOString(),
-    };
+    const purchaseNo = `PUR-${purchaseDate.replaceAll("-", "")}-${supplierInvoiceNo || "ENTRY"}`;
 
-    console.log("Purchase saved:", purchase);
+    const formData = new FormData();
 
-    alert("Purchase saved successfully.");
+    formData.append("purchaseNo", purchaseNo);
+    formData.append("purchaseDate", purchaseDate);
+    formData.append("supplier", supplier);
+    formData.append("supplierInvoiceNo", supplierInvoiceNo);
+    formData.append("paymentMethod", paymentMethod);
+    formData.append("paymentStatus", paymentStatus);
+    formData.append("vatIncluded", String(vatIncluded));
+
+    formData.append(
+      "items",
+      JSON.stringify(
+        items.map((item) => ({
+          item: item.item,
+          quantity: Number(item.quantity) || 1,
+          unitPrice: Number(item.unitPrice) || 0,
+          discount: Number(item.discount) || 0,
+          total: calculateItemTotal(item),
+        })),
+      ),
+    );
+
+    formData.append("subtotal", String(subtotal));
+    formData.append("vatAmount", String(vat));
+    formData.append("grandTotal", String(grandTotal));
+
+    if (invoiceFile) {
+      formData.append("invoiceFile", invoiceFile);
+    }
+
+    try {
+      const response = await fetch("/api/purchases", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || "Failed to save purchase");
+      }
+
+      console.log("Purchase saved:", result);
+      alert("Purchase saved successfully.");
+    } catch (error) {
+      console.error("Purchase save error:", error);
+      alert(error.message || "Failed to save purchase.");
+    }
   };
 
   return (

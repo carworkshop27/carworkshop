@@ -482,6 +482,26 @@ export default function Dashboard({
 
                         <button
                           type="button"
+                          onClick={() => setActiveScreen("purchase")}
+                          className="
+    w-full
+    text-left
+    px-3
+    py-2
+    rounded-lg
+    text-sm
+    font-semibold
+    text-slate-400
+    hover:bg-slate-800
+    hover:text-white
+  "
+                        >
+                          Purchase
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveScreen("purchase-records")}
                           className="
                 w-full
                 text-left
@@ -495,7 +515,7 @@ export default function Dashboard({
                 hover:text-white
               "
                         >
-                          Purchase
+                          Purchase Records
                         </button>
 
                         <button

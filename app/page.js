@@ -12,6 +12,8 @@ import * as XLSX from "xlsx";
 import NewJobIntake from "../components/intake/NewJobIntake";
 import JobCards from "../components/jobs/JobCards";
 import Sales from "../components/accounts/Sales";
+import PurchaseEntry from "../components/accounts/PurchaseEntry";
+import PurchaseRecords from "../components/accounts/PurchaseRecords";
 import DailyLedger from "../components/Sales/DailyLedger";
 import MonthlyLedger from "../components/Sales/MonthlyLedger";
 import PartsOrders from "../components/parts-orders/PartsOrders";
@@ -2497,6 +2499,14 @@ export default function Home() {
 
   if (activeScreen === "sales") {
     return <Sales setActiveScreen={setActiveScreen} />;
+  }
+
+  if (activeScreen === "purchase") {
+    return <PurchaseEntry setActiveScreen={setActiveScreen} />;
+  }
+
+  if (activeScreen === "purchase-records") {
+    return <PurchaseRecords setActiveScreen={setActiveScreen} />;
   }
 
   if (activeScreen === "monthly-ledger") {
