@@ -50,7 +50,7 @@ export async function POST(request) {
     const supplierInvoiceNo = formData.get("supplierInvoiceNo");
     const paymentMethod = formData.get("paymentMethod");
     const paymentStatus = formData.get("paymentStatus");
-    const vatIncluded = formData.get("vatIncluded");
+    const vatRegistrationNumber = formData.get("vatRegistrationNumber");
     const itemsJson = formData.get("items");
     const subtotal = formData.get("subtotal");
     const vatAmount = formData.get("vatAmount");
@@ -158,7 +158,7 @@ export async function POST(request) {
         supplier_invoice_no: supplierInvoiceNo || null,
         payment_method: paymentMethod || "Cash",
         payment_status: paymentStatus || "Paid",
-        vat_included: vatIncluded === "true",
+        vat_registration_number: vatRegistrationNumber || null,
         subtotal: Number(subtotal) || 0,
         vat_amount: Number(vatAmount) || 0,
         grand_total: Number(grandTotal) || 0,

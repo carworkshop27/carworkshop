@@ -11,7 +11,7 @@ export default function PurchaseEntry({ setActiveScreen }) {
   const [supplierInvoiceNo, setSupplierInvoiceNo] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [paymentStatus, setPaymentStatus] = useState("Paid");
-  const [vatIncluded, setVatIncluded] = useState(true);
+  const [vatRegistrationNumber, setVatRegistrationNumber] = useState("");
   const [invoiceFile, setInvoiceFile] = useState(null);
 
   const [items, setItems] = useState([
@@ -73,7 +73,7 @@ export default function PurchaseEntry({ setActiveScreen }) {
     0,
   );
 
-  const vat = vatIncluded ? subtotal * 0.15 : 0;
+  const vat = subtotal * 0.15;
 
   const grandTotal = subtotal + vat;
 
@@ -104,9 +104,9 @@ export default function PurchaseEntry({ setActiveScreen }) {
     formData.append("purchaseDate", purchaseDate);
     formData.append("supplier", supplier);
     formData.append("supplierInvoiceNo", supplierInvoiceNo);
+    formData.append("vatRegistrationNumber", vatRegistrationNumber);
     formData.append("paymentMethod", paymentMethod);
     formData.append("paymentStatus", paymentStatus);
-    formData.append("vatIncluded", String(vatIncluded));
 
     formData.append(
       "items",
@@ -365,39 +365,40 @@ export default function PurchaseEntry({ setActiveScreen }) {
               </select>
             </div>
 
-            {/* VAT Included */}
-            <div className="flex items-end">
-              <label
-                className="
-                  flex
-                  min-h-[48px]
-                  w-full
-                  cursor-pointer
-                  items-center
-                  gap-3
-                  rounded-xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  px-4
-                  py-3
-                "
-              >
-                <input
-                  type="checkbox"
-                  checked={vatIncluded}
-                  onChange={(event) => setVatIncluded(event.target.checked)}
-                  className="h-5 w-5 accent-blue-600"
-                />
-
-                <span className="text-sm font-bold text-slate-700">
-                  VAT Included
-                </span>
-
-                <span className="ml-auto text-xs font-bold text-slate-400">
-                  15%
-                </span>
+            {/* VAT Registration Number */}
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                VAT Registration Number
               </label>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                value={vatRegistrationNumber}
+                onChange={(event) =>
+                  setVatRegistrationNumber(
+                    event.target.value.replace(/\D/g, ""),
+                  )
+                }
+                placeholder="Enter VAT registration number"
+                className="
+      w-full
+      rounded-xl
+      border
+      border-slate-200
+      bg-white
+      px-4
+      py-3
+      text-sm
+      font-semibold
+      text-slate-700
+      outline-none
+      placeholder:text-slate-400
+      focus:border-blue-500
+      focus:ring-2
+      focus:ring-blue-100
+    "
+              />
             </div>
           </div>
         </div>

@@ -528,7 +528,7 @@ export default function PurchaseRecords({ setActiveScreen }) {
                   Supplier Information
                 </h3>
 
-                <div className="mt-3 grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-3">
+                <div className="mt-3 grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-4">
                   <div>
                     <p className="text-xs font-bold text-slate-500">Supplier</p>
                     <p className="mt-1 text-sm font-black text-slate-900">
@@ -553,6 +553,14 @@ export default function PurchaseRecords({ setActiveScreen }) {
                       {formatDate(selectedPurchase.purchase_date)}
                     </p>
                   </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-500">
+                    VAT Registration Number
+                  </p>
+                  <p className="mt-1 text-sm font-black text-slate-900">
+                    {selectedPurchase.vat_registration_number || "-"}
+                  </p>
                 </div>
               </section>
 
