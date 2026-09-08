@@ -15,6 +15,7 @@ import Sales from "../components/accounts/Sales";
 import PurchaseEntry from "../components/accounts/PurchaseEntry";
 import PurchaseRecords from "../components/accounts/PurchaseRecords";
 import ExpenseEntry from "../components/accounts/ExpenseEntry";
+import ExpenseRecords from "../components/accounts/ExpenseRecords";
 import DailyLedger from "../components/Sales/DailyLedger";
 import MonthlyLedger from "../components/Sales/MonthlyLedger";
 import PartsOrders from "../components/parts-orders/PartsOrders";
@@ -2512,6 +2513,10 @@ export default function Home() {
 
   if (activeScreen === "expense") {
     return <ExpenseEntry setActiveScreen={setActiveScreen} />;
+  }
+
+  if (activeScreen === "expense-records") {
+    return <ExpenseRecords setActiveScreen={setActiveScreen} />;
   }
 
   if (activeScreen === "monthly-ledger") {

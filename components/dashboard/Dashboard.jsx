@@ -536,6 +536,24 @@ export default function Dashboard({
                         >
                           Expense
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveScreen("expense-records")}
+                          className="
+    w-full
+    text-left
+    px-3
+    py-2
+    rounded-lg
+    text-sm
+    font-semibold
+    text-slate-400
+    hover:bg-slate-800
+    hover:text-white
+  "
+                        >
+                          Expense Records
+                        </button>
                       </div>
                     )}
                   </div>
