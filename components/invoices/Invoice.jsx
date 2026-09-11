@@ -61,6 +61,118 @@ export default function Invoice({
 
   return (
     <div className="invoice-print-area bg-white text-slate-900">
+      <style>{`
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  @media print {
+    html,
+    body {
+      width: 210mm !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+    }
+
+    body:has(.invoice-print-area) .min-h-screen {
+      min-height: 0 !important;
+      padding: 0 !important;
+    }
+
+    body:has(.invoice-print-area) .max-w-5xl {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .invoice-print-area {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: 10px !important;
+      line-height: 1.25 !important;
+    }
+
+    .invoice-print-area .text-4xl {
+      font-size: 1.5rem !important;
+      line-height: 1.75rem !important;
+    }
+
+    .invoice-print-area .text-3xl {
+      font-size: 1.35rem !important;
+      line-height: 1.6rem !important;
+    }
+
+    .invoice-print-area .text-lg {
+      font-size: 0.95rem !important;
+      line-height: 1.2rem !important;
+    }
+
+    .invoice-print-area .text-sm {
+      font-size: 0.68rem !important;
+      line-height: 0.95rem !important;
+    }
+
+    .invoice-print-area .text-xs {
+      font-size: 0.58rem !important;
+      line-height: 0.8rem !important;
+    }
+
+    .invoice-print-area .py-5 {
+      padding-top: 0.45rem !important;
+      padding-bottom: 0.45rem !important;
+    }
+
+    .invoice-print-area .py-4 {
+      padding-top: 0.4rem !important;
+      padding-bottom: 0.4rem !important;
+    }
+
+    .invoice-print-area .py-3 {
+      padding-top: 0.3rem !important;
+      padding-bottom: 0.3rem !important;
+    }
+
+    .invoice-print-area .px-4 {
+      padding-left: 0.55rem !important;
+      padding-right: 0.55rem !important;
+    }
+
+    .invoice-print-area .mt-8 {
+      margin-top: 0.7rem !important;
+    }
+
+    .invoice-print-area .mt-6 {
+      margin-top: 0.5rem !important;
+    }
+
+    .invoice-print-area .mb-6 {
+      margin-bottom: 0.6rem !important;
+    }
+
+    .invoice-print-area .pb-4 {
+      padding-bottom: 0.6rem !important;
+    }
+
+    .invoice-print-area table {
+      page-break-inside: auto;
+    }
+
+    .invoice-print-area tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+
+    .invoice-print-area > * {
+      page-break-inside: avoid;
+    }
+  }
+`}</style>
       {/* INVOICE HEADER */}
       <div className="border-b-2 border-slate-900 pb-4">
         <div className="flex items-start justify-between">

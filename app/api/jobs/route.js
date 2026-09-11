@@ -84,8 +84,7 @@ export async function DELETE(request) {
       .from("jobs")
       .delete()
       .eq("id", id)
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error("Jobs DELETE error:", error);

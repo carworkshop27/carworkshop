@@ -6,6 +6,7 @@ import {
   MessageSquare,
   CreditCard,
   UserCheck,
+  User,
   Car,
   Palette,
   Phone,
@@ -53,11 +54,11 @@ export default function FullJobCard({
           <div className="flex items-center justify-between h-16 gap-4">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => setActiveScreen("dashboard")}
+                onClick={() => setActiveScreen("job-cards")}
                 className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-white flex items-center space-x-1 text-xs font-bold border border-slate-700"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Back to Dashboard</span>
+                <span>Back to Job Cards</span>
               </button>
               <div>
                 <h1 className="font-bold text-lg leading-tight">
