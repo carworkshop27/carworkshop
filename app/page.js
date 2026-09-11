@@ -14,6 +14,7 @@ import JobCards from "../components/jobs/JobCards";
 import Sales from "../components/accounts/Sales";
 import PurchaseEntry from "../components/accounts/PurchaseEntry";
 import PurchaseRecords from "../components/accounts/PurchaseRecords";
+import MonthlyAccountStatement from "../components/accounts/MonthlyAccountStatement";
 import ExpenseEntry from "../components/accounts/ExpenseEntry";
 import ExpenseRecords from "../components/accounts/ExpenseRecords";
 import DailyLedger from "../components/Sales/DailyLedger";
@@ -2517,6 +2518,10 @@ export default function Home() {
 
   if (activeScreen === "expense-records") {
     return <ExpenseRecords setActiveScreen={setActiveScreen} />;
+  }
+
+  if (activeScreen === "monthly-account-statement") {
+    return <MonthlyAccountStatement setActiveScreen={setActiveScreen} />;
   }
 
   if (activeScreen === "monthly-ledger") {

@@ -554,6 +554,26 @@ export default function Dashboard({
                         >
                           Expense Records
                         </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveScreen("monthly-account-statement")
+                          }
+                          className="
+    w-full
+    text-left
+    px-3
+    py-2
+    rounded-lg
+    text-sm
+    font-semibold
+    text-slate-400
+    hover:bg-slate-800
+    hover:text-white
+  "
+                        >
+                          Monthly Account Statement
+                        </button>
                       </div>
                     )}
                   </div>
