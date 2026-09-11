@@ -707,6 +707,8 @@ export default function Home() {
   const [showInvoice, setShowInvoice] = useState(false);
   const [isTaxInvoice, setIsTaxInvoice] = useState(false);
 
+  const invoicePreviousScreenRef = useRef("dashboard");
+
   // SMS / WhatsApp Simulator Modal State
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
   const [smsJobData, setSmsJobData] = useState(null);
@@ -1221,10 +1223,34 @@ export default function Home() {
   };
 
   const handleOpenInvoice = (job, taxInvoice = false) => {
+    invoicePreviousScreenRef.current = activeScreen;
+
+    window.history.pushState(
+      { carWorkshopInvoice: true },
+      "",
+      window.location.href,
+    );
+
     setInvoiceJob(job);
     setIsTaxInvoice(taxInvoice);
     setActiveScreen("invoice");
   };
+
+  useEffect(() => {
+    const handleBrowserBack = () => {
+      if (activeScreen === "invoice") {
+        setActiveScreen(invoicePreviousScreenRef.current || "job-cards");
+        setInvoiceJob(null);
+        setIsTaxInvoice(false);
+      }
+    };
+
+    window.addEventListener("popstate", handleBrowserBack);
+
+    return () => {
+      window.removeEventListener("popstate", handleBrowserBack);
+    };
+  }, [activeScreen]);
 
   useEffect(() => {
     if (!printJobCard || activeScreen !== "full-job-card" || !detailedJobCard) {
@@ -1923,11 +1949,11 @@ export default function Home() {
             <div className="flex items-center justify-between h-16 gap-4">
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={() => setActiveScreen("dashboard")}
+                  onClick={() => setActiveScreen("job-cards")}
                   className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-white flex items-center space-x-1 text-xs font-bold border border-slate-700"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Dashboard</span>
+                  <span>Back to Job Cards</span>
                 </button>
                 <div>
                   <h1 className="font-bold text-lg leading-tight">
