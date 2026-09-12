@@ -698,7 +698,7 @@ export default function Home() {
       customRepairCost: "",
     })),
   );
-  const [selectedPanelId, setSelectedPanelId] = useState("hood");
+  const [selectedPanelId, setSelectedPanelId] = useState("Front-Bumper");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -723,7 +723,7 @@ export default function Home() {
         })),
       );
 
-      setSelectedPanelId("hood");
+      setSelectedPanelId("Front-Bumper");
     }
 
     setActiveScreen(screen);
@@ -1750,7 +1750,8 @@ export default function Home() {
           customRepairCost: "",
         })),
       );
-      setSelectedPanelId("hood");
+
+      setSelectedPanelId("Front Bumper");
       setIsModalOpen(false);
       localStorage.removeItem("autofix_intake_issue_draft");
 
