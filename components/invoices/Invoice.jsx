@@ -11,6 +11,8 @@ import {
   Printer,
 } from "lucide-react";
 
+import InvoiceQRCode from "../invoiceQR/InvoiceQRCode";
+
 export default function Invoice({
   job,
   getDamageInfo,
@@ -58,6 +60,10 @@ export default function Invoice({
   const grandTotal = taxableAmount + vatAmount;
 
   const invoiceNumber = `INV-${job.id.replace("JOB-", "")}`;
+
+  const workshopName = "Garage Altalaa Fahir";
+  const workshopVatNumber =
+    job.workshopVatNumber || job.vatNumber || "VAT NUMBER";
 
   return (
     <div className="invoice-print-area bg-white text-slate-900">
@@ -175,11 +181,11 @@ export default function Invoice({
 `}</style>
       {/* INVOICE HEADER */}
       <div className="border-b-2 border-slate-900 pb-4">
-        <div className="flex items-start justify-between">
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-6 items-center">
           {/* COMPANY INFORMATION */}
           <div>
             <h1 className="text-4xl font-black tracking-tight text-slate-900">
-              Garage Altalaa Fahir
+              {workshopName}
             </h1>
 
             <p className="text-sm font-semibold text-slate-500 mt-1">
@@ -195,7 +201,7 @@ export default function Invoice({
           </div>
 
           {/* INVOICE INFORMATION */}
-          <div className="text-right">
+          <div className="text-left">
             <h2 className="text-4xl font-black uppercase tracking-wide text-slate-700">
               {isTaxInvoice ? "Tax Invoice" : "Invoice"}
             </h2>
@@ -223,6 +229,17 @@ export default function Invoice({
             <p className="text-xs font-semibold text-slate-500 mt-2">
               Job Card: {job.id}
             </p>
+          </div>
+
+          {/* QR CODE */}
+          <div className="flex items-center justify-center">
+            <InvoiceQRCode
+              invoiceNumber={invoiceNumber}
+              workshopName={workshopName}
+              vatNumber={workshopVatNumber}
+              invoiceTotal={grandTotal}
+              vatTotal={vatAmount}
+            />
           </div>
         </div>
       </div>
