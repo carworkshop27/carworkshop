@@ -690,7 +690,14 @@ export default function Home() {
   const [jobs, setJobs] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState(null);
-  const [panels, setPanels] = useState(DEFAULT_PANELS);
+  const [panels, setPanels] = useState(
+    DEFAULT_PANELS.map((panel) => ({
+      ...panel,
+      status: "ok",
+      assignedTech: "",
+      customRepairCost: "",
+    })),
+  );
   const [selectedPanelId, setSelectedPanelId] = useState("hood");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -702,6 +709,25 @@ export default function Home() {
 
   const [electricalItems, setElectricalItems] = useState([]);
   const [mechanicalItems, setMechanicalItems] = useState([]);
+
+  const handleSetActiveScreen = (screen) => {
+    if (screen === "new-job-intake") {
+      setSelectedJobId(null);
+
+      setPanels(
+        DEFAULT_PANELS.map((panel) => ({
+          ...panel,
+          status: "ok",
+          assignedTech: "",
+          customRepairCost: "",
+        })),
+      );
+
+      setSelectedPanelId("hood");
+    }
+
+    setActiveScreen(screen);
+  };
 
   const [invoiceJob, setInvoiceJob] = useState(null);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -1715,8 +1741,16 @@ export default function Home() {
       setJobs(updatedJobs);
       localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
 
-      setSelectedJobId(savedJob.id || uniqueId);
-      setPanels(DEFAULT_PANELS);
+      setSelectedJobId(null);
+      setPanels(
+        DEFAULT_PANELS.map((panel) => ({
+          ...panel,
+          status: "ok",
+          assignedTech: "",
+          customRepairCost: "",
+        })),
+      );
+      setSelectedPanelId("hood");
       setIsModalOpen(false);
       localStorage.removeItem("autofix_intake_issue_draft");
 
@@ -2440,7 +2474,7 @@ export default function Home() {
         formData={formData}
         setFormData={handleFormDataChange}
         handleIntakeSubmit={handleIntakeSubmit}
-        setActiveScreen={setActiveScreen}
+        setActiveScreen={handleSetActiveScreen}
         onElectricalItemsChange={setElectricalItems}
         onMechanicalItemsChange={setMechanicalItems}
         handleConfirmElectricalItem={handleConfirmElectricalItem}
@@ -2476,7 +2510,7 @@ export default function Home() {
         handleOpenSmsModal={handleOpenSmsModal}
         updateJobStatus={updateJobStatus}
         handleDeleteJob={handleDeleteJob}
-        setActiveScreen={setActiveScreen}
+        setActiveScreen={handleSetActiveScreen}
         handleExportJobCardsExcel={handleExportJobCardsExcel}
         handleExportJobCardsPDF={handleExportJobCardsPDF}
         handleExportSalesExcel={handleExportSalesExcel}
@@ -2617,7 +2651,7 @@ export default function Home() {
         togglePaymentStatus={togglePaymentStatus}
         handleDeleteJob={handleDeleteJob}
         updateJobStatus={updateJobStatus}
-        setActiveScreen={setActiveScreen}
+        setActiveScreen={handleSetActiveScreen}
         setIsModalOpen={setIsModalOpen}
         setIsSmsModalOpen={setIsSmsModalOpen}
         setIsUserModalOpen={setIsUserModalOpen}
