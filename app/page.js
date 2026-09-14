@@ -1737,6 +1737,8 @@ export default function Home() {
 
       const savedJob = await response.json();
 
+      alert("Job Card Created");
+
       const updatedJobs = [newJob, ...jobs];
       setJobs(updatedJobs);
       localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
@@ -1914,6 +1916,21 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-slate-100 p-6">
         <div className="max-w-5xl mx-auto">
+          <div className="mb-4 flex items-center">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveScreen("job-cards");
+                setInvoiceJob(null);
+                setIsTaxInvoice(false);
+              }}
+              className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Job Cards
+            </button>
+          </div>
+
           <Invoice
             job={invoiceJob}
             getDamageInfo={getDamageInfo}
