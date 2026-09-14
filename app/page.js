@@ -15,6 +15,7 @@ import Sales from "../components/accounts/Sales";
 import PurchaseEntry from "../components/accounts/PurchaseEntry";
 import PurchaseRecords from "../components/accounts/PurchaseRecords";
 import MonthlyAccountStatement from "../components/accounts/MonthlyAccountStatement";
+import Quotations from "../components/accounts/Quotations";
 import ExpenseEntry from "../components/accounts/ExpenseEntry";
 import ExpenseRecords from "../components/accounts/ExpenseRecords";
 import DailyLedger from "../components/Sales/DailyLedger";
@@ -2600,6 +2601,10 @@ export default function Home() {
 
   if (activeScreen === "monthly-account-statement") {
     return <MonthlyAccountStatement setActiveScreen={setActiveScreen} />;
+  }
+
+  if (activeScreen === "quotation") {
+    return <Quotations setActiveScreen={setActiveScreen} />;
   }
 
   if (activeScreen === "monthly-ledger") {
