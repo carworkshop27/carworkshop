@@ -63,11 +63,11 @@ export default function TaxInvoice({ job, getDamageInfo, onPrint }) {
         <div className="grid grid-cols-[1fr_2fr_1fr] min-h-[105px]">
           {/* LOGO AREA */}
           <div className="border-r border-slate-300 flex items-center justify-center p-4">
-            <div className="text-center">
-              <div className="text-2xl font-black tracking-wide">
-                Garage Altalaa Fahir
-              </div>
-            </div>
+            <img
+              src="/images/garage-logo.png"
+              alt="Garage Altalaa Fahir"
+              className="w-64 h-auto object-contain"
+            />
           </div>
 
           {/* TITLE */}
