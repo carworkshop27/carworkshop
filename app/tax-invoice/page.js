@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import TaxInvoice from "../../components/tax-invoices/TaxInvoice";
 
@@ -131,6 +132,17 @@ function TaxInvoiceContent() {
 
   return (
     <main className="min-h-screen bg-slate-100 p-6">
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Job Cards
+        </button>
+      </div>
+
       <TaxInvoice
         job={job}
         getDamageInfo={getDamageInfo}
