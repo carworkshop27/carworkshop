@@ -184,9 +184,11 @@ export default function Invoice({
         <div className="grid grid-cols-[1fr_1fr_auto] gap-6 items-center">
           {/* COMPANY INFORMATION */}
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900">
-              {workshopName}
-            </h1>
+            <img
+              src="/images/garage-logo.png"
+              alt="Garage Altalaa Fahir"
+              className="w-64 h-auto object-contain object-left"
+            />
 
             <p className="text-sm font-semibold text-slate-500 mt-1">
               Vehicle Repair & Maintenance
