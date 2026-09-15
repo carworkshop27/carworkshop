@@ -16,6 +16,7 @@ import PurchaseEntry from "../components/accounts/PurchaseEntry";
 import PurchaseRecords from "../components/accounts/PurchaseRecords";
 import MonthlyAccountStatement from "../components/accounts/MonthlyAccountStatement";
 import Quotations from "../components/accounts/Quotations";
+import QuotationRecords from "../components/accounts/QuotationRecords";
 import ExpenseEntry from "../components/accounts/ExpenseEntry";
 import ExpenseRecords from "../components/accounts/ExpenseRecords";
 import DailyLedger from "../components/Sales/DailyLedger";
@@ -705,6 +706,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("list");
   const [activeScreen, setActiveScreen] = useState("dashboard");
+  const [quotationToEdit, setQuotationToEdit] = useState(null);
   const [detailedJobCard, setDetailedJobCard] = useState(null);
   const [printJobCard, setPrintJobCard] = useState(false);
 
@@ -2604,7 +2606,24 @@ export default function Home() {
   }
 
   if (activeScreen === "quotation") {
-    return <Quotations setActiveScreen={setActiveScreen} />;
+    return (
+      <Quotations
+        setActiveScreen={setActiveScreen}
+        quotationToEdit={quotationToEdit}
+      />
+    );
+  }
+
+  if (activeScreen === "quotation-records") {
+    return (
+      <QuotationRecords
+        setActiveScreen={setActiveScreen}
+        onOpenQuotation={(quotation) => {
+          setQuotationToEdit(quotation);
+          setActiveScreen("quotation");
+        }}
+      />
+    );
   }
 
   if (activeScreen === "monthly-ledger") {
@@ -2675,6 +2694,10 @@ export default function Home() {
         handleDeleteJob={handleDeleteJob}
         updateJobStatus={updateJobStatus}
         setActiveScreen={handleSetActiveScreen}
+        onNewQuotation={() => {
+          setQuotationToEdit(null);
+          setActiveScreen("quotation");
+        }}
         setIsModalOpen={setIsModalOpen}
         setIsSmsModalOpen={setIsSmsModalOpen}
         setIsUserModalOpen={setIsUserModalOpen}

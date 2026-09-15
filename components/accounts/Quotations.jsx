@@ -3,24 +3,52 @@
 import { ArrowLeft, FileText, Plus, Printer, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-export default function Quotation({ setActiveScreen }) {
-  const [quotationItems, setQuotationItems] = useState([
-    {
-      serialNumber: 1,
-      description: "",
-      quantity: 1,
-      unitPrice: 0,
-    },
-  ]);
+export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
+  const [quotationItems, setQuotationItems] = useState(() =>
+    Array.isArray(quotationToEdit?.items) && quotationToEdit.items.length > 0
+      ? quotationToEdit.items.map((item, index) => ({
+          serialNumber: item.serial_number ?? index + 1,
+          description: item.description || "",
+          quantity: item.quantity ?? 1,
+          unitPrice: item.unit_price ?? 0,
+        }))
+      : [
+          {
+            serialNumber: 1,
+            description: "",
+            quantity: 1,
+            unitPrice: 0,
+          },
+        ],
+  );
 
-  const [quotationTerms, setQuotationTerms] = useState([""]);
+  const [quotationTerms, setQuotationTerms] = useState(() =>
+    Array.isArray(quotationToEdit?.terms)
+      ? quotationToEdit.terms
+          .filter((term) => !term.is_hardcoded)
+          .map((term) => term.term_text || "")
+      : [""],
+  );
 
-  const [customerNo, setCustomerNo] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
-  const [contactNumber, setContactNumber] = useState("");
-  const [email, setEmail] = useState("");
+  const [customerNo, setCustomerNo] = useState(
+    quotationToEdit?.quotation_no || "",
+  );
+
+  const [customerName, setCustomerName] = useState(
+    quotationToEdit?.customer_name || "",
+  );
+
+  const [customerAddress, setCustomerAddress] = useState(
+    quotationToEdit?.address || "",
+  );
+
+  const [contactNumber, setContactNumber] = useState(
+    quotationToEdit?.contact_number || "",
+  );
+
+  const [email, setEmail] = useState(quotationToEdit?.email || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [quotationId, setQuotationId] = useState(quotationToEdit?.id || "");
 
   const updateQuotationItem = (index, field, value) => {
     setQuotationItems((currentItems) =>
@@ -95,11 +123,12 @@ export default function Quotation({ setActiveScreen }) {
       setIsSaving(true);
 
       const response = await fetch("/api/quotations", {
-        method: "POST",
+        method: quotationId ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          id: quotationId || undefined,
           customerName: customerName.trim(),
           address: customerAddress.trim(),
           contactNumber: contactNumber.trim(),
@@ -123,8 +152,8 @@ export default function Quotation({ setActiveScreen }) {
       setCustomerNo(data?.quotation_no || "");
 
       alert(
-        `Quotation saved successfully.\nQuotation No.: ${
-          data?.quotation_no || "Generated"
+        `${quotationId ? "Quotation updated successfully." : "Quotation saved successfully."}\nQuotation No.: ${
+          data?.quotation_no || customerNo || "Generated"
         }`,
       );
     } catch (error) {
@@ -439,7 +468,11 @@ export default function Quotation({ setActiveScreen }) {
 
           <button
             type="button"
-            onClick={() => setActiveScreen("dashboard")}
+            onClick={() =>
+              setActiveScreen(
+                quotationToEdit ? "quotation-records" : "dashboard",
+              )
+            }
             className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             <ArrowLeft className="h-4 w-4" />

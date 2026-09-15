@@ -31,6 +31,7 @@ export default function Dashboard({
   updatePanelRepairCost,
   updatePanelTechnician,
   addPanel,
+  onNewQuotation,
   filteredJobs,
   customers,
   inventory,
@@ -86,6 +87,8 @@ export default function Dashboard({
   };
 
   const [accountsOpen, setAccountsOpen] = React.useState(false);
+
+  const [quotationOpen, setQuotationOpen] = React.useState(false);
 
   const jobs = Array.isArray(filteredJobs) ? filteredJobs : [];
 
@@ -338,6 +341,11 @@ export default function Dashboard({
       action: () => setAccountsOpen((open) => !open),
     },
     {
+      label: "Quotation",
+      icon: FileText,
+      action: () => setQuotationOpen((open) => !open),
+    },
+    {
       label: "Calendar",
       icon: CalendarDays,
       action: () => {
@@ -574,10 +582,70 @@ export default function Dashboard({
                         >
                           Monthly Account Statement
                         </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              if (item.label === "Quotation") {
+                return (
+                  <div key={item.label}>
+                    <button
+                      type="button"
+                      onClick={item.action}
+                      className="
+          w-full
+          flex
+          items-center
+          justify-between
+          gap-3
+          px-3
+          py-2.5
+          rounded-xl
+          text-left
+          text-sm
+          font-bold
+          transition-all
+          text-slate-300
+          hover:bg-slate-800
+          hover:text-white
+        "
+                    >
+                      <span className="flex items-center gap-3">
+                        <Icon className="w-5 h-5 shrink-0" />
+                        <span>Quotation</span>
+                      </span>
+
+                      <span className="text-xs text-slate-400">
+                        {quotationOpen ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {quotationOpen && (
+                      <div className="ml-8 mt-1 space-y-1">
+                        <button
+                          type="button"
+                          onClick={onNewQuotation}
+                          className="
+              w-full
+              text-left
+              px-3
+              py-2
+              rounded-lg
+              text-sm
+              font-semibold
+              text-slate-400
+              hover:bg-slate-800
+              hover:text-white
+            "
+                        >
+                          New Quotation
+                        </button>
 
                         <button
                           type="button"
-                          onClick={() => setActiveScreen("quotation")}
+                          onClick={() => setActiveScreen("quotation-records")}
                           className="
     w-full
     text-left
@@ -591,7 +659,7 @@ export default function Dashboard({
     hover:text-white
   "
                         >
-                          Quotation
+                          Quotation Records
                         </button>
                       </div>
                     )}
