@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, FileText, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Printer, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export default function Quotation({ setActiveScreen }) {
@@ -134,8 +134,298 @@ export default function Quotation({ setActiveScreen }) {
       setIsSaving(false);
     }
   };
+
+  const handlePrintQuotation = () => {
+    window.print();
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
+      <style>{`
+      .quotation-print {
+        display: none;
+      }
+
+      @media print {
+        @page {
+          size: A4 portrait;
+          margin: 0;
+        }
+
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+        }
+
+        body * {
+          visibility: hidden !important;
+        }
+
+        .quotation-print,
+        .quotation-print * {
+          visibility: visible !important;
+        }
+
+        .quotation-print {
+          display: block !important;
+          position: absolute;
+          inset: 0;
+          width: 210mm;
+          height: 297mm;
+          background: white;
+          color: #123b3b;
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .quotation-print-page {
+          width: 180mm;
+          min-height: 267mm;
+          margin: 15mm auto;
+          position: relative;
+          background: white;
+          box-sizing: border-box;
+        }
+
+        /* HEADER */
+        .quotation-print-header {
+          display: flex;
+          width: 100%;
+          min-height: 50mm;
+          background: #d8f3f1;
+        }
+
+        .quotation-print-left-bar {
+          width: 9mm;
+          background: #148f8a;
+          flex-shrink: 0;
+        }
+
+        .quotation-print-header-content {
+          flex: 1;
+          padding: 7mm 8mm 6mm 8mm;
+        }
+
+        .quotation-print-title-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+
+        .quotation-print-title-row h1 {
+          margin: 0;
+          font-size: 25pt;
+          line-height: 1;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+          color: #073f40;
+        }
+
+        .quotation-print-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 1.2mm;
+          font-size: 7.5pt;
+        }
+
+        .quotation-print-meta div {
+          display: grid;
+          grid-template-columns: 25mm 25mm;
+          gap: 2mm;
+        }
+
+        .quotation-print-meta strong {
+          text-align: right;
+        }
+
+        .quotation-print-parties {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15mm;
+          margin-top: 6mm;
+          font-size: 8pt;
+          line-height: 1.35;
+        }
+
+        .quotation-print-parties strong {
+          display: block;
+          margin-bottom: 1.5mm;
+          font-size: 9pt;
+        }
+
+        .quotation-print-parties p {
+          margin: 0;
+        }
+
+        /* SALESPERSON */
+        .quotation-print-sales {
+          margin-top: 5mm;
+          border: 0.35mm solid #55bcb7;
+        }
+
+        .quotation-print-sales-header,
+        .quotation-print-sales-body {
+          display: grid;
+          grid-template-columns: 1.1fr repeat(4, 1fr) 1.1fr;
+        }
+
+        .quotation-print-sales-header {
+          background: #d8f3f1;
+          font-size: 7.5pt;
+          font-weight: 800;
+        }
+
+        .quotation-print-sales-header span,
+        .quotation-print-sales-body span {
+          padding: 2mm 2.5mm;
+          border-right: 0.25mm solid #72c8c3;
+        }
+
+        .quotation-print-sales-header span:last-child,
+        .quotation-print-sales-body span:last-child {
+          border-right: none;
+        }
+
+        .quotation-print-sales-header span:last-child {
+          text-align: right;
+        }
+
+        .quotation-print-sales-body {
+          min-height: 7mm;
+          font-size: 7.5pt;
+        }
+
+        /* ITEMS */
+        .quotation-print-items {
+          width: 100%;
+          margin-top: 5mm;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 7.5pt;
+        }
+
+        .quotation-print-items th {
+          background: #d8f3f1;
+          color: #073f40;
+          font-weight: 800;
+        }
+
+        .quotation-print-items th,
+        .quotation-print-items td {
+          border: 0.3mm solid #72c8c3;
+          padding: 2mm 2.5mm;
+          height: 7mm;
+        }
+
+        .quotation-print-items th:nth-child(1) {
+  width: 10%;
+}
+
+.quotation-print-items th:nth-child(2) {
+  width: 14%;
+}
+
+.quotation-print-items th:nth-child(3) {
+  width: 34%;
+}
+
+.quotation-print-items th:nth-child(4) {
+  width: 19%;
+}
+
+.quotation-print-items th:nth-child(5) {
+  width: 23%;
+}
+
+        .quotation-print-items td:nth-child(1),
+.quotation-print-items td:nth-child(2) {
+  text-align: center;
+}
+
+.quotation-print-items td:nth-child(4),
+.quotation-print-items td:nth-child(5) {
+  text-align: right;
+}
+
+        /* BOTTOM */
+        .quotation-print-bottom {
+          display: grid;
+          grid-template-columns: 1fr 43%;
+          gap: 7mm;
+          margin-top: 4mm;
+          min-height: 48mm;
+        }
+
+        .quotation-print-note {
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          font-size: 7.5pt;
+          line-height: 1.4;
+          padding: 0 2.5mm 2mm 2.5mm;
+        }
+
+        .quotation-print-note p {
+          margin: 0;
+        }
+
+        .quotation-print-bank {
+          margin-top: 7mm;
+          text-align: center;
+          font-size: 7.5pt;
+        }
+
+        .quotation-print-totals {
+          border-left: 0.3mm solid #72c8c3;
+          border-top: 0.3mm solid #72c8c3;
+        }
+
+        .quotation-print-totals > div {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          border-right: 0.3mm solid #72c8c3;
+          border-bottom: 0.3mm solid #72c8c3;
+          min-height: 7mm;
+          font-size: 7.5pt;
+        }
+
+        .quotation-print-totals strong,
+        .quotation-print-totals span {
+          padding: 1.8mm 2.5mm;
+        }
+
+        .quotation-print-totals span {
+          text-align: right;
+        }
+
+        .quotation-print-total {
+          background: #c5ebe8;
+          font-size: 8.5pt !important;
+        }
+
+        /* FOOTER */
+        .quotation-print-footer {
+          display: flex;
+          align-items: center;
+          min-height: 12mm;
+          margin-top: 5mm;
+          background: #d8f3f1;
+          font-size: 8.5pt;
+        }
+
+        .quotation-print-footer-bar {
+          width: 9mm;
+          align-self: stretch;
+          background: #148f8a;
+          margin-right: 8mm;
+        }
+
+        .quotation-print-footer strong {
+          color: #073f40;
+        }
+      }
+    `}</style>
       <main className="px-6 py-8 lg:px-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -469,8 +759,17 @@ export default function Quotation({ setActiveScreen }) {
           </div>
         </section>
 
-        {/* SAVE QUOTATION */}
-        <div className="flex justify-end pb-8">
+        {/* SAVE + PRINT QUOTATION */}
+        <div className="flex justify-end gap-3 pb-8">
+          <button
+            type="button"
+            onClick={handlePrintQuotation}
+            className="flex items-center gap-2 rounded-xl border border-teal-600 bg-white px-6 py-3 text-sm font-bold text-teal-700 shadow-sm transition hover:bg-teal-50"
+          >
+            <Printer className="h-4 w-4" />
+            Print Quotation
+          </button>
+
           <button
             type="button"
             onClick={handleSaveQuotation}
@@ -480,6 +779,190 @@ export default function Quotation({ setActiveScreen }) {
             <Save className="h-4 w-4" />
             {isSaving ? "Saving..." : "Save Quotation"}
           </button>
+        </div>
+        {/* PRINT-ONLY QUOTATION */}
+        <div className="quotation-print">
+          <div className="quotation-print-page">
+            {/* HEADER */}
+            <div className="quotation-print-header">
+              <div className="quotation-print-left-bar"></div>
+
+              <div className="quotation-print-header-content">
+                <div className="quotation-print-title-row">
+                  <h1>QUOTATION</h1>
+
+                  <div className="quotation-print-meta">
+                    <div>
+                      <strong>Date</strong>
+                      <span>{new Date().toLocaleDateString("en-GB")}</span>
+                    </div>
+
+                    <div>
+                      <strong>Quotation #</strong>
+                      <span>{customerNo || "Pending"}</span>
+                    </div>
+
+                    <div>
+                      <strong>Customer ID</strong>
+                      <span>{customerNo || "Pending"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="quotation-print-parties">
+                  <div>
+                    <strong>Car Workshop</strong>
+                    <p>Jeddah, Saudi Arabia</p>
+                    <p>Phone: 0501234567</p>
+                    <p>Email: info@carworkshop.com</p>
+                  </div>
+
+                  <div>
+                    <strong>Quotation for:</strong>
+                    <p>{customerName || "-"}</p>
+                    <p>{customerAddress || "-"}</p>
+                    <p>{contactNumber || "-"}</p>
+                    <p>{email || "-"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SALESPERSON / TERMS */}
+            <div className="quotation-print-sales">
+              <div className="quotation-print-sales-header">
+                <span>Salesperson</span>
+                <span>Terms</span>
+              </div>
+
+              <div className="quotation-print-sales-body">
+                <span>Admin</span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span>
+                  {quotationTerms.find((term) => term.trim()) ||
+                    "Due on receipt"}
+                </span>
+              </div>
+            </div>
+
+            {/* ITEMS TABLE */}
+            <table className="quotation-print-items">
+              <thead>
+                <tr>
+                  <th>S.No.</th>
+                  <th>Quantity</th>
+                  <th>Description</th>
+                  <th>Unit Price</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {quotationItems.map((item, index) => {
+                  const quantity = Number(item.quantity) || 0;
+                  const unitPrice = Number(item.unitPrice) || 0;
+                  const amount = quantity * unitPrice;
+
+                  return (
+                    <tr key={index}>
+                      <td>{item.serialNumber}</td>
+                      <td>{quantity}</td>
+                      <td>{item.description || ""}</td>
+                      <td>{unitPrice.toFixed(2)}</td>
+                      <td>{amount.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
+
+                {/* EMPTY ROWS */}
+                {Array.from({
+                  length: Math.max(0, 5 - quotationItems.length),
+                }).map((_, index) => (
+                  <tr key={`empty-${index}`}>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* BOTTOM CONTENT */}
+            <div className="quotation-print-bottom">
+              {/* CONTACT / BANK */}
+              <div className="quotation-print-note">
+                <p>
+                  If you have any questions concerning this quotation contact
+                  us:
+                </p>
+
+                <p>
+                  {contactNumber || "0501234567"} or{" "}
+                  {email || "info@carworkshop.com"}.
+                </p>
+
+                <div className="quotation-print-bank">
+                  Bank info: Talaa Alfahar, IBAN
+                </div>
+              </div>
+
+              {/* TOTALS */}
+              <div className="quotation-print-totals">
+                {(() => {
+                  const subtotal = quotationItems.reduce(
+                    (sum, item) =>
+                      sum +
+                      (Number(item.quantity) || 0) *
+                        (Number(item.unitPrice) || 0),
+                    0,
+                  );
+
+                  const vat = subtotal * 0.15;
+                  const total = subtotal + vat;
+
+                  return (
+                    <>
+                      <div>
+                        <strong>Subtotal</strong>
+                        <span>{subtotal.toFixed(2)}</span>
+                      </div>
+
+                      <div>
+                        <strong>Tax Rate</strong>
+                        <span>15.00%</span>
+                      </div>
+
+                      <div>
+                        <strong>VAT 15%</strong>
+                        <span>{vat.toFixed(2)}</span>
+                      </div>
+
+                      <div>
+                        <strong>Other</strong>
+                        <span>-</span>
+                      </div>
+
+                      <div className="quotation-print-total">
+                        <strong>Total</strong>
+                        <span>{total.toFixed(2)}</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* FOOTER */}
+            <div className="quotation-print-footer">
+              <div className="quotation-print-footer-bar"></div>
+              <strong>Thank you!</strong>
+            </div>
+          </div>
         </div>
       </main>
     </div>
