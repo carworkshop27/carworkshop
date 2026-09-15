@@ -209,13 +209,15 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         }
 
         .quotation-print-page {
-          width: 180mm;
-          min-height: 267mm;
-          margin: 15mm auto;
-          position: relative;
-          background: white;
-          box-sizing: border-box;
-        }
+  width: 180mm;
+  height: 267mm;
+  min-height: 0;
+  margin: 15mm auto;
+  position: relative;
+  background: white;
+  box-sizing: border-box;
+  overflow: hidden;
+}
 
         /* HEADER */
         .quotation-print-header {
@@ -250,6 +252,14 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           letter-spacing: 0.5px;
           color: #073f40;
         }
+
+        .quotation-print-logo {
+  height: 24mm;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  mix-blend-mode: multiply;
+}
 
         .quotation-print-meta {
           display: flex;
@@ -399,11 +409,38 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           margin: 0;
         }
 
-        .quotation-print-bank {
-          margin-top: 7mm;
-          text-align: center;
-          font-size: 7.5pt;
-        }
+        .quotation-print-terms {
+  border: 0.3mm solid #55bcb7;
+  min-height: 48mm;
+}
+
+.quotation-print-terms-title {
+  background: #d8f3f1;
+  padding: 2.5mm 3mm;
+  font-size: 8.5pt;
+  font-weight: 800;
+  color: #073f40;
+}
+
+.quotation-print-terms-body {
+  padding: 3mm 3mm;
+}
+
+.quotation-print-term-row {
+  display: grid;
+  grid-template-columns: 7mm 1fr;
+  font-size: 7.5pt;
+  line-height: 1.45;
+  min-height: 5mm;
+}
+
+.quotation-print-term-number {
+  font-weight: 600;
+}
+
+.quotation-print-term-text {
+  min-width: 0;
+}
 
         .quotation-print-totals {
           border-left: 0.3mm solid #72c8c3;
@@ -822,7 +859,11 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
               <div className="quotation-print-header-content">
                 <div className="quotation-print-title-row">
-                  <h1>QUOTATION</h1>
+                  <img
+                    src="/images/garage-logo.png"
+                    alt="Garage AlTalaa AlFahir"
+                    className="quotation-print-logo"
+                  />
 
                   <div className="quotation-print-meta">
                     <div>
@@ -844,7 +885,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
                 <div className="quotation-print-parties">
                   <div>
-                    <strong>Car Workshop</strong>
+                    <strong>Garage AlTalaa AlFahir</strong>
                     <p>Jeddah, Saudi Arabia</p>
                     <p>Phone: 0501234567</p>
                     <p>Email: info@carworkshop.com</p>
@@ -874,10 +915,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                 <span></span>
                 <span></span>
                 <span></span>
-                <span>
-                  {quotationTerms.find((term) => term.trim()) ||
-                    "Due on receipt"}
-                </span>
+                <span></span>
               </div>
             </div>
 
@@ -927,20 +965,26 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
             {/* BOTTOM CONTENT */}
             <div className="quotation-print-bottom">
-              {/* CONTACT / BANK */}
-              <div className="quotation-print-note">
-                <p>
-                  If you have any questions concerning this quotation contact
-                  us:
-                </p>
+              {/* TERMS & CONDITIONS */}
+              <div className="quotation-print-terms">
+                <div className="quotation-print-terms-title">
+                  Terms & Conditions
+                </div>
 
-                <p>
-                  {contactNumber || "0501234567"} or{" "}
-                  {email || "info@carworkshop.com"}.
-                </p>
+                <div className="quotation-print-terms-body">
+                  {["Bank Information - IBAN - Talaa Fahir", ...quotationTerms]
+                    .slice(0, 5)
+                    .map((term, index) => (
+                      <div key={index} className="quotation-print-term-row">
+                        <span className="quotation-print-term-number">
+                          {index + 1}.
+                        </span>
 
-                <div className="quotation-print-bank">
-                  Bank info: Talaa Alfahar, IBAN
+                        <span className="quotation-print-term-text">
+                          {term.trim() || " "}
+                        </span>
+                      </div>
+                    ))}
                 </div>
               </div>
 
