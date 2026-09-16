@@ -1252,7 +1252,44 @@ export default function Home() {
     setActiveScreen("full-job-card");
   };
 
-  const handleOpenInvoice = (job, taxInvoice = false) => {
+  const handleOpenInvoice = async (job, taxInvoice = false) => {
+    if (job?.quotation_id) {
+      try {
+        const response = await fetch("/api/quotations");
+        const quotations = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            quotations?.error || "Failed to load quotation details.",
+          );
+        }
+
+        const quotation = Array.isArray(quotations)
+          ? quotations.find(
+              (item) => String(item.id) === String(job.quotation_id),
+            )
+          : null;
+
+        if (!quotation) {
+          throw new Error("Original quotation could not be found.");
+        }
+
+        setQuotationToEdit({
+          ...quotation,
+          invoice_no: job.invoice_no,
+          invoice_date: job.invoice_date,
+          invoice_source_screen: activeScreen,
+        });
+
+        setActiveScreen("quotation-invoice");
+        return;
+      } catch (error) {
+        console.error("Open quotation invoice error:", error);
+        alert(error.message || "Failed to open quotation invoice.");
+        return;
+      }
+    }
+
     invoicePreviousScreenRef.current = activeScreen;
 
     window.history.pushState(
@@ -2618,10 +2655,22 @@ export default function Home() {
   }
 
   if (activeScreen === "quotation-invoice") {
+    const invoiceBackScreen =
+      quotationToEdit?.invoice_source_screen || "quotation-records";
+
+    const invoiceBackLabel =
+      invoiceBackScreen === "daily-ledger"
+        ? "Back to Daily Ledger"
+        : invoiceBackScreen === "monthly-ledger"
+          ? "Back to Monthly Ledger"
+          : "Back to Quotation Records";
+
     return (
       <QuotationInvoice
         quotation={quotationToEdit}
         setActiveScreen={setActiveScreen}
+        backScreen={invoiceBackScreen}
+        backLabel={invoiceBackLabel}
       />
     );
   }

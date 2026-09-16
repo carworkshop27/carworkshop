@@ -3,7 +3,12 @@
 import { ArrowLeft, Printer } from "lucide-react";
 import QRCode from "react-qr-code";
 
-export default function QuotationInvoice({ quotation, setActiveScreen }) {
+export default function QuotationInvoice({
+  quotation,
+  setActiveScreen,
+  backScreen = "quotation-records",
+  backLabel = "Back to Quotation Records",
+}) {
   if (!quotation) {
     return (
       <div className="min-h-screen bg-slate-100 p-6">
@@ -22,20 +27,32 @@ export default function QuotationInvoice({ quotation, setActiveScreen }) {
     );
   }
 
-  const items = Array.isArray(quotation.items) ? quotation.items : [];
+  const items = Array.isArray(quotation.items)
+    ? quotation.items.map((item, index) => ({
+        serial_number: item.serial_number ?? item.serialNumber ?? index + 1,
+        description: item.description || "",
+        quantity: Number(item.quantity || 0),
+        unit_price: Number(item.unit_price ?? item.unitPrice ?? 0),
+      }))
+    : [];
 
-  const subtotal = items.reduce((sum, item) => {
-    const quantity = Number(item.quantity || 0);
-    const unitPrice = Number(item.unit_price || 0);
-
-    return sum + quantity * unitPrice;
-  }, 0);
+  const subtotal = items.reduce(
+    (sum, item) =>
+      sum + Number(item.quantity || 0) * Number(item.unit_price || 0),
+    0,
+  );
 
   const vat = subtotal * 0.15;
   const total = subtotal + vat;
 
   const terms = Array.isArray(quotation.terms)
-    ? quotation.terms.map((term) => term.term_text).filter(Boolean)
+    ? quotation.terms
+        .map((term) =>
+          typeof term === "string"
+            ? term
+            : term?.term_text || term?.termText || "",
+        )
+        .filter(Boolean)
     : [];
 
   const quotationDate = quotation.quotation_date || quotation.created_at;
@@ -111,11 +128,11 @@ export default function QuotationInvoice({ quotation, setActiveScreen }) {
       <div className="quotation-invoice-actions mx-auto mb-5 flex max-w-5xl items-center justify-between">
         <button
           type="button"
-          onClick={() => setActiveScreen("quotation-records")}
+          onClick={() => setActiveScreen(backScreen)}
           className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Quotation Records
+          {backLabel}
         </button>
 
         <button
@@ -199,13 +216,13 @@ export default function QuotationInvoice({ quotation, setActiveScreen }) {
               </h3>
 
               <p className="font-black text-slate-900">
-                {quotation.customer_name || "-"}
+                {quotation.customer_name || quotation.customerName || "-"}
               </p>
 
               <p className="mt-1 text-slate-600">{quotation.address || "-"}</p>
 
               <p className="mt-1 text-slate-600">
-                {quotation.contact_number || "-"}
+                {quotation.contact_number || quotation.contactNumber || "-"}
               </p>
 
               <p className="mt-1 text-slate-600">{quotation.email || "-"}</p>
