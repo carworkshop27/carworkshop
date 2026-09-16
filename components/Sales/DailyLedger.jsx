@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileText, ArrowLeft, CalendarDays } from "lucide-react";
 
 export default function DailyLedger({
@@ -15,10 +15,41 @@ export default function DailyLedger({
   ).padStart(2, "0")}/${today.getFullYear()}`;
 
   const [selectedDate, setSelectedDate] = useState(
-    today.toISOString().slice(0, 10),
+    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
+      today.getDate(),
+    ).padStart(2, "0")}`,
   );
 
   const dateInputRef = useRef(null);
+
+  const [savedInvoices, setSavedInvoices] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadInvoices = async () => {
+      try {
+        const response = await fetch("/api/invoices");
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.error || "Failed to load invoices.");
+        }
+
+        if (!cancelled) {
+          setSavedInvoices(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("Load daily ledger invoices error:", error);
+      }
+    };
+
+    loadInvoices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const calculateInvoice = (job) => {
     const repairCost = (job.panels || [])
