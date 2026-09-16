@@ -539,7 +539,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             {/* Customer No. */}
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
-                Customer No.
+                Quotation No.
               </label>
 
               <input

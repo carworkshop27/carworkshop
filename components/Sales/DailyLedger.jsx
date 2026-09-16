@@ -301,6 +301,7 @@ export default function DailyLedger({
                         ) : (
                           <button
                             type="button"
+                            onClick={() => handleOpenInvoice(row.invoice)}
                             className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-indigo-700"
                           >
                             <FileText className="h-4 w-4" />
