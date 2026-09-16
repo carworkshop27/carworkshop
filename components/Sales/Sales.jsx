@@ -14,6 +14,7 @@ export default function Sales({ setActiveScreen }) {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <button
             type="button"
+            onClick={() => setActiveScreen("daily-ledger")}
             className="rounded-xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:shadow-md"
           >
             <h2 className="text-xl font-bold text-slate-900">Daily Ledger</h2>
