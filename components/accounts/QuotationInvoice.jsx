@@ -122,9 +122,9 @@ export default function QuotationInvoice({ quotation, setActiveScreen }) {
                 </p>
 
                 <div className="mt-3 text-xs leading-5 text-slate-600">
-                  <p>Jeddah, Saudi Arabia</p>
-                  <p>Phone: 0501234567</p>
-                  <p>Email: info@carworkshop.com</p>
+                  <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                  <p>Phone: +966 50 662 0654</p>
+                  <p>Email: talaa.alfakhir@gmail.com</p>
                 </div>
               </div>
 
