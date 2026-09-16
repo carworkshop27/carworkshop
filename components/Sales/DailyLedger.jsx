@@ -113,9 +113,48 @@ export default function DailyLedger({
     return jobDateString === selectedDateString;
   });
 
-  const totalEarnings = selectedJobs.reduce((total, job) => {
-    return total + calculateInvoice(job).grandTotal;
-  }, 0);
+  const selectedInvoices = savedInvoices.filter((invoice) => {
+    if (!invoice.invoice_date) {
+      return false;
+    }
+
+    const invoiceDate = new Date(invoice.invoice_date);
+
+    if (Number.isNaN(invoiceDate.getTime())) {
+      return false;
+    }
+
+    const invoiceDateString = `${invoiceDate.getFullYear()}-${String(
+      invoiceDate.getMonth() + 1,
+    ).padStart(2, "0")}-${String(invoiceDate.getDate()).padStart(2, "0")}`;
+
+    return invoiceDateString === selectedDate;
+  });
+
+  const ledgerRows = [
+    ...selectedJobs.map((job) => ({
+      type: "job",
+      id: job.id,
+      job,
+      subtotal: calculateInvoice(job).subtotal,
+      vat: calculateInvoice(job).vat,
+      grandTotal: calculateInvoice(job).grandTotal,
+    })),
+    ...selectedInvoices.map((invoice) => ({
+      type: "quotation-invoice",
+      id: invoice.id,
+      invoice,
+      displayNumber: invoice.invoice_no || invoice.quotation_no,
+      subtotal: Number(invoice.subtotal || 0),
+      vat: Number(invoice.vat_amount || 0),
+      grandTotal: Number(invoice.total_amount || 0),
+    })),
+  ];
+
+  const totalEarnings = ledgerRows.reduce(
+    (total, row) => total + row.grandTotal,
+    0,
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
@@ -214,7 +253,7 @@ export default function DailyLedger({
               </thead>
 
               <tbody>
-                {selectedJobs.length === 0 ? (
+                {ledgerRows.length === 0 ? (
                   <tr>
                     <td
                       colSpan="6"
@@ -224,47 +263,53 @@ export default function DailyLedger({
                     </td>
                   </tr>
                 ) : (
-                  selectedJobs.map((job, index) => {
-                    const invoice = calculateInvoice(job);
+                  ledgerRows.map((row, index) => (
+                    <tr
+                      key={`${row.type}-${row.id}`}
+                      className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
+                    >
+                      <td className="px-5 py-4 font-bold text-slate-700">
+                        {index + 1}
+                      </td>
 
-                    return (
-                      <tr
-                        key={job.id}
-                        className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
-                      >
-                        <td className="px-5 py-4 font-bold text-slate-700">
-                          {index + 1}
-                        </td>
+                      <td className="px-5 py-4 font-black text-blue-600">
+                        {row.type === "job" ? row.id : row.displayNumber}
+                      </td>
 
-                        <td className="px-5 py-4 font-black text-blue-600">
-                          {job.id}
-                        </td>
+                      <td className="px-5 py-4 text-right font-bold text-slate-700">
+                        ⃁{row.subtotal.toFixed(2)}
+                      </td>
 
-                        <td className="px-5 py-4 text-right font-bold text-slate-700">
-                          ⃁{invoice.subtotal.toFixed(2)}
-                        </td>
+                      <td className="px-5 py-4 text-right font-bold text-slate-700">
+                        ⃁{row.vat.toFixed(2)}
+                      </td>
 
-                        <td className="px-5 py-4 text-right font-bold text-slate-700">
-                          ⃁{invoice.vat.toFixed(2)}
-                        </td>
+                      <td className="px-5 py-4 text-right font-black text-slate-900">
+                        ⃁{row.grandTotal.toFixed(2)}
+                      </td>
 
-                        <td className="px-5 py-4 text-right font-black text-slate-900">
-                          ⃁{invoice.grandTotal.toFixed(2)}
-                        </td>
-
-                        <td className="px-5 py-4 text-center">
+                      <td className="px-5 py-4 text-center">
+                        {row.type === "job" ? (
                           <button
                             type="button"
-                            onClick={() => handleOpenInvoice(job)}
+                            onClick={() => handleOpenInvoice(row.job)}
                             className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-indigo-700"
                           >
                             <FileText className="h-4 w-4" />
                             Invoice
                           </button>
-                        </td>
-                      </tr>
-                    );
-                  })
+                        ) : (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-indigo-700"
+                          >
+                            <FileText className="h-4 w-4" />
+                            Invoice
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
