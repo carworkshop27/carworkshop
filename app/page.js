@@ -17,6 +17,7 @@ import PurchaseRecords from "../components/accounts/PurchaseRecords";
 import MonthlyAccountStatement from "../components/accounts/MonthlyAccountStatement";
 import Quotations from "../components/accounts/Quotations";
 import QuotationRecords from "../components/accounts/QuotationRecords";
+import QuotationInvoice from "../components/accounts/QuotationInvoice";
 import ExpenseEntry from "../components/accounts/ExpenseEntry";
 import ExpenseRecords from "../components/accounts/ExpenseRecords";
 import DailyLedger from "../components/Sales/DailyLedger";
@@ -2614,12 +2615,27 @@ export default function Home() {
     );
   }
 
+  if (activeScreen === "quotation-invoice") {
+    return (
+      <QuotationInvoice
+        quotation={quotationToEdit}
+        setActiveScreen={setActiveScreen}
+      />
+    );
+  }
+
   if (activeScreen === "quotation-records") {
     return (
       <QuotationRecords
         setActiveScreen={setActiveScreen}
-        onOpenQuotation={(quotation) => {
+        onOpenQuotation={(quotation, openInvoice = false) => {
           setQuotationToEdit(quotation);
+
+          if (openInvoice) {
+            setActiveScreen("quotation-invoice");
+            return;
+          }
+
           setActiveScreen("quotation");
         }}
       />

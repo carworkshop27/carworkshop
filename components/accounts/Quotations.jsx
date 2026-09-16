@@ -886,9 +886,9 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                 <div className="quotation-print-parties">
                   <div>
                     <strong>Garage AlTalaa AlFahir</strong>
-                    <p>Jeddah, Saudi Arabia</p>
-                    <p>Phone: 0501234567</p>
-                    <p>Email: info@carworkshop.com</p>
+                    <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                    <p>Phone: +966 50 662 0654</p>
+                    <p>Email: talaa.alfakhir@gmail.com</p>
                   </div>
 
                   <div>

@@ -205,8 +205,8 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                       <td className="px-5 py-4 text-center align-top">
                         <button
                           type="button"
-                          disabled
-                          className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-100 px-4 py-2 text-xs font-black text-slate-400"
+                          onClick={() => onOpenQuotation(quotation, true)}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm transition hover:bg-emerald-700"
                         >
                           <FileText className="h-3.5 w-3.5" />
                           Invoice
