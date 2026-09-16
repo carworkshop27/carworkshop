@@ -25,12 +25,12 @@ export default function Sales({ setActiveScreen }) {
 
           <button
             type="button"
-            onClick={() => setActiveScreen("daily-ledger")}
+            onClick={() => setActiveScreen("monthly-ledger")}
             className="rounded-xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:shadow-md"
           >
-            <h2 className="text-xl font-bold text-slate-900">Daily Ledger</h2>
+            <h2 className="text-xl font-bold text-slate-900">Monthly Ledger</h2>
             <p className="mt-2 text-sm text-slate-500">
-              View and manage daily sales transactions.
+              View and manage monthly sales records.
             </p>
           </button>
         </div>
