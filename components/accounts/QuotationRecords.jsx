@@ -6,21 +6,117 @@ import { useEffect, useState } from "react";
 export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
   const [quotations, setQuotations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [quotationToGenerate, setQuotationToGenerate] = useState(null);
+  const [generatedInvoices, setGeneratedInvoices] = useState({});
+  const handleGenerateInvoice = async () => {
+    if (!quotationToGenerate) return;
+
+    try {
+      const items = Array.isArray(quotationToGenerate.items)
+        ? quotationToGenerate.items.map((item, index) => ({
+            serial_number: item.serial_number ?? index + 1,
+            description: item.description || "",
+            quantity: Number(item.quantity) || 0,
+            unit_price: Number(item.unit_price) || 0,
+            total: Number(item.quantity || 0) * Number(item.unit_price || 0),
+          }))
+        : [];
+
+      const subtotal = items.reduce(
+        (sum, item) => sum + Number(item.total || 0),
+        0,
+      );
+
+      const vatAmount = subtotal * 0.15;
+      const totalAmount = subtotal + vatAmount;
+
+      const response = await fetch("/api/invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quotationId: quotationToGenerate.id,
+          quotationNo: quotationToGenerate.quotation_no,
+          customerName: quotationToGenerate.customer_name,
+          address: quotationToGenerate.address,
+          contactNumber: quotationToGenerate.contact_number,
+          email: quotationToGenerate.email,
+          items,
+          terms: Array.isArray(quotationToGenerate.terms)
+            ? quotationToGenerate.terms
+            : [],
+          subtotal,
+          vatAmount,
+          totalAmount,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to generate invoice.");
+      }
+
+      setGeneratedInvoices((previous) => ({
+        ...previous,
+        [quotationToGenerate.id]: true,
+      }));
+
+      setQuotationToGenerate(null);
+
+      alert(
+        `Invoice generated successfully.\nInvoice No.: ${
+          data?.invoice?.invoice_no || `INV-${quotationToGenerate.quotation_no}`
+        }`,
+      );
+    } catch (error) {
+      console.error("Generate invoice error:", error);
+
+      alert(error.message || "Failed to generate invoice.");
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
 
     const loadQuotations = async () => {
       try {
-        const response = await fetch("/api/quotations");
-        const data = await response.json();
+        const [quotationsResponse, invoicesResponse] = await Promise.all([
+          fetch("/api/quotations"),
+          fetch("/api/invoices"),
+        ]);
 
-        if (!response.ok) {
-          throw new Error(data?.error || "Failed to load quotation records.");
+        const quotationsData = await quotationsResponse.json();
+        const invoicesData = await invoicesResponse.json();
+
+        if (!quotationsResponse.ok) {
+          throw new Error(
+            quotationsData?.error || "Failed to load quotation records.",
+          );
+        }
+
+        if (!invoicesResponse.ok) {
+          throw new Error(invoicesData?.error || "Failed to load invoices.");
         }
 
         if (!cancelled) {
-          setQuotations(Array.isArray(data) ? data : []);
+          const quotationList = Array.isArray(quotationsData)
+            ? quotationsData
+            : [];
+
+          const invoiceList = Array.isArray(invoicesData) ? invoicesData : [];
+
+          const savedInvoices = {};
+
+          invoiceList.forEach((invoice) => {
+            if (invoice?.quotation_id) {
+              savedInvoices[invoice.quotation_id] = true;
+            }
+          });
+
+          setQuotations(quotationList);
+          setGeneratedInvoices(savedInvoices);
           setIsLoading(false);
         }
       } catch (error) {
@@ -201,16 +297,30 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                         </button>
                       </td>
 
-                      {/* INVOICE */}
+                      {/* GENERATE INVOICE */}
                       <td className="px-5 py-4 text-center align-top">
-                        <button
-                          type="button"
-                          onClick={() => onOpenQuotation(quotation, true)}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm transition hover:bg-emerald-700"
-                        >
-                          <FileText className="h-3.5 w-3.5" />
-                          Invoice
-                        </button>
+                        <div className="flex flex-col items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setQuotationToGenerate(quotation)}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-sm transition hover:bg-amber-600"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            Generate Invoice
+                          </button>
+
+                          <div
+                            className={`w-full rounded-lg px-4 py-2 text-xs font-black ${
+                              generatedInvoices[quotation.id]
+                                ? "bg-emerald-500 text-white"
+                                : "bg-slate-300 text-slate-600"
+                            }`}
+                          >
+                            {generatedInvoices[quotation.id]
+                              ? "Invoice Saved"
+                              : "Invoice Not Saved"}
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -220,6 +330,42 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
           )}
         </div>
       </div>
+
+      {quotationToGenerate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="text-xl font-black text-slate-900">
+              Generate Invoice
+            </h2>
+
+            <p className="mt-3 text-sm font-medium text-slate-600">
+              Do you want to generate the invoice of quotation{" "}
+              <span className="font-black text-slate-900">
+                {quotationToGenerate.quotation_no || "-"}
+              </span>
+              ?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setQuotationToGenerate(null)}
+                className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              >
+                No
+              </button>
+
+              <button
+                type="button"
+                onClick={handleGenerateInvoice}
+                className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-emerald-700"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
