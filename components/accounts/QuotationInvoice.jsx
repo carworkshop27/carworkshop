@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, Printer } from "lucide-react";
+import QRCode from "react-qr-code";
 
 export default function QuotationInvoice({ quotation, setActiveScreen }) {
   if (!quotation) {
@@ -42,6 +43,27 @@ export default function QuotationInvoice({ quotation, setActiveScreen }) {
   const formattedDate = quotationDate
     ? new Date(quotationDate).toLocaleDateString("en-GB")
     : "-";
+
+  const qrData = JSON.stringify({
+    invoice: `INV-${quotation.quotation_no || "-"}`,
+    quotation: quotation.quotation_no || "-",
+    date: formattedDate,
+    customer: quotation.customer_name || "-",
+    address: quotation.address || "-",
+    phone: quotation.contact_number || "-",
+    email: quotation.email || "-",
+    items: items.map((item) => ({
+      description: item.description || "-",
+      quantity: Number(item.quantity || 0),
+      unitPrice: Number(item.unit_price || 0),
+      amount: (
+        Number(item.quantity || 0) * Number(item.unit_price || 0)
+      ).toFixed(2),
+    })),
+    subtotal: subtotal.toFixed(2),
+    vat: vat.toFixed(2),
+    total: total.toFixed(2),
+  });
 
   const handlePrint = () => {
     window.print();
@@ -113,9 +135,11 @@ export default function QuotationInvoice({ quotation, setActiveScreen }) {
           <div className="border-b-2 border-slate-900 pb-5">
             <div className="flex items-start justify-between gap-8">
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-slate-900">
-                  Garage Altalaa Fahir
-                </h1>
+                <img
+                  src="/images/garage-logo.png"
+                  alt="Garage Altalaa Fahir"
+                  className="w-[320px] h-auto object-contain"
+                />
 
                 <p className="mt-1 text-sm font-semibold text-slate-500">
                   Vehicle Repair & Maintenance
@@ -126,6 +150,21 @@ export default function QuotationInvoice({ quotation, setActiveScreen }) {
                   <p>Phone: +966 50 662 0654</p>
                   <p>Email: talaa.alfakhir@gmail.com</p>
                 </div>
+              </div>
+
+              {/* QR CODE */}
+              <div className="flex flex-col items-center justify-center pt-2">
+                <QRCode
+                  value={qrData}
+                  size={110}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="M"
+                />
+
+                <span className="mt-1 text-[9px] font-semibold text-slate-500">
+                  Scan for invoice details
+                </span>
               </div>
 
               <div className="text-right">
