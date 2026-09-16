@@ -5,7 +5,9 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("invoices")
-      .select("id, invoice_no, quotation_id, quotation_no, invoice_date")
+      .select(
+        "id, invoice_no, quotation_id, quotation_no, invoice_date, subtotal, vat_amount, total_amount, payment_status, payment_method",
+      )
       .order("invoice_date", { ascending: false });
 
     if (error) {
