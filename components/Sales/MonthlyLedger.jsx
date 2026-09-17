@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FileText, ArrowLeft, CalendarDays } from "lucide-react";
 
 export default function MonthlyLedger({
@@ -16,6 +16,29 @@ export default function MonthlyLedger({
   );
 
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+
+  const [savedInvoices, setSavedInvoices] = useState([]);
+
+  useEffect(() => {
+    const loadInvoices = async () => {
+      try {
+        const response = await fetch("/api/invoices");
+
+        if (!response.ok) {
+          throw new Error("Failed to load invoices");
+        }
+
+        const data = await response.json();
+
+        setSavedInvoices(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to load invoices:", error);
+        setSavedInvoices([]);
+      }
+    };
+
+    loadInvoices();
+  }, []);
 
   const selectedYear = Number(selectedMonth.slice(0, 4));
 
@@ -95,8 +118,39 @@ export default function MonthlyLedger({
     return jobMonth === selectedMonth;
   });
 
-  const totalEarnings = selectedJobs.reduce((total, job) => {
-    return total + calculateInvoice(job).grandTotal;
+  const selectedInvoices = savedInvoices.filter((invoice) => {
+    if (!invoice.invoice_date) return false;
+
+    return String(invoice.invoice_date).slice(0, 7) === selectedMonth;
+  });
+
+  const ledgerRows = [
+    ...selectedJobs.map((job) => {
+      const invoice = calculateInvoice(job);
+
+      return {
+        type: "job",
+        id: job.id,
+        job,
+        subtotal: invoice.subtotal,
+        vat: invoice.vat,
+        grandTotal: invoice.grandTotal,
+      };
+    }),
+
+    ...selectedInvoices.map((invoice) => ({
+      type: "quotation-invoice",
+      id: invoice.id,
+      invoice,
+      displayNumber: invoice.invoice_no || invoice.quotation_no,
+      subtotal: Number(invoice.subtotal || 0),
+      vat: Number(invoice.vat_amount || 0),
+      grandTotal: Number(invoice.total_amount || 0),
+    })),
+  ];
+
+  const totalEarnings = ledgerRows.reduce((total, row) => {
+    return total + row.grandTotal;
   }, 0);
 
   const formattedMonth = (() => {
@@ -259,7 +313,7 @@ export default function MonthlyLedger({
               </thead>
 
               <tbody>
-                {selectedJobs.length === 0 ? (
+                {ledgerRows.length === 0 ? (
                   <tr>
                     <td
                       colSpan="6"
@@ -269,12 +323,19 @@ export default function MonthlyLedger({
                     </td>
                   </tr>
                 ) : (
-                  selectedJobs.map((job, index) => {
-                    const invoice = calculateInvoice(job);
+                  ledgerRows.map((row, index) => {
+                    const invoice =
+                      row.type === "job"
+                        ? calculateInvoice(row.job)
+                        : {
+                            subtotal: row.subtotal,
+                            vat: row.vat,
+                            grandTotal: row.grandTotal,
+                          };
 
                     return (
                       <tr
-                        key={job.id}
+                        key={`${row.type}-${row.id}`}
                         className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
                       >
                         <td className="px-5 py-4 font-bold text-slate-700">
@@ -282,7 +343,7 @@ export default function MonthlyLedger({
                         </td>
 
                         <td className="px-5 py-4 font-black text-blue-600">
-                          {job.id}
+                          {row.type === "job" ? row.job.id : row.displayNumber}
                         </td>
 
                         <td className="px-5 py-4 text-right font-bold text-slate-700">
@@ -300,7 +361,11 @@ export default function MonthlyLedger({
                         <td className="px-5 py-4 text-center">
                           <button
                             type="button"
-                            onClick={() => handleOpenInvoice(job)}
+                            onClick={() =>
+                              row.type === "job"
+                                ? handleOpenInvoice(row.job)
+                                : handleOpenInvoice(row.invoice)
+                            }
                             className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-indigo-700"
                           >
                             <FileText className="h-4 w-4" />
