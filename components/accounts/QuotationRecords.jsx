@@ -181,7 +181,16 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
     <div className="min-h-screen bg-slate-100 p-6 text-slate-800">
       <div className="mx-auto max-w-7xl">
         {/* HEADER */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setActiveScreen("dashboard")}
+            className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Dashboard
+          </button>
+
           <div>
             <h1 className="text-2xl font-black text-slate-900">
               Quotation Records
@@ -191,15 +200,6 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
               View and edit saved quotations.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveScreen("dashboard")}
-            className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Dashboard
-          </button>
         </div>
 
         {/* RECORDS TABLE */}

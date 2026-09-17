@@ -118,7 +118,34 @@ export default function PurchaseRecords({ setActiveScreen }) {
     <div className="min-h-screen bg-slate-100 text-slate-800">
       <main className="px-6 lg:px-8 py-8">
         {/* Page Header */}
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-6 flex items-start gap-4">
+          <button
+            type="button"
+            onClick={() => setActiveScreen("dashboard")}
+            className="
+      inline-flex
+      items-center
+      gap-2
+      rounded-xl
+      border
+      border-slate-200
+      bg-white
+      px-4
+      py-2.5
+      text-sm
+      font-bold
+      text-slate-700
+      shadow-sm
+      transition-all
+      hover:border-blue-300
+      hover:bg-blue-50
+      hover:text-blue-700
+    "
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </button>
+
           <div>
             <h1 className="text-3xl font-black text-slate-900">
               Purchase Records
@@ -128,33 +155,6 @@ export default function PurchaseRecords({ setActiveScreen }) {
               View and manage purchase records and supplier invoices.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveScreen("dashboard")}
-            className="
-              inline-flex
-              items-center
-              gap-2
-              rounded-xl
-              border
-              border-slate-200
-              bg-white
-              px-4
-              py-2.5
-              text-sm
-              font-bold
-              text-slate-700
-              shadow-sm
-              transition-all
-              hover:border-blue-300
-              hover:bg-blue-50
-              hover:text-blue-700
-            "
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </button>
         </div>
 
         {/* Purchase Ledger */}

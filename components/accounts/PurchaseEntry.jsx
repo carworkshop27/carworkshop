@@ -153,7 +153,32 @@ export default function PurchaseEntry({ setActiveScreen }) {
     <div className="min-h-screen bg-slate-100 text-slate-800">
       <main className="px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-6 flex items-start gap-4">
+          <button
+            type="button"
+            onClick={() => setActiveScreen("accounts")}
+            className="
+      inline-flex
+      items-center
+      gap-2
+      rounded-xl
+      border
+      border-slate-200
+      bg-white
+      px-4
+      py-2.5
+      text-sm
+      font-bold
+      text-slate-700
+      shadow-sm
+      transition
+      hover:bg-slate-50
+    "
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Accounts
+          </button>
+
           <div>
             <h1 className="text-3xl font-black text-slate-900">
               Purchase Entry
@@ -163,31 +188,6 @@ export default function PurchaseEntry({ setActiveScreen }) {
               Record workshop purchases and supplier invoices.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveScreen("accounts")}
-            className="
-              inline-flex
-              items-center
-              gap-2
-              rounded-xl
-              border
-              border-slate-200
-              bg-white
-              px-4
-              py-2.5
-              text-sm
-              font-bold
-              text-slate-700
-              shadow-sm
-              transition
-              hover:bg-slate-50
-            "
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Accounts
-          </button>
         </div>
 
         {/* Purchase Information */}

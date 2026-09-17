@@ -227,14 +227,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
     <div className="min-h-screen bg-slate-100 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Expense Entry</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Record and manage workshop expenses
-            </p>
-          </div>
-
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
           <button
             type="button"
             onClick={() => setActiveScreen("dashboard")}
@@ -242,6 +235,13 @@ export default function ExpenseEntry({ setActiveScreen }) {
           >
             ← Back to Dashboard
           </button>
+
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Expense Entry</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Record and manage workshop expenses
+            </p>
+          </div>
         </div>
 
         {/* Expense Information */}

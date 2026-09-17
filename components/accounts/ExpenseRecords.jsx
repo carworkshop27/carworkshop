@@ -145,7 +145,15 @@ export default function ExpenseRecords({ setActiveScreen }) {
     <div className="min-h-screen bg-slate-100 text-slate-800">
       <main className="px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <button
+            type="button"
+            onClick={() => setActiveScreen("dashboard")}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            ← Back to Dashboard
+          </button>
+
           <div>
             <h1 className="text-3xl font-black text-slate-900">
               Expense Records
@@ -155,14 +163,6 @@ export default function ExpenseRecords({ setActiveScreen }) {
               View and manage expense records and expense invoices.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveScreen("dashboard")}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
-          >
-            ← Back to Dashboard
-          </button>
         </div>
 
         {/* Ledger */}

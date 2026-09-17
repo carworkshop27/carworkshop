@@ -494,7 +494,16 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
     `}</style>
       <main className="px-6 py-8 lg:px-8">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setActiveScreen("dashboard")}
+            className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+
           <div>
             <h1 className="text-3xl font-black text-slate-900">Quotation</h1>
 
@@ -502,19 +511,6 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
               Create a new quotation for a customer or company.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() =>
-              setActiveScreen(
-                quotationToEdit ? "quotation-records" : "dashboard",
-              )
-            }
-            className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
         </div>
 
         {/* BOX 1 — CUSTOMER INFORMATION */}

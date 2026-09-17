@@ -27,7 +27,15 @@ export default function JobCards({
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1500px] items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <button
+            type="button"
+            onClick={() => setActiveScreen?.("dashboard")}
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Back to Dashboard
+          </button>
+
           <div>
             <h1 className="text-2xl font-black tracking-tight text-slate-950">
               Job Cards
@@ -36,14 +44,6 @@ export default function JobCards({
               Manage active workshop jobs and vehicle repair progress
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveScreen?.("dashboard")}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
-          >
-            Back to Dashboard
-          </button>
         </div>
       </header>
 

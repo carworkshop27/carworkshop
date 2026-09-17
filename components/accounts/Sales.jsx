@@ -8,14 +8,7 @@ export default function Sales({ setActiveScreen }) {
       {/* Page Content */}
       <main className="px-6 lg:px-8 py-8">
         {/* Page Header */}
-        <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900">Sales</h1>
-            <p className="mt-1 text-sm font-medium text-slate-500">
-              Manage sales ledgers and invoice history.
-            </p>
-          </div>
-
+        <div className="mb-6 flex items-start gap-4">
           <button
             type="button"
             onClick={() => setActiveScreen("dashboard")}
@@ -42,6 +35,13 @@ export default function Sales({ setActiveScreen }) {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </button>
+
+          <div>
+            <h1 className="text-3xl font-black text-slate-900">Sales</h1>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              Manage sales ledgers and invoice history.
+            </p>
+          </div>
         </div>
 
         {/* Sales Options */}

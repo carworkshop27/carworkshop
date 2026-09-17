@@ -411,7 +411,36 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
       `}</style>
       <main className="px-6 py-8 lg:px-8">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+          <button
+            type="button"
+            onClick={() => setActiveScreen("dashboard")}
+            className="
+      inline-flex
+      items-center
+      justify-center
+      gap-2
+      rounded-xl
+      border
+      border-slate-200
+      bg-white
+      px-4
+      py-2.5
+      text-sm
+      font-bold
+      text-slate-700
+      shadow-sm
+      transition-all
+      hover:border-blue-300
+      hover:bg-blue-50
+      hover:text-blue-700
+      print:hidden
+    "
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </button>
+
           <div>
             <h1 className="text-3xl font-black text-slate-900">
               Monthly Account Statement
@@ -422,35 +451,6 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
               balance.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveScreen("dashboard")}
-            className="
-              inline-flex
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              border
-              border-slate-200
-              bg-white
-              px-4
-              py-2.5
-              text-sm
-              font-bold
-              text-slate-700
-              shadow-sm
-              transition-all
-              hover:border-blue-300
-              hover:bg-blue-50
-              hover:text-blue-700
-print:hidden
-            "
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </button>
         </div>
 
         {/* Statement Container */}
