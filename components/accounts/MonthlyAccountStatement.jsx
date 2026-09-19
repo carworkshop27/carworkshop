@@ -728,7 +728,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
               </div>
 
               <p className="mt-4 text-2xl font-black text-emerald-700">
-                ﷼ {formatAmount(salesTotals.grandTotal)}
+                ⃁ {formatAmount(salesTotals.grandTotal)}
               </p>
 
               <p className="mt-1 text-xs font-medium text-emerald-600">
@@ -749,7 +749,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
               </div>
 
               <p className="mt-4 text-2xl font-black text-slate-900">
-                ﷼ {formatAmount(purchaseTotals.grandTotal)}
+                ⃁ {formatAmount(purchaseTotals.grandTotal)}
               </p>
 
               <p className="mt-1 text-xs font-medium text-slate-500">
@@ -770,7 +770,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
               </div>
 
               <p className="mt-4 text-2xl font-black text-slate-900">
-                ﷼ {formatAmount(expenseTotals.grandTotal)}
+                ⃁ {formatAmount(expenseTotals.grandTotal)}
               </p>
 
               <p className="mt-1 text-xs font-medium text-slate-500">
@@ -803,7 +803,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                   Total Sales
                 </p>
                 <p className="mt-1 text-lg font-black text-emerald-700">
-                  ﷼ {formatAmount(salesTotals.grandTotal)}
+                  ⃁ {formatAmount(salesTotals.grandTotal)}
                 </p>
               </div>
 
@@ -816,7 +816,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                   Purchases
                 </p>
                 <p className="mt-1 text-lg font-black text-slate-900">
-                  ﷼ {formatAmount(purchaseTotals.grandTotal)}
+                  ⃁ {formatAmount(purchaseTotals.grandTotal)}
                 </p>
               </div>
 
@@ -829,7 +829,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                   Expenses
                 </p>
                 <p className="mt-1 text-lg font-black text-slate-900">
-                  ﷼ {formatAmount(expenseTotals.grandTotal)}
+                  ⃁ {formatAmount(expenseTotals.grandTotal)}
                 </p>
               </div>
 
@@ -861,7 +861,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                       : "text-rose-700"
                   }`}
                 >
-                  ﷼ {formatAmount(statementTotals.netBalance)}
+                  ⃁ {formatAmount(statementTotals.netBalance)}
                 </p>
               </div>
             </div>
@@ -902,15 +902,15 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-bold text-slate-700">
-                      ﷼ {formatAmount(salesTotals.subtotal)}
+                      ⃁ {formatAmount(salesTotals.subtotal)}
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-bold text-slate-700">
-                      ﷼ {formatAmount(salesTotals.vat)}
+                      ⃁ {formatAmount(salesTotals.vat)}
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-black text-emerald-700">
-                      ﷼ {formatAmount(salesTotals.grandTotal)}
+                      ⃁ {formatAmount(salesTotals.grandTotal)}
                     </td>
                   </tr>
 
@@ -920,15 +920,15 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-bold text-slate-700">
-                      ﷼ {formatAmount(purchaseTotals.subtotal)}
+                      ⃁ {formatAmount(purchaseTotals.subtotal)}
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-bold text-slate-700">
-                      ﷼ {formatAmount(purchaseTotals.vat)}
+                      ⃁ {formatAmount(purchaseTotals.vat)}
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-black text-slate-900">
-                      ﷼ {formatAmount(purchaseTotals.grandTotal)}
+                      ⃁ {formatAmount(purchaseTotals.grandTotal)}
                     </td>
                   </tr>
 
@@ -938,15 +938,15 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-bold text-slate-700">
-                      ﷼ {formatAmount(expenseTotals.subtotal)}
+                      ⃁ {formatAmount(expenseTotals.subtotal)}
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-bold text-slate-700">
-                      ﷼ {formatAmount(expenseTotals.vat)}
+                      ⃁ {formatAmount(expenseTotals.vat)}
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-black text-slate-900">
-                      ﷼ {formatAmount(expenseTotals.grandTotal)}
+                      ⃁ {formatAmount(expenseTotals.grandTotal)}
                     </td>
                   </tr>
 
@@ -956,7 +956,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-black text-slate-700">
-                      ﷼{" "}
+                      ⃁{" "}
                       {formatAmount(
                         salesTotals.subtotal -
                           purchaseTotals.subtotal -
@@ -965,7 +965,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                     </td>
 
                     <td className="px-5 py-4 text-right text-sm font-black text-slate-700">
-                      ﷼ {formatAmount(statementTotals.netVat)}
+                      ⃁ {formatAmount(statementTotals.netVat)}
                     </td>
 
                     <td
@@ -975,7 +975,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
                           : "text-rose-700"
                       }`}
                     >
-                      ﷼ {formatAmount(statementTotals.netBalance)}
+                      ⃁ {formatAmount(statementTotals.netBalance)}
                     </td>
                   </tr>
                 </tbody>

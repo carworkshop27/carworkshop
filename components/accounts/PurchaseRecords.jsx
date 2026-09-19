@@ -85,7 +85,7 @@ export default function PurchaseRecords({ setActiveScreen }) {
     );
   }, [filteredPurchases]);
 
-  const formatCurrency = (value) => `﷼${Number(value || 0).toFixed(2)}`;
+  const formatCurrency = (value) => `⃁${Number(value || 0).toFixed(2)}`;
 
   const formatDate = (value) => {
     if (!value) return "-";

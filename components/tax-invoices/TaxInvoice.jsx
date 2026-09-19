@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import QRCode from "react-qr-code";
 
 export default function TaxInvoice({ job, getDamageInfo, onPrint }) {
   if (!job) return null;
@@ -53,6 +54,106 @@ export default function TaxInvoice({ job, getDamageInfo, onPrint }) {
 
   const formatAmount = (value) => Number(value || 0).toFixed(2);
 
+  const qrItems = [
+    ...damagedPanels.map((panel, index) => {
+      const info = getDamageInfo(panel.status);
+
+      const amount =
+        panel.customRepairCost !== undefined && panel.customRepairCost !== ""
+          ? Number(panel.customRepairCost)
+          : Number(info.cost || 0);
+
+      const rowVat = amount * (vatRate / 100);
+      const rowTotal = amount + rowVat;
+
+      return {
+        serialNumber: index + 1,
+        type: "Panel",
+        description: `${panel.name || "Panel"} - ${info.label || ""}`.trim(),
+        quantity: 1,
+        unitPrice: formatAmount(amount),
+        discount: "0.00",
+        taxableAmount: formatAmount(amount),
+        vatRate: formatAmount(vatRate),
+        vatAmount: formatAmount(rowVat),
+        totalAmount: formatAmount(rowTotal),
+      };
+    }),
+
+    ...jobParts.map((part, index) => {
+      const amount = Number(part.price || 0);
+
+      const rowVat = amount * (vatRate / 100);
+      const rowTotal = amount + rowVat;
+
+      return {
+        serialNumber: damagedPanels.length + index + 1,
+        type: "Part",
+        description: part.name || part.description || part.partName || "Part",
+        quantity: Number(part.quantity || 1),
+        unitPrice: formatAmount(amount),
+        discount: "0.00",
+        taxableAmount: formatAmount(amount),
+        vatRate: formatAmount(vatRate),
+        vatAmount: formatAmount(rowVat),
+        totalAmount: formatAmount(rowTotal),
+      };
+    }),
+
+    ...electricalItems.map((item, index) => {
+      const amount = Number(item.cost || 0);
+
+      const rowVat = amount * (vatRate / 100);
+      const rowTotal = amount + rowVat;
+
+      return {
+        serialNumber: damagedPanels.length + jobParts.length + index + 1,
+        type: "Electrical",
+        description: item.name || item.description || "Electrical Item",
+        quantity: Number(item.quantity || 1),
+        unitPrice: formatAmount(amount),
+        discount: "0.00",
+        taxableAmount: formatAmount(amount),
+        vatRate: formatAmount(vatRate),
+        vatAmount: formatAmount(rowVat),
+        totalAmount: formatAmount(rowTotal),
+      };
+    }),
+
+    ...mechanicalItems.map((item, index) => {
+      const amount = Number(item.cost || 0);
+
+      const rowVat = amount * (vatRate / 100);
+      const rowTotal = amount + rowVat;
+
+      return {
+        serialNumber:
+          damagedPanels.length +
+          jobParts.length +
+          electricalItems.length +
+          index +
+          1,
+        type: "Mechanical",
+        description: item.name || item.description || "Mechanical Item",
+        quantity: Number(item.quantity || 1),
+        unitPrice: formatAmount(amount),
+        discount: "0.00",
+        taxableAmount: formatAmount(amount),
+        vatRate: formatAmount(vatRate),
+        vatAmount: formatAmount(rowVat),
+        totalAmount: formatAmount(rowTotal),
+      };
+    }),
+  ];
+
+  const qrData = JSON.stringify({
+    invoiceNo: invoiceNumber,
+    workshopName: "Garage AlTalaa AlFahir",
+    vatNumber: "VAT NUMBER",
+    invoiceTotal: formatAmount(totalAmount),
+    vatTotal: formatAmount(vatAmount),
+  });
+
   return (
     <div className="tax-invoice-print bg-white text-slate-900">
       {/* =========================================================
@@ -83,10 +184,20 @@ export default function TaxInvoice({ job, getDamageInfo, onPrint }) {
 
           {/* QR PLACEHOLDER */}
           <div className="border-l border-slate-300 flex items-center justify-center p-4">
-            <div className="w-20 h-20 border-2 border-dashed border-slate-300 flex items-center justify-center text-[9px] text-slate-400 text-center">
-              QR CODE
-              <br />
-              LATER
+            <div className="flex flex-col items-center">
+              <div className="bg-white p-2">
+                <QRCode
+                  value={qrData}
+                  size={120}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="M"
+                />
+              </div>
+
+              <div className="mt-1 text-[8px] font-semibold text-slate-500">
+                Scan for invoice details
+              </div>
             </div>
           </div>
         </div>

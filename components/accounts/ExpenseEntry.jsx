@@ -510,14 +510,14 @@ export default function ExpenseEntry({ setActiveScreen }) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Subtotal</span>
                   <span className="text-sm font-semibold text-slate-900">
-                    SAR {formatAmount(summary.subtotal)}
+                    ⃁ {formatAmount(summary.subtotal)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">VAT</span>
                   <span className="text-sm font-semibold text-slate-900">
-                    SAR {formatAmount(summary.vat)}
+                    ⃁ {formatAmount(summary.vat)}
                   </span>
                 </div>
 
@@ -527,7 +527,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
                       Grand Total
                     </span>
                     <span className="text-xl font-bold text-slate-900">
-                      SAR {formatAmount(summary.grandTotal)}
+                      ⃁ {formatAmount(summary.grandTotal)}
                     </span>
                   </div>
                 </div>
