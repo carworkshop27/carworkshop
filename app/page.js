@@ -1917,7 +1917,11 @@ export default function Home() {
   ).length;
   const totalRevenue = jobs.reduce((acc, job) => {
     const jobDamageCost = (job.panels || []).reduce(
-      (sum, p) => sum + getDamageInfo(p.status).cost,
+      (sum, p) =>
+        sum +
+        (p.customRepairCost !== undefined && p.customRepairCost !== ""
+          ? Number(p.customRepairCost)
+          : Number(getDamageInfo(p.status).cost || 0)),
       0,
     );
 
@@ -1936,7 +1940,14 @@ export default function Home() {
       0,
     );
 
-    return acc + jobDamageCost + jobPartsCost + electricalCost + mechanicalCost;
+    const subtotal =
+      jobDamageCost + jobPartsCost + electricalCost + mechanicalCost;
+
+    const vatAmount = subtotal * 0.15;
+
+    const grandTotal = subtotal + vatAmount;
+
+    return acc + grandTotal;
   }, 0);
 
   if (!authReady) {
