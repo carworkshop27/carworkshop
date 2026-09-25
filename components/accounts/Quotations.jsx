@@ -48,6 +48,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
   const [email, setEmail] = useState(quotationToEdit?.email || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [showQuotationPreview, setShowQuotationPreview] = useState(false);
   const [quotationId, setQuotationId] = useState(quotationToEdit?.id || "");
 
   const updateQuotationItem = (index, field, value) => {
@@ -165,8 +166,266 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
   };
 
   const handlePrintQuotation = () => {
-    window.print();
+    setShowQuotationPreview(true);
   };
+
+  if (showQuotationPreview) {
+    return (
+      <div className="min-h-screen bg-slate-100 text-slate-800">
+        <div className="mx-auto max-w-6xl px-6 py-6">
+          {/* PREVIEW ACTION BAR */}
+          <div className="mb-5 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setShowQuotationPreview(false)}
+              className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Quotation
+            </button>
+
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-teal-700"
+            >
+              <Printer className="h-4 w-4" />
+              Print Quotation
+            </button>
+          </div>
+
+          {/* QUOTATION PREVIEW */}
+          <div className="quotation-preview-sheet bg-white shadow-lg">
+            {/* HEADER */}
+            <div className="flex min-h-[190px]">
+              <div className="w-9 shrink-0 bg-teal-600"></div>
+
+              <div className="flex-1 bg-teal-50 px-10 py-8">
+                <div className="flex items-start justify-between gap-8">
+                  <img
+                    src="/images/quotation-logo.png"
+                    alt="Garage AlTalaa AlFahir"
+                    className="h-24 w-auto object-contain mix-blend-multiply"
+                  />
+
+                  <div className="space-y-2 text-sm text-slate-700">
+                    <div className="grid grid-cols-[110px_130px] gap-3">
+                      <strong className="text-right">Date</strong>
+                      <span>{new Date().toLocaleDateString("en-GB")}</span>
+                    </div>
+
+                    <div className="grid grid-cols-[110px_130px] gap-3">
+                      <strong className="text-right">Quotation #</strong>
+                      <span>{customerNo || "Pending"}</span>
+                    </div>
+
+                    <div className="grid grid-cols-[110px_130px] gap-3">
+                      <strong className="text-right">Customer ID</strong>
+                      <span>{customerNo || "Pending"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-7 grid grid-cols-2 gap-16 text-sm leading-6">
+                  <div>
+                    <strong className="block text-base text-slate-900">
+                      Garage AlTalaa AlFahir
+                    </strong>
+                    <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                    <p>Phone: +966 50 662 0654</p>
+                    <p>Email: talaa.alfakhir@gmail.com</p>
+                  </div>
+
+                  <div>
+                    <strong className="block text-base text-slate-900">
+                      Quotation for:
+                    </strong>
+                    <p>{customerName || "-"}</p>
+                    <p>{customerAddress || "-"}</p>
+                    <p>{contactNumber || "-"}</p>
+                    <p>{email || "-"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SALESPERSON / TERMS */}
+            <div className="mx-10 mt-7 overflow-hidden border border-teal-300">
+              <div className="grid grid-cols-2 bg-teal-50 text-sm font-black text-slate-800">
+                <div className="border-r border-teal-300 px-4 py-3">
+                  Salesperson
+                </div>
+                <div className="px-4 py-3">Terms</div>
+              </div>
+
+              <div className="grid min-h-11 grid-cols-2 text-sm">
+                <div className="border-r border-teal-300 px-4 py-3">Admin</div>
+                <div className="px-4 py-3"></div>
+              </div>
+            </div>
+
+            {/* ITEMS */}
+            <div className="mx-10 mt-7">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-teal-50 text-slate-800">
+                    <th className="border border-teal-300 px-3 py-3 text-center">
+                      S.No.
+                    </th>
+                    <th className="border border-teal-300 px-3 py-3 text-center">
+                      Quantity
+                    </th>
+                    <th className="border border-teal-300 px-3 py-3 text-left">
+                      Description
+                    </th>
+                    <th className="border border-teal-300 px-3 py-3 text-right">
+                      Unit Price
+                    </th>
+                    <th className="border border-teal-300 px-3 py-3 text-right">
+                      Amount
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {quotationItems.map((item, index) => {
+                    const quantity = Number(item.quantity) || 0;
+                    const unitPrice = Number(item.unitPrice) || 0;
+                    const amount = quantity * unitPrice;
+
+                    return (
+                      <tr key={index}>
+                        <td className="border border-teal-300 px-3 py-3 text-center">
+                          {item.serialNumber}
+                        </td>
+
+                        <td className="border border-teal-300 px-3 py-3 text-center">
+                          {quantity}
+                        </td>
+
+                        <td className="border border-teal-300 px-3 py-3">
+                          {item.description || ""}
+                        </td>
+
+                        <td className="border border-teal-300 px-3 py-3 text-right">
+                          {unitPrice.toFixed(2)}
+                        </td>
+
+                        <td className="border border-teal-300 px-3 py-3 text-right">
+                          {amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+
+                  {Array.from({
+                    length: Math.max(0, 5 - quotationItems.length),
+                  }).map((_, index) => (
+                    <tr key={`preview-empty-${index}`}>
+                      <td className="border border-teal-300 px-3 py-3">
+                        &nbsp;
+                      </td>
+                      <td className="border border-teal-300 px-3 py-3">
+                        &nbsp;
+                      </td>
+                      <td className="border border-teal-300 px-3 py-3">
+                        &nbsp;
+                      </td>
+                      <td className="border border-teal-300 px-3 py-3">
+                        &nbsp;
+                      </td>
+                      <td className="border border-teal-300 px-3 py-3">
+                        &nbsp;
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* TERMS + TOTALS */}
+            <div className="mx-10 mt-7 grid grid-cols-[1fr_43%] gap-7">
+              <div className="min-h-[180px] border border-teal-300">
+                <div className="bg-teal-50 px-4 py-3 text-sm font-black text-slate-800">
+                  Terms & Conditions
+                </div>
+
+                <div className="space-y-2 px-4 py-4 text-sm">
+                  {["Bank Information - IBAN - Talaa Fahir", ...quotationTerms]
+                    .slice(0, 5)
+                    .map((term, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-[25px_1fr] gap-2"
+                      >
+                        <span className="font-semibold">{index + 1}.</span>
+                        <span>{term.trim() || " "}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="self-start border-l border-t border-teal-300">
+                {(() => {
+                  const subtotal = quotationItems.reduce(
+                    (sum, item) =>
+                      sum +
+                      (Number(item.quantity) || 0) *
+                        (Number(item.unitPrice) || 0),
+                    0,
+                  );
+
+                  const vat = subtotal * 0.15;
+                  const total = subtotal + vat;
+
+                  return (
+                    <>
+                      <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                        <strong className="px-4 py-3">Subtotal</strong>
+                        <span className="px-4 py-3 text-right">
+                          {subtotal.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                        <strong className="px-4 py-3">Tax Rate</strong>
+                        <span className="px-4 py-3 text-right">15.00%</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                        <strong className="px-4 py-3">VAT 15%</strong>
+                        <span className="px-4 py-3 text-right">
+                          {vat.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                        <strong className="px-4 py-3">Other</strong>
+                        <span className="px-4 py-3 text-right">-</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 border-b border-r border-teal-300 bg-teal-100 text-base">
+                        <strong className="px-4 py-3">Total</strong>
+                        <span className="px-4 py-3 text-right font-black">
+                          {total.toFixed(2)}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* FOOTER */}
+            <div className="mx-10 mb-10 mt-8 flex min-h-14 items-center bg-teal-50">
+              <div className="mr-8 self-stretch w-9 bg-teal-600"></div>
+              <strong className="text-teal-900">Thank you!</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
@@ -833,7 +1092,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             className="flex items-center gap-2 rounded-xl border border-teal-600 bg-white px-6 py-3 text-sm font-bold text-teal-700 shadow-sm transition hover:bg-teal-50"
           >
             <Printer className="h-4 w-4" />
-            Print Quotation
+            Quotation
           </button>
 
           <button
@@ -856,7 +1115,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
               <div className="quotation-print-header-content">
                 <div className="quotation-print-title-row">
                   <img
-                    src="/images/garage-logo.png"
+                    src="/images/quotation-logo.png"
                     alt="Garage AlTalaa AlFahir"
                     className="quotation-print-logo"
                   />
