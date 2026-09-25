@@ -90,7 +90,43 @@ export default function Dashboard({
 
   const [quotationOpen, setQuotationOpen] = React.useState(false);
 
+  const todayForMonth = new Date();
+
+  const [selectedRevenueMonth, setSelectedRevenueMonth] = React.useState(
+    `${todayForMonth.getFullYear()}-${String(
+      todayForMonth.getMonth() + 1,
+    ).padStart(2, "0")}`,
+  );
+
+  const [revenueMonthPickerOpen, setRevenueMonthPickerOpen] =
+    React.useState(false);
+
+  const [savedInvoices, setSavedInvoices] = React.useState([]);
+
   const jobs = Array.isArray(filteredJobs) ? filteredJobs : [];
+
+  React.useEffect(() => {
+    const loadSavedInvoices = async () => {
+      try {
+        const response = await fetch("/api/invoices", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load invoices");
+        }
+
+        const data = await response.json();
+
+        setSavedInvoices(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Dashboard invoice load error:", error);
+        setSavedInvoices([]);
+      }
+    };
+
+    loadSavedInvoices();
+  }, []);
 
   const normalizeStatus = (status) => {
     return String(status || "")
@@ -250,7 +286,101 @@ export default function Dashboard({
     return sum + panelCost + partsCost + electricalCost + mechanicalCost;
   }, 0);
 
-  const unpaidRevenue = Math.max(Number(totalRevenue || 0) - paidRevenue, 0);
+  const getMonthKey = (dateValue) => {
+    if (!dateValue) return "";
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0",
+    )}`;
+  };
+
+  const selectedMonthJobs = jobs.filter((job) => {
+    const jobDate =
+      job.invoiceDate ||
+      job.invoice_date ||
+      job.createdAt ||
+      job.created_at ||
+      job.intakeDate ||
+      job.intake_date;
+
+    return getMonthKey(jobDate) === selectedRevenueMonth;
+  });
+
+  const selectedMonthJobRevenue = selectedMonthJobs.reduce((sum, job) => {
+    const panelCost = (job.panels || []).reduce((panelSum, panel) => {
+      const defaultCosts = {
+        ok: 0,
+        scratch: 150,
+        dent: 300,
+        replace: 600,
+        light_damage: 100,
+        medium_damage: 250,
+        large_damage: 400,
+        polish: 75,
+      };
+
+      const cost =
+        panel.customRepairCost !== undefined && panel.customRepairCost !== ""
+          ? Number(panel.customRepairCost)
+          : Number(defaultCosts[panel.status] || 0);
+
+      return panelSum + cost;
+    }, 0);
+
+    const partsCost = (job.parts || []).reduce(
+      (partsSum, part) => partsSum + Number(part.price || 0),
+      0,
+    );
+
+    const electricalCost = (job.electricalItems || []).reduce(
+      (electricalSum, item) => electricalSum + Number(item.cost || 0),
+      0,
+    );
+
+    const mechanicalCost = (job.mechanicalItems || []).reduce(
+      (mechanicalSum, item) => mechanicalSum + Number(item.cost || 0),
+      0,
+    );
+
+    const subtotal = panelCost + partsCost + electricalCost + mechanicalCost;
+
+    return sum + subtotal * 1.15;
+  }, 0);
+
+  const selectedMonthQuotationRevenue = savedInvoices
+    .filter((invoice) => {
+      const invoiceDate =
+        invoice.invoice_date ||
+        invoice.invoiceDate ||
+        invoice.created_at ||
+        invoice.createdAt;
+
+      return getMonthKey(invoiceDate) === selectedRevenueMonth;
+    })
+    .reduce((sum, invoice) => {
+      const total = Number(
+        invoice.total_amount ??
+          invoice.totalAmount ??
+          invoice.grand_total ??
+          invoice.grandTotal ??
+          0,
+      );
+
+      return sum + total;
+    }, 0);
+
+  const selectedMonthTotalRevenue =
+    selectedMonthJobRevenue + selectedMonthQuotationRevenue;
+
+  const unpaidRevenue = Math.max(
+    Number(selectedMonthTotalRevenue || 0) - paidRevenue,
+    0,
+  );
 
   const recentJobs = [...jobs]
     .sort((a, b) => {
@@ -864,15 +994,26 @@ export default function Dashboard({
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-black uppercase text-slate-400">
-                    Total Revenue
-                  </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
+                      Total Revenue
+                    </p>
+
+                    <input
+                      type="month"
+                      value={selectedRevenueMonth}
+                      onChange={(e) => setSelectedRevenueMonth(e.target.value)}
+                      className="w-[125px] rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500"
+                    />
+                  </div>
 
                   <p className="text-xl font-black text-slate-900 mt-1 truncate">
-                    {formatMoney(totalRevenue)}
+                    {formatMoney(selectedMonthTotalRevenue)}
                   </p>
 
-                  <p className="text-xs text-slate-500 mt-1">All time</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {selectedRevenueMonth}
+                  </p>
                 </div>
               </div>
             </div>
