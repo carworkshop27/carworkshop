@@ -1,6 +1,7 @@
 "use client";
 
 import LoginScreen from "../components/auth/LoginScreen";
+import SuperUserSetup from "../components/auth/SuperUserSetup";
 import Dashboard from "../components/dashboard/Dashboard";
 import InventoryList from "../components/inventory/InventoryList";
 import SmsNotificationModal from "../components/notifications/SmsNotificationModal";
@@ -626,66 +627,104 @@ const PAINT_CHEMICALS_INVENTORY = [
   },
 ];
 
-const INITIAL_USERS = [
-  {
-    id: "u-1",
-    username: "superuser",
-    pin: "1234",
-    role: "Super User",
-    name: "Master Administrator",
-  },
-  {
-    id: "u-2",
-    username: "manager",
-    pin: "1234",
-    role: "Manager",
-    name: "Alex Morgan (Manager)",
-  },
-  {
-    id: "u-3",
-    username: "mechanic",
-    pin: "1234",
-    role: "Mechanic",
-    name: "David Smith (Lead Tech)",
-  },
-  {
-    id: "u-4",
-    username: "cashier",
-    pin: "1234",
-    role: "Cashier",
-    name: "Sarah Connor (Front Desk)",
-  },
-];
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+  const [setupStatus, setSetupStatus] = useState(null);
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const savedUser = sessionStorage.getItem("autofix_current_user");
+    let cancelled = false;
 
-      if (savedUser) {
-        try {
-          setCurrentUser(JSON.parse(savedUser));
-        } catch {
-          sessionStorage.removeItem("autofix_current_user");
+    async function initializeAuthentication() {
+      try {
+        sessionStorage.removeItem("autofix_current_user");
+
+        const statusResponse = await fetch(
+          "/api/auth/setup-status",
+          { cache: "no-store" },
+        );
+
+        if (!statusResponse.ok) {
+          throw new Error(
+            "Unable to verify workshop setup status.",
+          );
+        }
+
+        const statusResult = await statusResponse.json();
+
+        if (cancelled) return;
+
+        if (
+          ![
+            "setup_required",
+            "setup_complete",
+            "setup_locked",
+          ].includes(statusResult.status)
+        ) {
+          throw new Error(
+            "Workshop setup returned an invalid status.",
+          );
+        }
+
+        setSetupStatus(statusResult.status);
+
+        if (statusResult.status === "setup_complete") {
+          const sessionResponse = await fetch(
+            "/api/auth/me",
+            { cache: "no-store" },
+          );
+
+          if (sessionResponse.ok) {
+            const sessionResult =
+              await sessionResponse.json();
+
+            if (
+              !cancelled &&
+              sessionResult.authenticated &&
+              sessionResult.user
+            ) {
+              setCurrentUser(sessionResult.user);
+            }
+          } else if (sessionResponse.status !== 401) {
+            throw new Error(
+              "Unable to verify your login session.",
+            );
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setAuthError(
+            error.message ||
+              "Authentication initialization failed.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setAuthReady(true);
         }
       }
+    }
 
-      setAuthReady(true);
-    }, 0);
+    initializeAuthentication();
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
   const [loginInput, setLoginInput] = useState({ username: "", pin: "" });
 
-  const [registeredUsers, setRegisteredUsers] = useState(INITIAL_USERS);
+  const [registeredUsers, setRegisteredUsers] = useState([]);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirm, setResetConfirm] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
   const [newUserForm, setNewUserForm] = useState({
     name: "",
     username: "",
+    email: "",
     pin: "",
     role: "Mechanic",
   });
@@ -1048,10 +1087,8 @@ export default function Home() {
       setIsLoading(true);
 
       try {
-        const savedUsers = localStorage.getItem("autofix_users_db");
-        if (savedUsers) setRegisteredUsers(JSON.parse(savedUsers));
 
-        const jobsResponse = await fetch("/api/jobs");
+const jobsResponse = await fetch("/api/jobs");
         const jobsResult = await jobsResponse.json();
 
         if (!jobsResponse.ok || !Array.isArray(jobsResult)) {
@@ -1122,29 +1159,56 @@ export default function Home() {
     loadCustomers();
   }, []);
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
 
-    const foundUser = registeredUsers.find(
-      (u) =>
-        u.username.toLowerCase() === loginInput.username.trim().toLowerCase() &&
-        u.pin === loginInput.pin.trim(),
-    );
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: loginInput.username,
+          password: loginInput.pin,
+        }),
+      });
 
-    if (foundUser) {
-      setCurrentUser(foundUser);
-      sessionStorage.setItem("autofix_current_user", JSON.stringify(foundUser));
+      const result = await response.json();
+
+      if (!response.ok || !result.user) {
+        throw new Error(
+          result.error || "Invalid username or password.",
+        );
+      }
+
+      setCurrentUser(result.user);
+      setLoginInput({ username: "", pin: "" });
       setActiveScreen("dashboard");
-    } else {
-      alert("Invalid username or PIN.");
+    } catch (error) {
+      alert(error.message || "Login failed.");
     }
   };
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    sessionStorage.removeItem("autofix_current_user");
+      if (!response.ok) {
+        throw new Error("Logout failed.");
+      }
+
+      setCurrentUser(null);
+      setLoginInput({ username: "", pin: "" });
+      sessionStorage.removeItem("autofix_current_user");
+    } catch (error) {
+      alert(
+        error.message ||
+          "Unable to log out. Please try again.",
+      );
+    }
   };
-
   const handleDeleteJob = async (jobId) => {
     const jobToDelete = jobs.find((job) => job.id === jobId);
 
@@ -1190,57 +1254,233 @@ export default function Home() {
     }
   };
 
-  const handleCreateUserSubmit = (e) => {
-    e.preventDefault();
-    if (currentUser?.role !== "Super User")
-      return alert(
-        "Access Restricted: Only the Super User can create new system accounts.",
+  const loadWorkshopUsers = async () => {
+    const response = await fetch("/api/users/list", {
+      cache: "no-store",
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !Array.isArray(result.users)) {
+      throw new Error(
+        result.error || "Unable to load staff accounts.",
       );
-    if (!newUserForm.name || !newUserForm.username || !newUserForm.pin)
-      return alert("Please fill in all required user fields.");
-    if (
-      registeredUsers.some(
-        (u) =>
-          u.username.toLowerCase() ===
-          newUserForm.username.trim().toLowerCase(),
-      )
-    )
-      return alert("Username already exists.");
+    }
 
-    const newCreatedUser = {
-      id: `usr-${Date.now()}`,
-      name: newUserForm.name,
-      username: newUserForm.username.trim().toLowerCase(),
-      pin: newUserForm.pin.trim(),
-      role: newUserForm.role,
-    };
-
-    const updatedUsers = [...registeredUsers, newCreatedUser];
-    setRegisteredUsers(updatedUsers);
-    localStorage.setItem("autofix_users_db", JSON.stringify(updatedUsers));
-    alert(`Successfully created user: ${newUserForm.name}!`);
-    setIsUserModalOpen(false);
-    setNewUserForm({ name: "", username: "", pin: "", role: "Mechanic" });
+    setRegisteredUsers(result.users);
   };
 
-  const handleDeleteUser = (userId) => {
-    if (currentUser?.role !== "Super User") return;
-    if (registeredUsers.length <= 1)
-      return alert("Cannot delete the last remaining user account.");
-    const userToDelete = registeredUsers.find((u) => u.id === userId);
-    if (userToDelete?.username === "superuser")
-      return alert("Protected Account.");
-
+  useEffect(() => {
     if (
-      confirm(`Are you sure you want to delete user ${userToDelete?.name}?`)
+      !isUserModalOpen ||
+      currentUser?.role !== "Super User"
     ) {
-      const updatedUsers = registeredUsers.filter((u) => u.id !== userId);
-      setRegisteredUsers(updatedUsers);
-      localStorage.setItem("autofix_users_db", JSON.stringify(updatedUsers));
-      alert(`Successfully deleted user: ${userToDelete?.name}!`);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function refreshStaffList() {
+      try {
+        const response = await fetch("/api/users/list", {
+          cache: "no-store",
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !Array.isArray(result.users)) {
+          throw new Error(
+            result.error || "Unable to load staff accounts.",
+          );
+        }
+
+        if (!cancelled) {
+          setRegisteredUsers(result.users);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Staff list error:", error);
+          alert(
+            error.message ||
+              "Unable to load staff accounts.",
+          );
+        }
+      }
+    }
+
+    refreshStaffList();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isUserModalOpen,
+    currentUser?.id,
+    currentUser?.role,
+  ]);
+
+  const handleCreateUserSubmit = async (e) => {
+    e.preventDefault();
+
+    if (currentUser?.role !== "Super User") {
+      alert("Super User access required.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/users/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newUserForm.name,
+          username: newUserForm.username,
+          email: newUserForm.email,
+          password: newUserForm.pin,
+          role: newUserForm.role,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Unable to create staff account.",
+        );
+      }
+
+      setNewUserForm({
+        name: "",
+        username: "",
+        email: "",
+        pin: "",
+        role: "Mechanic",
+      });
+
+      await loadWorkshopUsers();
+
+      alert(
+        `Successfully created user: ${result.user.name}`,
+      );
+    } catch (error) {
+      alert(
+        error.message || "Unable to create staff account.",
+      );
     }
   };
 
+  const handleResetPassword = async (event) => {
+    event.preventDefault();
+
+    if (!resetTarget || resetBusy || currentUser?.role !== "Super User") {
+      return;
+    }
+
+    if (resetPassword.length < 12 || resetPassword.length > 128) {
+      alert("Password must contain 12–128 characters.");
+      return;
+    }
+
+    if (resetPassword !== resetConfirm) {
+      alert("New password and confirmation do not match.");
+      return;
+    }
+
+    setResetBusy(true);
+
+    try {
+      const response = await fetch("/api/users/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: resetTarget.id,
+          newPassword: resetPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Password reset failed.");
+      }
+
+      const changedOwnPassword = resetTarget.id === currentUser?.id;
+
+      setResetPassword("");
+      setResetConfirm("");
+      setResetTarget(null);
+
+      alert(
+        changedOwnPassword
+          ? "Your password was changed. Please log out and sign in again with the new password."
+          : `Password reset successfully for ${result.user.name}.`
+      );
+    } catch (error) {
+      alert(error.message || "Unable to reset password.");
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (currentUser?.role !== "Super User") {
+      alert("Super User access required.");
+      return;
+    }
+
+    const target = registeredUsers.find(
+      (user) => user.id === userId,
+    );
+
+    if (!target || !target.is_active) return;
+
+    if (
+      target.id === currentUser.id ||
+      target.username === "admin"
+    ) {
+      alert("The administrator account is protected.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Deactivate staff account ${target.name}?`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/users/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Unable to deactivate account.",
+        );
+      }
+
+      await loadWorkshopUsers();
+
+      alert(`Account deactivated: ${target.name}`);
+    } catch (error) {
+      alert(
+        error.message || "Unable to deactivate account.",
+      );
+    }
+  };
   const handleSelectJob = (job) => {
     setSelectedJobId(job.id);
     setPanels(job.panels || DEFAULT_PANELS);
@@ -1951,6 +2191,62 @@ export default function Home() {
   }, 0);
 
   if (!authReady) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white font-bold">
+        Checking workshop authentication...
+      </div>
+    );
+  }
+
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+        <div className="max-w-lg rounded-2xl bg-white p-8 text-center">
+          <h1 className="text-xl font-black text-red-700">
+            Workshop Authentication Unavailable
+          </h1>
+          <p className="mt-4 text-slate-700">
+            {authError}
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-6 rounded-xl bg-blue-600 px-6 py-3 font-bold text-white"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (setupStatus === "setup_required") {
+    return (
+      <SuperUserSetup
+        onSetupComplete={() => {
+          setSetupStatus("setup_complete");
+          setCurrentUser(null);
+        }}
+      />
+    );
+  }
+
+  if (setupStatus === "setup_locked") {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 text-center text-white">
+        <div>
+          <h1 className="text-2xl font-black">
+            Administrator Setup Locked
+          </h1>
+          <p className="mt-3 text-slate-300">
+            Setup is in progress or requires administrator recovery.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (setupStatus !== "setup_complete") {
     return null;
   }
 
@@ -2848,15 +3144,32 @@ export default function Home() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-extrabold text-slate-800 mb-1">
-                      Login PIN *
-                    </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">              <div>
+                <label className="block text-[11px] font-extrabold text-slate-800 mb-1">
+                  Staff Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="staff@example.com"
+                  value={newUserForm.email}
+                  onChange={(e) =>
+                    setNewUserForm({
+                      ...newUserForm,
+                      email: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 text-xs font-bold text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-600"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-extrabold text-slate-800 mb-1">
+                  Login Password *
+                </label>
                     <input
                       type="password"
                       required
-                      placeholder="e.g. 1234"
+                      placeholder="Minimum 12 characters" minLength={12}
                       value={newUserForm.pin}
                       onChange={(e) =>
                         setNewUserForm({ ...newUserForm, pin: e.target.value })
@@ -2915,7 +3228,14 @@ export default function Home() {
                     <tbody className="divide-y divide-slate-200 font-bold">
                       {registeredUsers.map((u) => (
                         <tr key={u.id} className="hover:bg-slate-50">
-                          <td className="p-3 text-slate-900">{u.name}</td>
+                          <td className="p-3 text-slate-900">
+                            {u.name}
+                            {!u.is_active && (
+                              <span className="ml-2 text-rose-600">
+                                (Inactive)
+                              </span>
+                            )}
+                          </td>
                           <td className="p-3 font-mono text-blue-700">
                             {u.username}
                           </td>
@@ -2927,7 +3247,21 @@ export default function Home() {
                             </span>
                           </td>
                           <td className="p-3 text-right">
-                            {u.username !== "superuser" && (
+                            <div className="flex items-center justify-end gap-2">
+                              {u.is_active && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setResetTarget(u);
+                                    setResetPassword("");
+                                    setResetConfirm("");
+                                  }}
+                                  className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-extrabold text-blue-700 hover:bg-blue-100"
+                                >
+                                  Reset Password
+                                </button>
+                              )}
+                            {u.username !== "admin" && u.id !== currentUser.id && u.is_active && (
                               <button
                                 onClick={() => handleDeleteUser(u.id)}
                                 className="text-rose-600 hover:text-rose-800 p-1"
@@ -2935,6 +3269,7 @@ export default function Home() {
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -2944,6 +3279,84 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {resetTarget && currentUser?.role === "Super User" && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <form
+            onSubmit={handleResetPassword}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5"
+          >
+            <div>
+              <h3 className="text-xl font-extrabold text-slate-900">
+                Reset Staff Password
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Staff: {resetTarget.name}
+              </p>
+              <p className="text-sm font-bold text-blue-700">
+                Username: {resetTarget.username}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-800 mb-2">
+                New Password
+              </label>
+              <input
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={12}
+                maxLength={128}
+                value={resetPassword}
+                onChange={(event) => setResetPassword(event.target.value)}
+                className="w-full rounded-xl border border-slate-300 p-3 text-slate-900"
+                placeholder="Minimum 12 characters"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-800 mb-2">
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={12}
+                maxLength={128}
+                value={resetConfirm}
+                onChange={(event) => setResetConfirm(event.target.value)}
+                className="w-full rounded-xl border border-slate-300 p-3 text-slate-900"
+                placeholder="Repeat new password"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={resetBusy}
+                onClick={() => {
+                  setResetTarget(null);
+                  setResetPassword("");
+                  setResetConfirm("");
+                }}
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-bold text-slate-700"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={resetBusy}
+                className="flex-1 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white disabled:opacity-50"
+              >
+                {resetBusy ? "Resetting..." : "Reset Password"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

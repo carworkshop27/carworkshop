@@ -1,0 +1,235 @@
+import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function secureCompare(received, expected) {
+  if (
+    typeof received !== "string" ||
+    typeof expected !== "string"
+  ) {
+    return false;
+  }
+
+  const a = Buffer.from(received);
+  const b = Buffer.from(expected);
+
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  return timingSafeEqual(a, b);
+}
+
+export async function POST(request) {
+  try {
+    const configuredSecret =
+      process.env.WORKSHOP_BOOTSTRAP_SECRET;
+
+    if (!configuredSecret || configuredSecret.length < 32) {
+      return NextResponse.json(
+        { error: "Administrator setup is not configured." },
+        { status: 503 }
+      );
+    }
+
+    const providedSecret =
+      request.headers.get("x-workshop-setup-secret");
+
+    if (
+      !secureCompare(
+        providedSecret,
+        configuredSecret
+      )
+    ) {
+      return NextResponse.json(
+        { error: "Unauthorized setup request." },
+        { status: 401 }
+      );
+    }
+
+    // Check whether the workshop already has accounts.
+
+    const { count, error: countError } =
+      await supabaseAdmin
+        .from("workshop_users")
+        .select("id", {
+          count: "exact",
+          head: true,
+        });
+
+    if (countError) {
+      console.error(
+        "Bootstrap account check failed:",
+        countError.message
+      );
+
+      return NextResponse.json(
+        { error: "Unable to verify administrator setup." },
+        { status: 500 }
+      );
+    }
+
+    if (count !== 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Initial administrator setup is already complete.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const body = await request.json();
+
+    const name =
+      typeof body.name === "string"
+        ? body.name.trim()
+        : "";
+
+    const username =
+      typeof body.username === "string"
+        ? body.username.trim().toLowerCase()
+        : "";
+
+    const email =
+      typeof body.email === "string"
+        ? body.email.trim().toLowerCase()
+        : "";
+
+    const password = body.password;
+
+    if (
+      !name ||
+      !username ||
+      !email ||
+      typeof password !== "string" ||
+      password.length < 12
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Name, username, email and a password of at least 12 characters are required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[a-z0-9_.-]+$/.test(username)) {
+      return NextResponse.json(
+        {
+          error:
+            "Username may contain lowercase letters, numbers, dots, underscores and hyphens.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid email address." },
+        { status: 400 }
+      );
+    }
+
+    // Create the authentication account.
+
+    const { data: authData, error: authError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+
+    if (authError || !authData?.user?.id) {
+      console.error(
+        "Bootstrap Auth creation failed:",
+        authError?.message
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Unable to create administrator authentication account.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const authUserId = authData.user.id;
+
+    // Save the workshop profile.
+
+    const { error: profileError } =
+      await supabaseAdmin
+        .from("workshop_users")
+        .insert({
+          id: authUserId,
+          username,
+          full_name: name,
+          role: "Super User",
+          is_active: true,
+        });
+
+    if (profileError) {
+      console.error(
+        "Bootstrap profile creation failed:",
+        profileError.message
+      );
+
+      // Roll back the new Auth account if profile creation fails.
+
+      const { error: rollbackError } =
+        await supabaseAdmin.auth.admin.deleteUser(
+          authUserId
+        );
+
+      if (rollbackError) {
+        console.error(
+          "Bootstrap rollback failed:",
+          rollbackError.message
+        );
+      }
+
+      return NextResponse.json(
+        {
+          error:
+            "Administrator profile creation failed.",
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message:
+          "Workshop Super User created successfully.",
+        user: {
+          id: authUserId,
+          username,
+          name,
+          role: "Super User",
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error(
+      "Bootstrap API error:",
+      error.message
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Administrator setup failed.",
+      },
+      { status: 500 }
+    );
+  }
+}
