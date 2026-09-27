@@ -90,6 +90,32 @@ export default function Dashboard({
 
   const [quotationOpen, setQuotationOpen] = React.useState(false);
 
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [mobileMenuOpen]);
+
   const todayForMonth = new Date();
 
   const [selectedRevenueMonth, setSelectedRevenueMonth] = React.useState(
@@ -385,11 +411,11 @@ export default function Dashboard({
   const recentJobs = [...jobs]
     .sort((a, b) => {
       const dateA = new Date(
-        a.updatedAt || a.createdAt || a.intakeDate || 0,
+        a.updatedAt || a.updated_at || a.createdAt || a.created_at || a.intakeDate || a.intake_date || 0,
       ).getTime();
 
       const dateB = new Date(
-        b.updatedAt || b.createdAt || b.intakeDate || 0,
+        b.updatedAt || b.updated_at || b.createdAt || b.created_at || b.intakeDate || b.intake_date || 0,
       ).getTime();
 
       return dateB - dateA;
@@ -423,7 +449,7 @@ export default function Dashboard({
   const unpaidPercentage = totalPaymentRevenue > 0 ? 100 - paidPercentage : 0;
 
   const formatMoney = (amount) => {
-    return `⃁ ${Number(amount || 0).toLocaleString("en-SA", {
+    return `SAR ${Number(amount || 0).toLocaleString("en-SA", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -523,6 +549,8 @@ export default function Dashboard({
       ========================================================= */}
       <DashboardHeader
         currentUser={currentUser}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         setIsUserModalOpen={setIsUserModalOpen}
@@ -537,20 +565,59 @@ export default function Dashboard({
         {/* =======================================================
             LEFT SIDEBAR
         ======================================================= */}
+        {mobileMenuOpen && (
+          <button
+            type="button"
+            aria-label="Close navigation menu"
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 top-[76px] z-40 bg-slate-950/60 lg:hidden"
+          />
+        )}
+
         <aside
-          className="
-            hidden
-            lg:flex
+          id="workshop-sidebar"
+          aria-label="Workshop navigation"
+          onClickCapture={(event) => {
+            const button = event.target.closest("button");
+
+            if (!button) return;
+
+            const label = button.textContent.trim();
+
+            if (label === "Accounts" || label === "Quotation") {
+              return;
+            }
+
+            setMobileMenuOpen(false);
+          }}
+          className={`
+            flex
             w-64
             shrink-0
-            min-h-[calc(100vh-76px)]
             bg-slate-950
             text-white
             flex-col
-            sticky
+            fixed
+            left-0
             top-[76px]
-            self-start
-          "
+            bottom-0
+            z-[45]
+            overflow-y-auto
+            shadow-2xl
+            transition-transform
+            duration-200
+            ease-out
+            lg:sticky
+            lg:top-[76px]
+            lg:bottom-auto
+            lg:z-auto
+            lg:min-h-[calc(100vh-76px)]
+            lg:self-start
+            lg:overflow-visible
+            lg:shadow-none
+            lg:translate-x-0
+            ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+          `}
         >
           {/* Brand */}
 
@@ -593,7 +660,7 @@ export default function Dashboard({
                       </span>
 
                       <span className="text-xs text-slate-400">
-                        {accountsOpen ? "▲" : "▼"}
+                        {accountsOpen ? "\u25B2" : "\u25BC"}
                       </span>
                     </button>
 
@@ -748,7 +815,7 @@ export default function Dashboard({
                       </span>
 
                       <span className="text-xs text-slate-400">
-                        {quotationOpen ? "▲" : "▼"}
+                        {quotationOpen ? "\u25B2" : "\u25BC"}
                       </span>
                     </button>
 
@@ -994,17 +1061,10 @@ export default function Dashboard({
                 </div>
 
                 <div className="min-w-0">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center">
                     <p className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
-                      Total Revenue
+                      Monthly Revenue
                     </p>
-
-                    <input
-                      type="month"
-                      value={selectedRevenueMonth}
-                      onChange={(e) => setSelectedRevenueMonth(e.target.value)}
-                      className="w-[125px] rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500"
-                    />
                   </div>
 
                   <p className="text-xl font-black text-slate-900 mt-1 truncate">
@@ -1012,7 +1072,12 @@ export default function Dashboard({
                   </p>
 
                   <p className="text-xs text-slate-500 mt-1">
-                    {selectedRevenueMonth}
+                    {new Date(
+                      `${selectedRevenueMonth}-01T12:00:00`
+                    ).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
                   </p>
                 </div>
               </div>
@@ -1103,7 +1168,7 @@ export default function Dashboard({
 
                         <td className="px-4 py-3 text-slate-500">
                           {formatDate(
-                            job.updatedAt || job.createdAt || job.intakeDate,
+                            job.updatedAt || job.updated_at || job.createdAt || job.created_at || job.intakeDate || job.intake_date,
                           )}
                         </td>
                       </tr>
@@ -1156,13 +1221,20 @@ export default function Dashboard({
                     )`,
                   }}
                 >
-                  <div className="w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center">
+                  <div className="w-36 h-36 bg-white rounded-full flex flex-col items-center justify-center px-2 text-center">
                     <span className="text-xs font-black text-slate-400">
                       TOTAL
                     </span>
 
-                    <span className="text-lg font-black text-slate-900 mt-1">
-                      {formatMoney(totalPaymentRevenue)}
+                    <span className="mt-1 text-[11px] font-extrabold text-slate-500">
+                      SAR
+                    </span>
+
+                    <span className="max-w-full text-center text-[15px] font-black leading-tight tracking-tight text-slate-900 tabular-nums">
+                      {Number(totalPaymentRevenue || 0).toLocaleString("en-SA", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </span>
                   </div>
                 </div>

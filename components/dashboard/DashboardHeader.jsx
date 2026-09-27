@@ -1,9 +1,11 @@
 "use client";
 
-import { Search, ShieldCheck, UserPlus, LogOut } from "lucide-react";
+import { Search, ShieldCheck, UserPlus, LogOut, Menu, X } from "lucide-react";
 
 export default function DashboardHeader({
   currentUser,
+  mobileMenuOpen,
+  setMobileMenuOpen,
   searchTerm,
   setSearchTerm,
   setIsUserModalOpen,
@@ -17,7 +19,22 @@ export default function DashboardHeader({
           {/* =========================================================
               LOGO
           ========================================================= */}
-          <div className="flex items-center shrink-0">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="workshop-sidebar"
+            className="lg:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 hover:bg-slate-100"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
+
+<div className="flex items-center shrink-0">
             <img
               src="/images/garage-logo.png"
               alt="Garage Altalaa Fakhir"
@@ -97,32 +114,6 @@ export default function DashboardHeader({
                 </p>
               </div>
             </div>
-
-            {/* Manage Users */}
-            {currentUser.role === "Super User" && (
-              <button
-                onClick={() => setIsUserModalOpen(true)}
-                title="Manage Users"
-                className="
-                  h-10
-                  px-3
-                  rounded-xl
-                  bg-purple-600
-                  hover:bg-purple-700
-                  text-white
-                  text-xs
-                  font-bold
-                  flex
-                  items-center
-                  gap-2
-                  shadow-sm
-                  transition
-                "
-              >
-                <UserPlus className="w-4 h-4" />
-                <span className="hidden xl:inline">Manage Users</span>
-              </button>
-            )}
 
             {/* Logout */}
             <button
