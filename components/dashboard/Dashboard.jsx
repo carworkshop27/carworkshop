@@ -582,7 +582,10 @@ export default function Dashboard({
 
             if (!button) return;
 
-            const label = button.textContent.trim();
+            // Ignore the arrow when identifying expandable menu headings.
+            const label = button.textContent
+              .replace(/[\u25B2\u25BC]/g, "")
+              .trim();
 
             if (label === "Accounts" || label === "Quotation") {
               return;
