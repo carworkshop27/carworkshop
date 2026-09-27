@@ -40,14 +40,32 @@ export async function GET() {
       );
     }
 
-    const users = (data || []).map((user) => ({
-      id: user.id,
-      username: user.username,
-      name: user.full_name,
-      role: user.role,
-      is_active: user.is_active,
-      created_at: user.created_at,
-    }));
+    const users = await Promise.all(
+      (data || []).map(async (user) => {
+        const {
+          data: authData,
+          error: authError,
+        } = await supabaseAdmin.auth.admin.getUserById(
+          user.id
+        );
+
+        if (authError || !authData?.user) {
+          throw new Error(
+            `Unable to retrieve authentication details for staff ID ${user.id}.`
+          );
+        }
+
+        return {
+          id: user.id,
+          username: user.username,
+          name: user.full_name,
+          email: authData.user.email || "",
+          role: user.role,
+          is_active: user.is_active,
+          created_at: user.created_at,
+        };
+      })
+    );
 
     return NextResponse.json(
       { users },
@@ -69,3 +87,4 @@ export async function GET() {
     );
   }
 }
+

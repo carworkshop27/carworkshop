@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import LoginScreen from "../components/auth/LoginScreen";
 import SuperUserSetup from "../components/auth/SuperUserSetup";
@@ -717,6 +717,14 @@ export default function Home() {
 
   const [registeredUsers, setRegisteredUsers] = useState([]);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [editBusy, setEditBusy] = useState(false);
+  const [editUserForm, setEditUserForm] = useState({
+    name: "",
+    username: "",
+    email: "",
+    role: "Mechanic",
+  });
   const [resetTarget, setResetTarget] = useState(null);
   const [resetPassword, setResetPassword] = useState("");
   const [resetConfirm, setResetConfirm] = useState("");
@@ -971,7 +979,7 @@ export default function Home() {
         Customer: job.owner,
         Plate: job.plate,
         "Payment Status": job.paymentStatus || "Unpaid",
-        "Invoice Amount (⃁)": grandTotal,
+        "Invoice Amount (âƒ)": grandTotal,
         Date: job.date,
       };
     });
@@ -1370,6 +1378,75 @@ const jobsResponse = await fetch("/api/jobs");
     }
   };
 
+  const handleEditUser = async (event) => {
+    event.preventDefault();
+
+    if (
+      !editTarget ||
+      editBusy ||
+      currentUser?.role !== "Super User"
+    ) {
+      return;
+    }
+
+    setEditBusy(true);
+
+    try {
+      const response = await fetch("/api/users/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: editTarget.id,
+          name: editUserForm.name,
+          username: editUserForm.username,
+          email: editUserForm.email,
+          role: editUserForm.role,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Unable to update staff account."
+        );
+      }
+
+      await loadWorkshopUsers();
+
+      if (editTarget.id === currentUser?.id) {
+        const sessionResponse = await fetch("/api/auth/me", {
+          cache: "no-store",
+        });
+
+        if (sessionResponse.ok) {
+          const sessionResult = await sessionResponse.json();
+
+          if (
+            sessionResult.authenticated &&
+            sessionResult.user
+          ) {
+            setCurrentUser(sessionResult.user);
+          }
+        }
+      }
+
+      setEditTarget(null);
+
+      alert(
+        `Staff account updated successfully: ${result.user.name}`
+      );
+    } catch (error) {
+      alert(
+        error.message || "Unable to update staff account."
+      );
+    } finally {
+      setEditBusy(false);
+    }
+  };
+
   const handleResetPassword = async (event) => {
     event.preventDefault();
 
@@ -1378,7 +1455,7 @@ const jobsResponse = await fetch("/api/jobs");
     }
 
     if (resetPassword.length < 12 || resetPassword.length > 128) {
-      alert("Password must contain 12–128 characters.");
+      alert("Password must contain 12â€“128 characters.");
       return;
     }
 
@@ -1625,13 +1702,13 @@ const jobsResponse = await fetch("/api/jobs");
     let text = `Hello ${job.owner}, here is an update from AutoFix Pro regarding your vehicle (${job.model} - ${job.plate}).\n\n`;
 
     text += `Current Workshop Status: ${job.status.toUpperCase()}\n`;
-    text += `Total Repair Estimate: ⃁${grandTotal.toFixed(2)}\n`;
+    text += `Total Repair Estimate: âƒ${grandTotal.toFixed(2)}\n`;
     text += `Payment Status: ${job.paymentStatus || "Unpaid"}\n\n`;
 
     if (job.status === "Ready for Pickup") {
-      text += `🚗 Your vehicle is fully ready for pickup! Please visit our workshop at your earliest convenience.\n\n`;
+      text += `ðŸš— Your vehicle is fully ready for pickup! Please visit our workshop at your earliest convenience.\n\n`;
     } else {
-      text += `🔧 Our team is actively processing your vehicle repair.\n\n`;
+      text += `ðŸ”§ Our team is actively processing your vehicle repair.\n\n`;
     }
 
     text += `Thank you for choosing AutoFix Pro!`;
@@ -2098,7 +2175,7 @@ const jobsResponse = await fetch("/api/jobs");
       tableData.push([
         p.name,
         `Body Repair - ${info.label}${techStr}`,
-        `⃁${info.cost.toFixed(2)}`,
+        `âƒ${info.cost.toFixed(2)}`,
       ]);
     });
 
@@ -2107,7 +2184,7 @@ const jobsResponse = await fetch("/api/jobs");
       tableData.push([
         part.name,
         `Spare Part (x${part.qty})`,
-        `⃁${part.price.toFixed(2)}`,
+        `âƒ${part.price.toFixed(2)}`,
       ]);
     });
 
@@ -2124,14 +2201,14 @@ const jobsResponse = await fetch("/api/jobs");
         colSpan: 2,
         styles: { fontStyle: "bold", halign: "right" },
       },
-      { content: `⃁${totalCost.toFixed(2)}`, styles: { fontStyle: "bold" } },
+      { content: `âƒ${totalCost.toFixed(2)}`, styles: { fontStyle: "bold" } },
     ]);
 
     autoTable(doc, {
       startY: 75,
       head: [["Item Description", "Category / Details", "Amount"]],
       body:
-        tableData.length > 0 ? tableData : [["No items added", "N/A", "⃁0.00"]],
+        tableData.length > 0 ? tableData : [["No items added", "N/A", "âƒ0.00"]],
       theme: "striped",
       headStyles: { fillColor: [37, 99, 235] },
     });
@@ -2418,7 +2495,7 @@ const jobsResponse = await fetch("/api/jobs");
               </p>
 
               <h3 className="text-3xl font-black text-slate-900">
-                ⃁{totalJobCost.toFixed(2)}
+                âƒ{totalJobCost.toFixed(2)}
               </h3>
             </div>
           </div>
@@ -2570,7 +2647,7 @@ const jobsResponse = await fetch("/api/jobs");
                         </div>
                       </div>
                       <span className="font-black text-slate-900">
-                        ⃁
+                        âƒ
                         {(p.customRepairCost !== undefined &&
                         p.customRepairCost !== ""
                           ? Number(p.customRepairCost)
@@ -2633,7 +2710,7 @@ const jobsResponse = await fetch("/api/jobs");
                     <div>
                       <p className="text-xs font-bold text-slate-500">Cost</p>
                       <p className="font-semibold text-slate-900">
-                        {Number(item.cost || 0).toFixed(2)} ⃁
+                        {Number(item.cost || 0).toFixed(2)} âƒ
                       </p>
                     </div>
                   </div>
@@ -2691,7 +2768,7 @@ const jobsResponse = await fetch("/api/jobs");
                     <div>
                       <p className="text-xs font-bold text-slate-500">Cost</p>
                       <p className="font-semibold text-slate-900">
-                        {Number(item.cost || 0).toFixed(2)} ⃁
+                        {Number(item.cost || 0).toFixed(2)} âƒ
                       </p>
                     </div>
                   </div>
@@ -2803,7 +2880,7 @@ const jobsResponse = await fetch("/api/jobs");
                       </p>
                     </div>
                     <span className="font-black text-slate-900">
-                      ⃁{pt.price.toFixed(2)}
+                      âƒ{pt.price.toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -3252,6 +3329,23 @@ const jobsResponse = await fetch("/api/jobs");
                                 <button
                                   type="button"
                                   onClick={() => {
+                                    setEditTarget(u);
+                                    setEditUserForm({
+                                      name: u.name || "",
+                                      username: u.username || "",
+                                      email: u.email || "",
+                                      role: u.role || "Mechanic",
+                                    });
+                                  }}
+                                  className="rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-extrabold text-emerald-700 hover:bg-emerald-100"
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {u.is_active && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
                                     setResetTarget(u);
                                     setResetPassword("");
                                     setResetConfirm("");
@@ -3279,6 +3373,135 @@ const jobsResponse = await fetch("/api/jobs");
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {editTarget && currentUser?.role === "Super User" && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <form
+            onSubmit={handleEditUser}
+            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto"
+          >
+            <div>
+              <h3 className="text-xl font-extrabold text-slate-900">
+                Edit Staff Account
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Update staff details and assigned role.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-800 mb-2">
+                Full Name *
+              </label>
+              <input
+                type="text"
+                required
+                maxLength={150}
+                value={editUserForm.name}
+                onChange={(event) =>
+                  setEditUserForm({
+                    ...editUserForm,
+                    name: event.target.value,
+                  })
+                }
+                className="w-full rounded-xl border border-slate-300 p-3 text-slate-900"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-800 mb-2">
+                Login Username *
+              </label>
+              <input
+                type="text"
+                required
+                maxLength={50}
+                pattern="[a-zA-Z0-9_.-]+"
+                disabled={editTarget.username === "admin"}
+                value={editUserForm.username}
+                onChange={(event) =>
+                  setEditUserForm({
+                    ...editUserForm,
+                    username: event.target.value,
+                  })
+                }
+                className="w-full rounded-xl border border-slate-300 p-3 text-slate-900 disabled:bg-slate-100 disabled:text-slate-500"
+              />
+              {editTarget.username === "admin" && (
+                <p className="mt-1 text-xs text-amber-700">
+                  The initial admin username is protected.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-800 mb-2">
+                Staff Email *
+              </label>
+              <input
+                type="email"
+                required
+                maxLength={254}
+                value={editUserForm.email}
+                onChange={(event) =>
+                  setEditUserForm({
+                    ...editUserForm,
+                    email: event.target.value,
+                  })
+                }
+                className="w-full rounded-xl border border-slate-300 p-3 text-slate-900"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-800 mb-2">
+                Assign Role / Privilege *
+              </label>
+              <select
+                required
+                disabled={editTarget.username === "admin"}
+                value={editUserForm.role}
+                onChange={(event) =>
+                  setEditUserForm({
+                    ...editUserForm,
+                    role: event.target.value,
+                  })
+                }
+                className="w-full rounded-xl border border-slate-300 p-3 text-slate-900 disabled:bg-slate-100 disabled:text-slate-500"
+              >
+                <option value="Super User">Super User</option>
+                <option value="Manager">Manager</option>
+                <option value="Mechanic">Mechanic</option>
+                <option value="Cashier">Cashier</option>
+              </select>
+              {editTarget.username === "admin" && (
+                <p className="mt-1 text-xs text-amber-700">
+                  The initial admin role is permanently Super User.
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={editBusy}
+                onClick={() => setEditTarget(null)}
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-bold text-slate-700 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={editBusy}
+                className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 font-bold text-white disabled:opacity-50"
+              >
+                {editBusy ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
@@ -3583,3 +3806,4 @@ const jobsResponse = await fetch("/api/jobs");
     </>
   );
 }
+
