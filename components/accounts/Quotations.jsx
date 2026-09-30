@@ -356,7 +356,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
                     <div className="leading-6">
                       <div>Bank Information:</div>
-                      <div>مؤسسة محمد عبدالله المال</div>
+                      <div>مؤسسة محمد عبدالله الملا</div>
                       <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
                     </div>
                   </div>
@@ -483,6 +483,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           margin: 0;
           padding: 0 5mm 5mm 5mm;
           position: relative;
+          top: -5mm;
           background: white;
           box-sizing: border-box;
           overflow: hidden;
@@ -1060,7 +1061,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             <div className="mb-3 flex items-center gap-3">
               <div className="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
                 Bank Information
-مؤسسة محمد عبدالله المال
+مؤسسة محمد عبدالله الملا
 IBAN: SA51 8000 0451 6080 1631 0298
               </div>
             </div>
@@ -1251,7 +1252,7 @@ IBAN: SA51 8000 0451 6080 1631 0298
 
                     <div className="quotation-print-term-text">
                       <div>Bank Information:</div>
-                      <div>مؤسسة محمد عبدالله المال</div>
+                      <div>مؤسسة محمد عبدالله الملا</div>
                       <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
                     </div>
                   </div>
@@ -1329,6 +1330,8 @@ IBAN: SA51 8000 0451 6080 1631 0298
     </div>
   );
 }
+
+
 
 
 
