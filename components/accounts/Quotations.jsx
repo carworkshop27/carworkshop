@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ArrowLeft, FileText, Plus, Printer, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -351,14 +351,24 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                 </div>
 
                 <div className="space-y-2 px-4 py-4 text-sm">
-                  {["Bank Information - IBAN - Talaa Fahir", ...quotationTerms]
-                    .slice(0, 5)
+                  <div className="grid grid-cols-[25px_1fr] gap-2">
+                    <span className="font-semibold">1.</span>
+
+                    <div className="leading-6">
+                      <div>Bank Information:</div>
+                      <div>مؤسسة محمد عبدالله المال</div>
+                      <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
+                    </div>
+                  </div>
+
+                  {quotationTerms
+                    .slice(0, 4)
                     .map((term, index) => (
                       <div
                         key={index}
                         className="grid grid-cols-[25px_1fr] gap-2"
                       >
-                        <span className="font-semibold">{index + 1}.</span>
+                        <span className="font-semibold">{index + 2}.</span>
                         <span>{term.trim() || " "}</span>
                       </div>
                     ))}
@@ -458,25 +468,27 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
         .quotation-print {
           display: block !important;
-          position: absolute;
-          inset: 0;
+          position: static;
           width: 210mm;
-          height: 297mm;
+          margin: 0;
+          padding: 0;
           background: white;
           color: #123b3b;
           font-family: Arial, Helvetica, sans-serif;
         }
 
         .quotation-print-page {
-  width: 180mm;
-  height: 267mm;
-  min-height: 0;
-  margin: 15mm auto;
-  position: relative;
-  background: white;
-  box-sizing: border-box;
-  overflow: hidden;
-}
+          width: 210mm;
+          height: 297mm;
+          margin: 0;
+          padding: 0 5mm 5mm 5mm;
+          position: relative;
+          background: white;
+          box-sizing: border-box;
+          overflow: hidden;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
 
         /* HEADER */
         .quotation-print-header {
@@ -733,10 +745,15 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         .quotation-print-footer {
           display: flex;
           align-items: center;
-          min-height: 12mm;
-          margin-top: 5mm;
+          position: absolute;
+          left: 15mm;
+          right: 15mm;
+          bottom: 15mm;
+          height: 12mm;
+          margin: 0;
           background: #d8f3f1;
           font-size: 8.5pt;
+          box-sizing: border-box;
         }
 
         .quotation-print-footer-bar {
@@ -772,7 +789,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           </div>
         </div>
 
-        {/* BOX 1 — CUSTOMER INFORMATION */}
+        {/* BOX 1 â€” CUSTOMER INFORMATION */}
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center gap-3 border-b border-slate-200 px-6 py-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
@@ -866,7 +883,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             </div>
           </div>
         </section>
-        {/* BOX 2 — QUOTATION ITEMS */}
+        {/* BOX 2 â€” QUOTATION ITEMS */}
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
             <div>
@@ -902,16 +919,16 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                     Quantity
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
-                    Unit Price (⃁)
+                    Unit Price (âƒ)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
-                    Amount (⃁)
+                    Amount (âƒ)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
-                    VAT 15% (⃁)
+                    VAT 15% (âƒ)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
-                    Total (⃁)
+                    Total (âƒ)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-center text-xs font-black text-slate-600">
                     Action
@@ -1026,7 +1043,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           </div>
         </section>
 
-        {/* BOX 3 — TERMS & CONDITIONS */}
+        {/* BOX 3 â€” TERMS & CONDITIONS */}
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-black text-slate-900">
@@ -1042,7 +1059,9 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             {/* Hardcoded Bank Information */}
             <div className="mb-3 flex items-center gap-3">
               <div className="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
-                Bank Information - IBAN - Talaa Fahir
+                Bank Information
+مؤسسة محمد عبدالله المال
+IBAN: SA51 8000 0451 6080 1631 0298
               </div>
             </div>
 
@@ -1064,7 +1083,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                     className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
                     title="Delete term"
                   >
-                    ×
+                    {String.fromCharCode(215)}
                   </button>
                 </div>
               ))}
@@ -1227,12 +1246,22 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                 </div>
 
                 <div className="quotation-print-terms-body">
-                  {["Bank Information - IBAN - Talaa Fahir", ...quotationTerms]
-                    .slice(0, 5)
+                  <div className="quotation-print-term-row">
+                    <span className="quotation-print-term-number">1.</span>
+
+                    <div className="quotation-print-term-text">
+                      <div>Bank Information:</div>
+                      <div>مؤسسة محمد عبدالله المال</div>
+                      <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
+                    </div>
+                  </div>
+
+                  {quotationTerms
+                    .slice(0, 4)
                     .map((term, index) => (
                       <div key={index} className="quotation-print-term-row">
                         <span className="quotation-print-term-number">
-                          {index + 1}.
+                          {index + 2}.
                         </span>
 
                         <span className="quotation-print-term-text">
@@ -1300,3 +1329,21 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
