@@ -170,7 +170,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
   };
 
   // Target quotation print layout: maximum 10 items per A4 page.
-  const ITEMS_PER_PRINT_PAGE = 10;
+  const ITEMS_PER_PRINT_PAGE = 7;
 
   const quotationPrintPages = Array.from(
     {
@@ -188,8 +188,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
   const quotationSubtotal = quotationItems.reduce(
     (sum, item) =>
-      sum +
-      (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0),
+      sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0),
     0,
   );
 
@@ -213,7 +212,10 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={() => {
+                setShowQuotationPreview(false);
+                setTimeout(() => window.print(), 150);
+              }}
               className="flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-teal-700"
             >
               <Printer className="h-4 w-4" />
@@ -224,8 +226,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           {/* QUOTATION PREVIEW */}
           <div className="space-y-8">
             {quotationPrintPages.map((pageItems, pageIndex) => {
-              const isLastPage =
-                pageIndex === quotationPrintPages.length - 1;
+              const isLastPage = pageIndex === quotationPrintPages.length - 1;
 
               return (
                 <div
@@ -263,7 +264,9 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                                 Quotation #
                               </strong>
                               <span className="text-center">:</span>
-                              <span className="text-left">{customerNo || "Pending"}</span>
+                              <span className="text-left">
+                                {customerNo || "Pending"}
+                              </span>
                             </div>
 
                             <div className="grid grid-cols-[105px_10px_130px] gap-2">
@@ -271,7 +274,9 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                                 Customer ID
                               </strong>
                               <span className="text-center">:</span>
-                              <span className="text-left">{customerNo || "Pending"}</span>
+                              <span className="text-left">
+                                {customerNo || "Pending"}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -406,29 +411,23 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                             <span className="font-semibold">1.</span>
 
                             <div className="leading-6">
-                              <div>
-                                Bank Information - IBAN - Talaa Fakhir
-                              </div>
+                              <div>Bank Information - IBAN - Talaa Fakhir</div>
                               <div>مؤسسة محمد عبدالله الملا</div>
-                              <div>
-                                IBAN: SA51 8000 0451 6080 1631 0298
-                              </div>
+                              <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
                             </div>
                           </div>
 
-                          {quotationTerms
-                            .slice(0, 4)
-                            .map((term, termIndex) => (
-                              <div
-                                key={termIndex}
-                                className="mt-1 grid grid-cols-[25px_1fr] gap-2"
-                              >
-                                <span className="font-semibold">
-                                  {termIndex + 2}.
-                                </span>
-                                <span>{term.trim() || " "}</span>
-                              </div>
-                            ))}
+                          {quotationTerms.slice(0, 4).map((term, termIndex) => (
+                            <div
+                              key={termIndex}
+                              className="mt-1 grid grid-cols-[25px_1fr] gap-2"
+                            >
+                              <span className="font-semibold">
+                                {termIndex + 2}.
+                              </span>
+                              <span>{term.trim() || " "}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
@@ -442,9 +441,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
                         <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
                           <strong className="px-4 py-3">Tax Rate</strong>
-                          <span className="px-4 py-3 text-right">
-                            15.00%
-                          </span>
+                          <span className="px-4 py-3 text-right">15.00%</span>
                         </div>
 
                         <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
@@ -474,16 +471,14 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                     <div
                       className="flex w-[54%] items-center bg-teal-700 pl-8 text-white"
                       style={{
-                        clipPath:
-                          "polygon(0 0, 88% 0, 100% 100%, 0 100%)",
+                        clipPath: "polygon(0 0, 88% 0, 100% 100%, 0 100%)",
                       }}
                     >
                       <span className="text-2xl italic">Thank you!</span>
                     </div>
 
                     <div className="flex flex-1 items-center justify-end pr-7 text-sm text-slate-900">
-                      Page {pageIndex + 1} of{" "}
-                      {quotationPrintPages.length}
+                      Page {pageIndex + 1} of {quotationPrintPages.length}
                     </div>
                   </div>
                 </div>
@@ -515,13 +510,26 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           background: white !important;
         }
 
+        main {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
         body * {
           visibility: hidden !important;
+        }
+
+        main > * {
+          display: none !important;
         }
 
         .quotation-print,
         .quotation-print * {
           visibility: visible !important;
+        }
+
+        main > .quotation-print {
+          display: block !important;
         }
 
         .quotation-print {
@@ -537,9 +545,9 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
         .quotation-print-page {
           width: 210mm;
-          height: 295mm;
+          height: 297mm;
           margin: 0;
-          padding: 5mm 5mm 5mm 5mm;
+          padding: 3mm;
           position: relative;
           background: white;
           box-sizing: border-box;
@@ -557,7 +565,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         .quotation-print-header {
           display: flex;
           width: 100%;
-          height: 48mm;
+          height: 44mm;
           background: #eefaf9;
           box-sizing: border-box;
         }
@@ -570,7 +578,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
         .quotation-print-header-content {
           flex: 1;
-          padding: 5mm 6mm 4mm 7mm;
+          padding: 3mm 6mm 3mm 7mm;
           box-sizing: border-box;
         }
 
@@ -595,10 +603,10 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         .quotation-print-heading-meta h1 {
           margin: 0 0 4mm 0;
           color: #075b5b;
-          font-size: 17pt;
+          font-size: 20pt;
           line-height: 1;
           font-weight: 900;
-          text-align: right;
+          text-align: left;
           letter-spacing: 0.2px;
         }
 
@@ -606,35 +614,46 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           display: flex;
           flex-direction: column;
           gap: 1.2mm;
-          font-size: 7.3pt;
+          font-size: 9pt;
+          transform: translateX(-6mm);
         }
 
         .quotation-print-meta > div {
           display: grid;
-          grid-template-columns: 24mm 1fr;
-          gap: 3mm;
+          grid-template-columns: 27mm 3mm 1fr;
+          gap: 0;
+        }
+
+        .quotation-print-meta > div::after {
+          content: ":";
+          grid-column: 2;
+          grid-row: 1;
+          text-align: center;
+          font-weight: 800;
         }
 
         .quotation-print-meta strong {
-          text-align: right;
+          text-align: left;
           font-weight: 800;
           color: #142f31;
         }
 
         .quotation-print-meta span {
+          grid-column: 3;
           white-space: nowrap;
+          text-align: left;
         }
 
         .quotation-print-company {
-          margin-top: 1.5mm;
-          font-size: 7.4pt;
+          margin-top: -4.5mm;
+          font-size: 9pt;
           line-height: 1.42;
         }
 
         .quotation-print-company strong {
           display: block;
           margin-bottom: 0.6mm;
-          font-size: 8.4pt;
+          font-size: 9pt;
           font-weight: 800;
           color: #142f31;
         }
@@ -648,7 +667,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           display: grid;
           grid-template-columns: 57% 21.5% 21.5%;
           width: 100%;
-          margin-top: 4mm;
+          margin-top: 3mm;
           min-height: 25mm;
           box-sizing: border-box;
         }
@@ -657,7 +676,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         .quotation-print-small-box {
           border: 0.3mm solid #67c9c3;
           box-sizing: border-box;
-          font-size: 7.4pt;
+          font-size: 9pt;
         }
 
         .quotation-print-customer-box {
@@ -667,7 +686,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         .quotation-print-customer-box strong {
           display: block;
           margin-bottom: 1.5mm;
-          font-size: 8pt;
+          font-size: 9pt;
           font-weight: 800;
         }
 
@@ -689,23 +708,23 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           background: #eefaf9;
           border-bottom: 0.3mm solid #67c9c3;
           box-sizing: border-box;
-          font-size: 7.5pt;
+          font-size: 8pt;
           font-weight: 800;
         }
 
         .quotation-print-small-box span {
           display: block;
           padding: 3mm;
-          font-size: 7.5pt;
+          font-size: 8pt;
         }
 
         /* ITEMS */
         .quotation-print-items {
           width: 100%;
-          margin-top: 4mm;
+          margin-top: 3mm;
           border-collapse: collapse;
           table-layout: fixed;
-          font-size: 7.2pt;
+          font-size: 8pt;
         }
 
         .quotation-print-items th {
@@ -766,7 +785,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           display: grid;
           grid-template-columns: 53% 47%;
           width: 100%;
-          margin-top: 4mm;
+          margin-top: 3mm;
           min-height: 39mm;
           box-sizing: border-box;
         }
@@ -780,7 +799,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         .quotation-print-terms-title {
           padding: 2.5mm 3mm;
           background: #eefaf9;
-          font-size: 8.5pt;
+          font-size: 9pt;
           font-weight: 900;
           color: #142f31;
         }
@@ -793,7 +812,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           display: grid;
           grid-template-columns: 7mm 1fr;
           min-height: 5mm;
-          font-size: 7pt;
+          font-size: 7.5pt;
           line-height: 1.4;
         }
 
@@ -816,7 +835,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           min-height: 7.2mm;
           border-right: 0.3mm solid #67c9c3;
           border-bottom: 0.3mm solid #67c9c3;
-          font-size: 7.4pt;
+          font-size: 9pt;
           box-sizing: border-box;
         }
 
@@ -835,16 +854,16 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
         .quotation-print-total {
           background: #83e1da;
-          font-size: 10pt !important;
+          font-size: 11pt !important;
           font-weight: 900;
         }
 
         /* TARGET FOOTER */
         .quotation-print-footer {
           position: absolute;
-          left: 5mm;
-          right: 5mm;
-          bottom: 5mm;
+          left: 3mm;
+          right: 3mm;
+          bottom: 3mm;
           height: 13mm;
           display: flex;
           align-items: stretch;
@@ -871,7 +890,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           display: inline-block;
           transform: skewX(-24deg);
           font-family: cursive;
-          font-size: 18pt;
+          font-size: 19pt;
           font-style: italic;
           line-height: 1;
           white-space: nowrap;
@@ -883,7 +902,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           align-items: center;
           justify-content: flex-end;
           padding-right: 7mm;
-          font-size: 8.5pt;
+          font-size: 9pt;
           color: #111827;
           box-sizing: border-box;
         }
@@ -1180,9 +1199,8 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             {/* Hardcoded Bank Information */}
             <div className="mb-3 flex items-center gap-3">
               <div className="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
-                Bank Information
-مؤسسة محمد عبدالله الملا
-IBAN: SA51 8000 0451 6080 1631 0298
+                Bank Information مؤسسة محمد عبدالله الملا IBAN: SA51 8000 0451
+                6080 1631 0298
               </div>
             </div>
 
@@ -1273,7 +1291,9 @@ IBAN: SA51 8000 0451 6080 1631 0298
                         <div className="quotation-print-meta">
                           <div>
                             <strong>Date</strong>
-                            <span>{new Date().toLocaleDateString("en-GB")}</span>
+                            <span>
+                              {new Date().toLocaleDateString("en-GB")}
+                            </span>
                           </div>
 
                           <div>
@@ -1375,7 +1395,9 @@ IBAN: SA51 8000 0451 6080 1631 0298
 
                       <div className="quotation-print-terms-body">
                         <div className="quotation-print-term-row">
-                          <span className="quotation-print-term-number">1.</span>
+                          <span className="quotation-print-term-number">
+                            1.
+                          </span>
 
                           <div className="quotation-print-term-text">
                             <div>Bank Information - IBAN - Talaa Fakhir</div>
@@ -1384,22 +1406,20 @@ IBAN: SA51 8000 0451 6080 1631 0298
                           </div>
                         </div>
 
-                        {quotationTerms
-                          .slice(0, 4)
-                          .map((term, termIndex) => (
-                            <div
-                              key={termIndex}
-                              className="quotation-print-term-row"
-                            >
-                              <span className="quotation-print-term-number">
-                                {termIndex + 2}.
-                              </span>
+                        {quotationTerms.slice(0, 4).map((term, termIndex) => (
+                          <div
+                            key={termIndex}
+                            className="quotation-print-term-row"
+                          >
+                            <span className="quotation-print-term-number">
+                              {termIndex + 2}.
+                            </span>
 
-                              <span className="quotation-print-term-text">
-                                {term.trim() || " "}
-                              </span>
-                            </div>
-                          ))}
+                            <span className="quotation-print-term-text">
+                              {term.trim() || " "}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -1450,23 +1470,3 @@ IBAN: SA51 8000 0451 6080 1631 0298
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
