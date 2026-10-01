@@ -241,34 +241,37 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                         <img
                           src="/images/quotation-logo.png"
                           alt="Garage AlTalaa AlFahir"
-                          className="h-20 w-auto object-contain mix-blend-multiply"
+                          className="h-28 w-auto object-contain mix-blend-multiply"
                         />
 
-                        <div className="w-[270px]">
+                        <div className="ml-auto w-[300px] text-right">
                           <h1 className="mb-3 text-right text-3xl font-black tracking-tight text-teal-800">
                             QUOTATION
                           </h1>
 
-                          <div className="space-y-2 text-sm text-slate-700">
-                            <div className="grid grid-cols-[110px_1fr] gap-4">
+                          <div className="ml-auto w-[261px] space-y-2 text-sm text-slate-700">
+                            <div className="grid grid-cols-[105px_10px_130px] gap-2">
                               <strong className="text-right">Date</strong>
-                              <span>
+                              <span className="text-center">:</span>
+                              <span className="text-left">
                                 {new Date().toLocaleDateString("en-GB")}
                               </span>
                             </div>
 
-                            <div className="grid grid-cols-[110px_1fr] gap-4">
+                            <div className="grid grid-cols-[105px_10px_130px] gap-2">
                               <strong className="text-right">
                                 Quotation #
                               </strong>
-                              <span>{customerNo || "Pending"}</span>
+                              <span className="text-center">:</span>
+                              <span className="text-left">{customerNo || "Pending"}</span>
                             </div>
 
-                            <div className="grid grid-cols-[110px_1fr] gap-4">
+                            <div className="grid grid-cols-[105px_10px_130px] gap-2">
                               <strong className="text-right">
                                 Customer ID
                               </strong>
-                              <span>{customerNo || "Pending"}</span>
+                              <span className="text-center">:</span>
+                              <span className="text-left">{customerNo || "Pending"}</span>
                             </div>
                           </div>
                         </div>
