@@ -169,6 +169,33 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
     setShowQuotationPreview(true);
   };
 
+  // Target quotation print layout: maximum 10 items per A4 page.
+  const ITEMS_PER_PRINT_PAGE = 10;
+
+  const quotationPrintPages = Array.from(
+    {
+      length: Math.max(
+        1,
+        Math.ceil(quotationItems.length / ITEMS_PER_PRINT_PAGE),
+      ),
+    },
+    (_, pageIndex) =>
+      quotationItems.slice(
+        pageIndex * ITEMS_PER_PRINT_PAGE,
+        (pageIndex + 1) * ITEMS_PER_PRINT_PAGE,
+      ),
+  );
+
+  const quotationSubtotal = quotationItems.reduce(
+    (sum, item) =>
+      sum +
+      (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0),
+    0,
+  );
+
+  const quotationVat = quotationSubtotal * 0.15;
+  const quotationTotal = quotationSubtotal + quotationVat;
+
   if (showQuotationPreview) {
     return (
       <div className="min-h-screen bg-slate-100 text-slate-800">
@@ -195,242 +222,270 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           </div>
 
           {/* QUOTATION PREVIEW */}
-          <div className="quotation-preview-sheet bg-white shadow-lg">
-            {/* HEADER */}
-            <div className="flex min-h-[190px]">
-              <div className="w-9 shrink-0 bg-teal-600"></div>
+          <div className="space-y-8">
+            {quotationPrintPages.map((pageItems, pageIndex) => {
+              const isLastPage =
+                pageIndex === quotationPrintPages.length - 1;
 
-              <div className="flex-1 bg-teal-50 px-10 py-8">
-                <div className="flex items-start justify-between gap-8">
-                  <img
-                    src="/images/quotation-logo.png"
-                    alt="Garage AlTalaa AlFahir"
-                    className="h-24 w-auto object-contain mix-blend-multiply"
-                  />
+              return (
+                <div
+                  key={`quotation-preview-page-${pageIndex}`}
+                  className="quotation-preview-sheet relative mx-auto flex min-h-[1123px] flex-col overflow-hidden bg-white shadow-lg"
+                >
+                  {/* HEADER */}
+                  <div className="mx-5 mt-5 flex min-h-[155px] bg-teal-50">
+                    <div className="w-8 shrink-0 bg-teal-600"></div>
 
-                  <div className="space-y-2 text-sm text-slate-700">
-                    <div className="grid grid-cols-[110px_130px] gap-3">
-                      <strong className="text-right">Date</strong>
-                      <span>{new Date().toLocaleDateString("en-GB")}</span>
-                    </div>
+                    <div className="flex-1 px-7 py-4">
+                      <div className="flex items-start justify-between gap-8">
+                        <img
+                          src="/images/quotation-logo.png"
+                          alt="Garage AlTalaa AlFahir"
+                          className="h-20 w-auto object-contain mix-blend-multiply"
+                        />
 
-                    <div className="grid grid-cols-[110px_130px] gap-3">
-                      <strong className="text-right">Quotation #</strong>
-                      <span>{customerNo || "Pending"}</span>
-                    </div>
+                        <div className="w-[270px]">
+                          <h1 className="mb-3 text-right text-3xl font-black tracking-tight text-teal-800">
+                            QUOTATION
+                          </h1>
 
-                    <div className="grid grid-cols-[110px_130px] gap-3">
-                      <strong className="text-right">Customer ID</strong>
-                      <span>{customerNo || "Pending"}</span>
-                    </div>
-                  </div>
-                </div>
+                          <div className="space-y-2 text-sm text-slate-700">
+                            <div className="grid grid-cols-[110px_1fr] gap-4">
+                              <strong className="text-right">Date</strong>
+                              <span>
+                                {new Date().toLocaleDateString("en-GB")}
+                              </span>
+                            </div>
 
-                <div className="mt-7 grid grid-cols-2 gap-16 text-sm leading-6">
-                  <div>
-                    <strong className="block text-base text-slate-900">
-                      Garage AlTalaa AlFahir
-                    </strong>
-                    <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
-                    <p>Phone: +966 50 662 0654</p>
-                    <p>Email: talaa.alfakhir@gmail.com</p>
-                  </div>
+                            <div className="grid grid-cols-[110px_1fr] gap-4">
+                              <strong className="text-right">
+                                Quotation #
+                              </strong>
+                              <span>{customerNo || "Pending"}</span>
+                            </div>
 
-                  <div>
-                    <strong className="block text-base text-slate-900">
-                      Quotation for:
-                    </strong>
-                    <p>{customerName || "-"}</p>
-                    <p>{customerAddress || "-"}</p>
-                    <p>{contactNumber || "-"}</p>
-                    <p>{email || "-"}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+                            <div className="grid grid-cols-[110px_1fr] gap-4">
+                              <strong className="text-right">
+                                Customer ID
+                              </strong>
+                              <span>{customerNo || "Pending"}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-            {/* SALESPERSON / TERMS */}
-            <div className="mx-10 mt-7 overflow-hidden border border-teal-300">
-              <div className="grid grid-cols-2 bg-teal-50 text-sm font-black text-slate-800">
-                <div className="border-r border-teal-300 px-4 py-3">
-                  Salesperson
-                </div>
-                <div className="px-4 py-3">Terms</div>
-              </div>
-
-              <div className="grid min-h-11 grid-cols-2 text-sm">
-                <div className="border-r border-teal-300 px-4 py-3">Admin</div>
-                <div className="px-4 py-3"></div>
-              </div>
-            </div>
-
-            {/* ITEMS */}
-            <div className="mx-10 mt-7">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="bg-teal-50 text-slate-800">
-                    <th className="border border-teal-300 px-3 py-3 text-center">
-                      S.No.
-                    </th>
-                    <th className="border border-teal-300 px-3 py-3 text-center">
-                      Quantity
-                    </th>
-                    <th className="border border-teal-300 px-3 py-3 text-left">
-                      Description
-                    </th>
-                    <th className="border border-teal-300 px-3 py-3 text-right">
-                      Unit Price
-                    </th>
-                    <th className="border border-teal-300 px-3 py-3 text-right">
-                      Amount
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {quotationItems.map((item, index) => {
-                    const quantity = Number(item.quantity) || 0;
-                    const unitPrice = Number(item.unitPrice) || 0;
-                    const amount = quantity * unitPrice;
-
-                    return (
-                      <tr key={index}>
-                        <td className="border border-teal-300 px-3 py-3 text-center">
-                          {item.serialNumber}
-                        </td>
-
-                        <td className="border border-teal-300 px-3 py-3 text-center">
-                          {quantity}
-                        </td>
-
-                        <td className="border border-teal-300 px-3 py-3">
-                          {item.description || ""}
-                        </td>
-
-                        <td className="border border-teal-300 px-3 py-3 text-right">
-                          {unitPrice.toFixed(2)}
-                        </td>
-
-                        <td className="border border-teal-300 px-3 py-3 text-right">
-                          {amount.toFixed(2)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {Array.from({
-                    length: Math.max(0, 5 - quotationItems.length),
-                  }).map((_, index) => (
-                    <tr key={`preview-empty-${index}`}>
-                      <td className="border border-teal-300 px-3 py-3">
-                        &nbsp;
-                      </td>
-                      <td className="border border-teal-300 px-3 py-3">
-                        &nbsp;
-                      </td>
-                      <td className="border border-teal-300 px-3 py-3">
-                        &nbsp;
-                      </td>
-                      <td className="border border-teal-300 px-3 py-3">
-                        &nbsp;
-                      </td>
-                      <td className="border border-teal-300 px-3 py-3">
-                        &nbsp;
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* TERMS + TOTALS */}
-            <div className="mx-10 mt-7 grid grid-cols-[1fr_43%] gap-7">
-              <div className="min-h-[180px] border border-teal-300">
-                <div className="bg-teal-50 px-4 py-3 text-sm font-black text-slate-800">
-                  Terms & Conditions
-                </div>
-
-                <div className="space-y-2 px-4 py-4 text-sm">
-                  <div className="grid grid-cols-[25px_1fr] gap-2">
-                    <span className="font-semibold">1.</span>
-
-                    <div className="leading-6">
-                      <div>Bank Information:</div>
-                      <div>مؤسسة محمد عبدالله الملا</div>
-                      <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
+                      <div className="mt-1 text-sm leading-5 text-slate-800">
+                        <strong className="block text-base">
+                          Garage AlTalaa AlFahir
+                        </strong>
+                        <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                        <p>Phone: +966 50 662 0654</p>
+                        <p>Email: talaa.alfakhir@gmail.com</p>
+                      </div>
                     </div>
                   </div>
 
-                  {quotationTerms
-                    .slice(0, 4)
-                    .map((term, index) => (
-                      <div
-                        key={index}
-                        className="grid grid-cols-[25px_1fr] gap-2"
-                      >
-                        <span className="font-semibold">{index + 2}.</span>
-                        <span>{term.trim() || " "}</span>
+                  {/* CUSTOMER / SALESPERSON / TERMS */}
+                  <div className="mx-5 mt-4 grid min-h-[115px] grid-cols-[57%_21.5%_21.5%]">
+                    <div className="border border-teal-300 px-4 py-3 text-sm">
+                      <strong className="mb-2 block font-black">
+                        Quotation for:
+                      </strong>
+                      <p>{customerName || "-"}</p>
+                      <p>{customerAddress || "-"}</p>
+                      <p>{contactNumber || "-"}</p>
+                      <p>{email || "-"}</p>
+                    </div>
+
+                    <div className="flex flex-col border-y border-r border-teal-300 text-sm">
+                      <strong className="border-b border-teal-300 bg-teal-50 px-4 py-3">
+                        Salesperson
+                      </strong>
+                      <span className="px-4 py-4">Admin</span>
+                    </div>
+
+                    <div className="flex flex-col border-y border-r border-teal-300 text-sm">
+                      <strong className="border-b border-teal-300 bg-teal-50 px-4 py-3">
+                        Terms
+                      </strong>
+                      <span className="px-4 py-4">&nbsp;</span>
+                    </div>
+                  </div>
+
+                  {/* ITEMS */}
+                  <div className="mx-5 mt-4">
+                    <table className="w-full table-fixed border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-teal-700 text-white">
+                          <th className="w-[11%] border border-teal-500 px-3 py-3 text-center">
+                            S.No.
+                          </th>
+                          <th className="w-[14%] border border-teal-500 px-3 py-3 text-center">
+                            Quantity
+                          </th>
+                          <th className="w-[42%] border border-teal-500 px-3 py-3 text-center">
+                            Description
+                          </th>
+                          <th className="w-[16.5%] border border-teal-500 px-3 py-3 text-center">
+                            Unit Price
+                          </th>
+                          <th className="w-[16.5%] border border-teal-500 px-3 py-3 text-center">
+                            Amount
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {pageItems.map((item, itemIndex) => {
+                          const quantity = Number(item.quantity) || 0;
+                          const unitPrice = Number(item.unitPrice) || 0;
+                          const amount = quantity * unitPrice;
+
+                          return (
+                            <tr key={`${pageIndex}-${itemIndex}`}>
+                              <td className="h-9 border border-teal-200 px-3 text-center">
+                                {item.serialNumber}
+                              </td>
+                              <td className="h-9 border border-teal-200 px-3 text-center">
+                                {quantity}
+                              </td>
+                              <td className="h-9 border border-teal-200 px-3">
+                                {item.description || ""}
+                              </td>
+                              <td className="h-9 border border-teal-200 px-3 text-right">
+                                {unitPrice.toFixed(2)}
+                              </td>
+                              <td className="h-9 border border-teal-200 px-3 text-right">
+                                {amount.toFixed(2)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+
+                        {Array.from({
+                          length: Math.max(
+                            0,
+                            ITEMS_PER_PRINT_PAGE - pageItems.length,
+                          ),
+                        }).map((_, emptyIndex) => (
+                          <tr key={`preview-empty-${pageIndex}-${emptyIndex}`}>
+                            <td className="h-9 border border-teal-200">
+                              &nbsp;
+                            </td>
+                            <td className="h-9 border border-teal-200">
+                              &nbsp;
+                            </td>
+                            <td className="h-9 border border-teal-200">
+                              &nbsp;
+                            </td>
+                            <td className="h-9 border border-teal-200">
+                              &nbsp;
+                            </td>
+                            <td className="h-9 border border-teal-200">
+                              &nbsp;
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* FINAL PAGE ONLY */}
+                  {isLastPage && (
+                    <div className="mx-5 mt-4 grid grid-cols-[53%_47%]">
+                      <div className="min-h-[150px] border border-teal-300">
+                        <div className="bg-teal-50 px-4 py-3 text-sm font-black">
+                          Terms & Conditions
+                        </div>
+
+                        <div className="px-4 py-3 text-sm">
+                          <div className="grid grid-cols-[25px_1fr] gap-2">
+                            <span className="font-semibold">1.</span>
+
+                            <div className="leading-6">
+                              <div>
+                                Bank Information - IBAN - Talaa Fakhir
+                              </div>
+                              <div>مؤسسة محمد عبدالله الملا</div>
+                              <div>
+                                IBAN: SA51 8000 0451 6080 1631 0298
+                              </div>
+                            </div>
+                          </div>
+
+                          {quotationTerms
+                            .slice(0, 4)
+                            .map((term, termIndex) => (
+                              <div
+                                key={termIndex}
+                                className="mt-1 grid grid-cols-[25px_1fr] gap-2"
+                              >
+                                <span className="font-semibold">
+                                  {termIndex + 2}.
+                                </span>
+                                <span>{term.trim() || " "}</span>
+                              </div>
+                            ))}
+                        </div>
                       </div>
-                    ))}
+
+                      <div className="border-t border-teal-300">
+                        <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                          <strong className="px-4 py-3">Subtotal</strong>
+                          <span className="px-4 py-3 text-right">
+                            {quotationSubtotal.toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                          <strong className="px-4 py-3">Tax Rate</strong>
+                          <span className="px-4 py-3 text-right">
+                            15.00%
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                          <strong className="px-4 py-3">VAT 15%</strong>
+                          <span className="px-4 py-3 text-right">
+                            {quotationVat.toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                          <strong className="px-4 py-3">Other</strong>
+                          <span className="px-4 py-3 text-right">-</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 border-b border-r border-teal-300 bg-teal-200 text-lg">
+                          <strong className="px-4 py-3">Total</strong>
+                          <span className="px-4 py-3 text-right font-black">
+                            {quotationTotal.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* FOOTER */}
+                  <div className="mx-5 mb-5 mt-auto flex h-14 overflow-hidden bg-teal-50">
+                    <div
+                      className="flex w-[54%] items-center bg-teal-700 pl-8 text-white"
+                      style={{
+                        clipPath:
+                          "polygon(0 0, 88% 0, 100% 100%, 0 100%)",
+                      }}
+                    >
+                      <span className="text-2xl italic">Thank you!</span>
+                    </div>
+
+                    <div className="flex flex-1 items-center justify-end pr-7 text-sm text-slate-900">
+                      Page {pageIndex + 1} of{" "}
+                      {quotationPrintPages.length}
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="self-start border-l border-t border-teal-300">
-                {(() => {
-                  const subtotal = quotationItems.reduce(
-                    (sum, item) =>
-                      sum +
-                      (Number(item.quantity) || 0) *
-                        (Number(item.unitPrice) || 0),
-                    0,
-                  );
-
-                  const vat = subtotal * 0.15;
-                  const total = subtotal + vat;
-
-                  return (
-                    <>
-                      <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                        <strong className="px-4 py-3">Subtotal</strong>
-                        <span className="px-4 py-3 text-right">
-                          {subtotal.toFixed(2)}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                        <strong className="px-4 py-3">Tax Rate</strong>
-                        <span className="px-4 py-3 text-right">15.00%</span>
-                      </div>
-
-                      <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                        <strong className="px-4 py-3">VAT 15%</strong>
-                        <span className="px-4 py-3 text-right">
-                          {vat.toFixed(2)}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                        <strong className="px-4 py-3">Other</strong>
-                        <span className="px-4 py-3 text-right">-</span>
-                      </div>
-
-                      <div className="grid grid-cols-2 border-b border-r border-teal-300 bg-teal-100 text-base">
-                        <strong className="px-4 py-3">Total</strong>
-                        <span className="px-4 py-3 text-right font-black">
-                          {total.toFixed(2)}
-                        </span>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* FOOTER */}
-            <div className="mx-10 mb-10 mt-8 flex min-h-14 items-center bg-teal-50">
-              <div className="mr-8 self-stretch w-9 bg-teal-600"></div>
-              <strong className="text-teal-900">Thank you!</strong>
-            </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -473,264 +528,302 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           margin: 0;
           padding: 0;
           background: white;
-          color: #123b3b;
+          color: #142f31;
           font-family: Arial, Helvetica, sans-serif;
         }
 
         .quotation-print-page {
           width: 210mm;
-          height: 297mm;
+          height: 295mm;
           margin: 0;
-          padding: 0 5mm 5mm 5mm;
+          padding: 5mm 5mm 5mm 5mm;
           position: relative;
-          top: -5mm;
           background: white;
           box-sizing: border-box;
           overflow: hidden;
-          break-inside: avoid;
-          page-break-inside: avoid;
+          break-after: page;
+          page-break-after: always;
         }
 
-        /* HEADER */
+        .quotation-print-page:last-child {
+          break-after: auto;
+          page-break-after: auto;
+        }
+
+        /* TARGET HEADER */
         .quotation-print-header {
           display: flex;
           width: 100%;
-          min-height: 50mm;
-          background: #d8f3f1;
+          height: 48mm;
+          background: #eefaf9;
+          box-sizing: border-box;
         }
 
         .quotation-print-left-bar {
-          width: 9mm;
-          background: #148f8a;
+          width: 8mm;
+          background: #10a99d;
           flex-shrink: 0;
         }
 
         .quotation-print-header-content {
           flex: 1;
-          padding: 7mm 8mm 6mm 8mm;
+          padding: 5mm 6mm 4mm 7mm;
+          box-sizing: border-box;
         }
 
         .quotation-print-title-row {
           display: flex;
-          justify-content: space-between;
           align-items: flex-start;
-        }
-
-        .quotation-print-title-row h1 {
-          margin: 0;
-          font-size: 25pt;
-          line-height: 1;
-          font-weight: 900;
-          letter-spacing: 0.5px;
-          color: #073f40;
+          justify-content: space-between;
         }
 
         .quotation-print-logo {
-  height: 24mm;
-  width: auto;
-  object-fit: contain;
-  display: block;
-  mix-blend-mode: multiply;
-}
+          display: block;
+          width: auto;
+          height: 22mm;
+          object-fit: contain;
+          mix-blend-mode: multiply;
+        }
+
+        .quotation-print-heading-meta {
+          width: 55mm;
+        }
+
+        .quotation-print-heading-meta h1 {
+          margin: 0 0 4mm 0;
+          color: #075b5b;
+          font-size: 17pt;
+          line-height: 1;
+          font-weight: 900;
+          text-align: right;
+          letter-spacing: 0.2px;
+        }
 
         .quotation-print-meta {
           display: flex;
           flex-direction: column;
           gap: 1.2mm;
-          font-size: 7.5pt;
+          font-size: 7.3pt;
         }
 
-        .quotation-print-meta div {
+        .quotation-print-meta > div {
           display: grid;
-          grid-template-columns: 25mm 25mm;
-          gap: 2mm;
+          grid-template-columns: 24mm 1fr;
+          gap: 3mm;
         }
 
         .quotation-print-meta strong {
           text-align: right;
+          font-weight: 800;
+          color: #142f31;
         }
 
-        .quotation-print-parties {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 15mm;
-          margin-top: 6mm;
-          font-size: 8pt;
-          line-height: 1.35;
+        .quotation-print-meta span {
+          white-space: nowrap;
         }
 
-        .quotation-print-parties strong {
+        .quotation-print-company {
+          margin-top: 1.5mm;
+          font-size: 7.4pt;
+          line-height: 1.42;
+        }
+
+        .quotation-print-company strong {
           display: block;
-          margin-bottom: 1.5mm;
-          font-size: 9pt;
+          margin-bottom: 0.6mm;
+          font-size: 8.4pt;
+          font-weight: 800;
+          color: #142f31;
         }
 
-        .quotation-print-parties p {
+        .quotation-print-company p {
           margin: 0;
         }
 
-        /* SALESPERSON */
-        .quotation-print-sales {
-          margin-top: 5mm;
-          border: 0.35mm solid #55bcb7;
-        }
-
-        .quotation-print-sales-header,
-        .quotation-print-sales-body {
+        /* CUSTOMER / SALESPERSON / TERMS */
+        .quotation-print-info-row {
           display: grid;
-          grid-template-columns: 1.1fr repeat(4, 1fr) 1.1fr;
+          grid-template-columns: 57% 21.5% 21.5%;
+          width: 100%;
+          margin-top: 4mm;
+          min-height: 25mm;
+          box-sizing: border-box;
         }
 
-        .quotation-print-sales-header {
-          background: #d8f3f1;
+        .quotation-print-customer-box,
+        .quotation-print-small-box {
+          border: 0.3mm solid #67c9c3;
+          box-sizing: border-box;
+          font-size: 7.4pt;
+        }
+
+        .quotation-print-customer-box {
+          padding: 2.5mm 3mm;
+        }
+
+        .quotation-print-customer-box strong {
+          display: block;
+          margin-bottom: 1.5mm;
+          font-size: 8pt;
+          font-weight: 800;
+        }
+
+        .quotation-print-customer-box p {
+          margin: 0;
+          line-height: 1.45;
+        }
+
+        .quotation-print-small-box {
+          border-left: none;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .quotation-print-small-box strong {
+          display: block;
+          min-height: 8mm;
+          padding: 2.5mm 3mm;
+          background: #eefaf9;
+          border-bottom: 0.3mm solid #67c9c3;
+          box-sizing: border-box;
           font-size: 7.5pt;
           font-weight: 800;
         }
 
-        .quotation-print-sales-header span,
-        .quotation-print-sales-body span {
-          padding: 2mm 2.5mm;
-          border-right: 0.25mm solid #72c8c3;
-        }
-
-        .quotation-print-sales-header span:last-child,
-        .quotation-print-sales-body span:last-child {
-          border-right: none;
-        }
-
-        .quotation-print-sales-header span:last-child {
-          text-align: right;
-        }
-
-        .quotation-print-sales-body {
-          min-height: 7mm;
+        .quotation-print-small-box span {
+          display: block;
+          padding: 3mm;
           font-size: 7.5pt;
         }
 
         /* ITEMS */
         .quotation-print-items {
           width: 100%;
-          margin-top: 5mm;
+          margin-top: 4mm;
           border-collapse: collapse;
           table-layout: fixed;
-          font-size: 7.5pt;
+          font-size: 7.2pt;
         }
 
         .quotation-print-items th {
-          background: #d8f3f1;
-          color: #073f40;
+          height: 8mm;
+          padding: 1.5mm 2mm;
+          border: 0.3mm solid #4fb6b0;
+          background: #087d78;
+          color: white;
           font-weight: 800;
+          vertical-align: middle;
         }
 
-        .quotation-print-items th,
         .quotation-print-items td {
-          border: 0.3mm solid #72c8c3;
-          padding: 2mm 2.5mm;
-          height: 7mm;
+          height: 8mm;
+          padding: 1.5mm 2mm;
+          border: 0.3mm solid #9ed7d3;
+          box-sizing: border-box;
+          vertical-align: middle;
         }
 
         .quotation-print-items th:nth-child(1) {
-  width: 10%;
-}
+          width: 11%;
+          text-align: center;
+        }
 
-.quotation-print-items th:nth-child(2) {
-  width: 14%;
-}
+        .quotation-print-items th:nth-child(2) {
+          width: 14%;
+          text-align: center;
+        }
 
-.quotation-print-items th:nth-child(3) {
-  width: 34%;
-}
+        .quotation-print-items th:nth-child(3) {
+          width: 42%;
+          text-align: center;
+        }
 
-.quotation-print-items th:nth-child(4) {
-  width: 19%;
-}
+        .quotation-print-items th:nth-child(4) {
+          width: 16.5%;
+          text-align: center;
+        }
 
-.quotation-print-items th:nth-child(5) {
-  width: 23%;
-}
+        .quotation-print-items th:nth-child(5) {
+          width: 16.5%;
+          text-align: center;
+        }
 
         .quotation-print-items td:nth-child(1),
-.quotation-print-items td:nth-child(2) {
-  text-align: center;
-}
+        .quotation-print-items td:nth-child(2) {
+          text-align: center;
+        }
 
-.quotation-print-items td:nth-child(4),
-.quotation-print-items td:nth-child(5) {
-  text-align: right;
-}
+        .quotation-print-items td:nth-child(4),
+        .quotation-print-items td:nth-child(5) {
+          text-align: right;
+        }
 
-        /* BOTTOM */
+        /* FINAL PAGE TERMS + TOTALS */
         .quotation-print-bottom {
           display: grid;
-          grid-template-columns: 1fr 43%;
-          gap: 7mm;
+          grid-template-columns: 53% 47%;
+          width: 100%;
           margin-top: 4mm;
-          min-height: 48mm;
-        }
-
-        .quotation-print-note {
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          font-size: 7.5pt;
-          line-height: 1.4;
-          padding: 0 2.5mm 2mm 2.5mm;
-        }
-
-        .quotation-print-note p {
-          margin: 0;
+          min-height: 39mm;
+          box-sizing: border-box;
         }
 
         .quotation-print-terms {
-  border: 0.3mm solid #55bcb7;
-  min-height: 48mm;
-}
+          border: 0.3mm solid #67c9c3;
+          min-height: 39mm;
+          box-sizing: border-box;
+        }
 
-.quotation-print-terms-title {
-  background: #d8f3f1;
-  padding: 2.5mm 3mm;
-  font-size: 8.5pt;
-  font-weight: 800;
-  color: #073f40;
-}
+        .quotation-print-terms-title {
+          padding: 2.5mm 3mm;
+          background: #eefaf9;
+          font-size: 8.5pt;
+          font-weight: 900;
+          color: #142f31;
+        }
 
-.quotation-print-terms-body {
-  padding: 3mm 3mm;
-}
+        .quotation-print-terms-body {
+          padding: 2.5mm 3mm;
+        }
 
-.quotation-print-term-row {
-  display: grid;
-  grid-template-columns: 7mm 1fr;
-  font-size: 7.5pt;
-  line-height: 1.45;
-  min-height: 5mm;
-}
+        .quotation-print-term-row {
+          display: grid;
+          grid-template-columns: 7mm 1fr;
+          min-height: 5mm;
+          font-size: 7pt;
+          line-height: 1.4;
+        }
 
-.quotation-print-term-number {
-  font-weight: 600;
-}
+        .quotation-print-term-number {
+          font-weight: 600;
+        }
 
-.quotation-print-term-text {
-  min-width: 0;
-}
+        .quotation-print-term-text {
+          min-width: 0;
+        }
 
         .quotation-print-totals {
-          border-left: 0.3mm solid #72c8c3;
-          border-top: 0.3mm solid #72c8c3;
+          border-top: 0.3mm solid #67c9c3;
+          box-sizing: border-box;
         }
 
         .quotation-print-totals > div {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          border-right: 0.3mm solid #72c8c3;
-          border-bottom: 0.3mm solid #72c8c3;
-          min-height: 7mm;
-          font-size: 7.5pt;
+          min-height: 7.2mm;
+          border-right: 0.3mm solid #67c9c3;
+          border-bottom: 0.3mm solid #67c9c3;
+          font-size: 7.4pt;
+          box-sizing: border-box;
         }
 
         .quotation-print-totals strong,
         .quotation-print-totals span {
-          padding: 1.8mm 2.5mm;
+          padding: 2mm 3mm;
+        }
+
+        .quotation-print-totals strong {
+          font-weight: 800;
         }
 
         .quotation-print-totals span {
@@ -738,34 +831,58 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         }
 
         .quotation-print-total {
-          background: #c5ebe8;
-          font-size: 8.5pt !important;
+          background: #83e1da;
+          font-size: 10pt !important;
+          font-weight: 900;
         }
 
-        /* FOOTER */
+        /* TARGET FOOTER */
         .quotation-print-footer {
+          position: absolute;
+          left: 5mm;
+          right: 5mm;
+          bottom: 5mm;
+          height: 13mm;
+          display: flex;
+          align-items: stretch;
+          background: #eefaf9;
+          box-sizing: border-box;
+          overflow: hidden;
+        }
+
+        .quotation-print-thankyou {
+          position: relative;
+          width: 54%;
+          height: 100%;
           display: flex;
           align-items: center;
-          position: absolute;
-          left: 15mm;
-          right: 15mm;
-          bottom: 15mm;
-          height: 12mm;
-          margin: 0;
-          background: #d8f3f1;
-          font-size: 8.5pt;
+          padding-left: 8mm;
+          background: #087d78;
+          color: white;
           box-sizing: border-box;
+          transform: skewX(24deg);
+          transform-origin: bottom left;
         }
 
-        .quotation-print-footer-bar {
-          width: 9mm;
-          align-self: stretch;
-          background: #148f8a;
-          margin-right: 8mm;
+        .quotation-print-thankyou span {
+          display: inline-block;
+          transform: skewX(-24deg);
+          font-family: cursive;
+          font-size: 18pt;
+          font-style: italic;
+          line-height: 1;
+          white-space: nowrap;
         }
 
-        .quotation-print-footer strong {
-          color: #073f40;
+        .quotation-print-page-number {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding-right: 7mm;
+          font-size: 8.5pt;
+          color: #111827;
+          box-sizing: border-box;
         }
       }
     `}</style>
@@ -1127,171 +1244,166 @@ IBAN: SA51 8000 0451 6080 1631 0298
         </div>
         {/* PRINT-ONLY QUOTATION */}
         <div className="quotation-print">
-          <div className="quotation-print-page">
-            {/* HEADER */}
-            <div className="quotation-print-header">
-              <div className="quotation-print-left-bar"></div>
+          {quotationPrintPages.map((pageItems, pageIndex) => {
+            const isLastPage = pageIndex === quotationPrintPages.length - 1;
 
-              <div className="quotation-print-header-content">
-                <div className="quotation-print-title-row">
-                  <img
-                    src="/images/quotation-logo.png"
-                    alt="Garage AlTalaa AlFahir"
-                    className="quotation-print-logo"
-                  />
+            return (
+              <div
+                className="quotation-print-page"
+                key={`quotation-print-page-${pageIndex}`}
+              >
+                {/* HEADER */}
+                <div className="quotation-print-header">
+                  <div className="quotation-print-left-bar"></div>
 
-                  <div className="quotation-print-meta">
-                    <div>
-                      <strong>Date</strong>
-                      <span>{new Date().toLocaleDateString("en-GB")}</span>
+                  <div className="quotation-print-header-content">
+                    <div className="quotation-print-title-row">
+                      <img
+                        src="/images/quotation-logo.png"
+                        alt="Garage AlTalaa AlFahir"
+                        className="quotation-print-logo"
+                      />
+
+                      <div className="quotation-print-heading-meta">
+                        <h1>QUOTATION</h1>
+
+                        <div className="quotation-print-meta">
+                          <div>
+                            <strong>Date</strong>
+                            <span>{new Date().toLocaleDateString("en-GB")}</span>
+                          </div>
+
+                          <div>
+                            <strong>Quotation #</strong>
+                            <span>{customerNo || "Pending"}</span>
+                          </div>
+
+                          <div>
+                            <strong>Customer ID</strong>
+                            <span>{customerNo || "Pending"}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <strong>Quotation #</strong>
-                      <span>{customerNo || "Pending"}</span>
-                    </div>
-
-                    <div>
-                      <strong>Customer ID</strong>
-                      <span>{customerNo || "Pending"}</span>
+                    <div className="quotation-print-company">
+                      <strong>Garage AlTalaa AlFahir</strong>
+                      <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                      <p>Phone: +966 50 662 0654</p>
+                      <p>Email: talaa.alfakhir@gmail.com</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="quotation-print-parties">
-                  <div>
-                    <strong>Garage AlTalaa AlFahir</strong>
-                    <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
-                    <p>Phone: +966 50 662 0654</p>
-                    <p>Email: talaa.alfakhir@gmail.com</p>
-                  </div>
-
-                  <div>
+                {/* CUSTOMER / SALESPERSON / TERMS */}
+                <div className="quotation-print-info-row">
+                  <div className="quotation-print-customer-box">
                     <strong>Quotation for:</strong>
                     <p>{customerName || "-"}</p>
                     <p>{customerAddress || "-"}</p>
                     <p>{contactNumber || "-"}</p>
                     <p>{email || "-"}</p>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* SALESPERSON / TERMS */}
-            <div className="quotation-print-sales">
-              <div className="quotation-print-sales-header">
-                <span>Salesperson</span>
-                <span>Terms</span>
-              </div>
-
-              <div className="quotation-print-sales-body">
-                <span>Admin</span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-
-            {/* ITEMS TABLE */}
-            <table className="quotation-print-items">
-              <thead>
-                <tr>
-                  <th>S.No.</th>
-                  <th>Quantity</th>
-                  <th>Description</th>
-                  <th>Unit Price</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {quotationItems.map((item, index) => {
-                  const quantity = Number(item.quantity) || 0;
-                  const unitPrice = Number(item.unitPrice) || 0;
-                  const amount = quantity * unitPrice;
-
-                  return (
-                    <tr key={index}>
-                      <td>{item.serialNumber}</td>
-                      <td>{quantity}</td>
-                      <td>{item.description || ""}</td>
-                      <td>{unitPrice.toFixed(2)}</td>
-                      <td>{amount.toFixed(2)}</td>
-                    </tr>
-                  );
-                })}
-
-                {/* EMPTY ROWS */}
-                {Array.from({
-                  length: Math.max(0, 5 - quotationItems.length),
-                }).map((_, index) => (
-                  <tr key={`empty-${index}`}>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* BOTTOM CONTENT */}
-            <div className="quotation-print-bottom">
-              {/* TERMS & CONDITIONS */}
-              <div className="quotation-print-terms">
-                <div className="quotation-print-terms-title">
-                  Terms & Conditions
-                </div>
-
-                <div className="quotation-print-terms-body">
-                  <div className="quotation-print-term-row">
-                    <span className="quotation-print-term-number">1.</span>
-
-                    <div className="quotation-print-term-text">
-                      <div>Bank Information:</div>
-                      <div>مؤسسة محمد عبدالله الملا</div>
-                      <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
-                    </div>
+                  <div className="quotation-print-small-box">
+                    <strong>Salesperson</strong>
+                    <span>Admin</span>
                   </div>
 
-                  {quotationTerms
-                    .slice(0, 4)
-                    .map((term, index) => (
-                      <div key={index} className="quotation-print-term-row">
-                        <span className="quotation-print-term-number">
-                          {index + 2}.
-                        </span>
-
-                        <span className="quotation-print-term-text">
-                          {term.trim() || " "}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="quotation-print-small-box">
+                    <strong>Terms</strong>
+                    <span>&nbsp;</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* TOTALS */}
-              <div className="quotation-print-totals">
-                {(() => {
-                  const subtotal = quotationItems.reduce(
-                    (sum, item) =>
-                      sum +
-                      (Number(item.quantity) || 0) *
-                        (Number(item.unitPrice) || 0),
-                    0,
-                  );
+                {/* ITEMS TABLE */}
+                <table className="quotation-print-items">
+                  <thead>
+                    <tr>
+                      <th>S.No.</th>
+                      <th>Quantity</th>
+                      <th>Description</th>
+                      <th>Unit Price</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
 
-                  const vat = subtotal * 0.15;
-                  const total = subtotal + vat;
+                  <tbody>
+                    {pageItems.map((item, itemIndex) => {
+                      const quantity = Number(item.quantity) || 0;
+                      const unitPrice = Number(item.unitPrice) || 0;
+                      const amount = quantity * unitPrice;
 
-                  return (
-                    <>
+                      return (
+                        <tr key={`${pageIndex}-${itemIndex}`}>
+                          <td>{item.serialNumber}</td>
+                          <td>{quantity}</td>
+                          <td>{item.description || ""}</td>
+                          <td>{unitPrice.toFixed(2)}</td>
+                          <td>{amount.toFixed(2)}</td>
+                        </tr>
+                      );
+                    })}
+
+                    {Array.from({
+                      length: Math.max(
+                        0,
+                        ITEMS_PER_PRINT_PAGE - pageItems.length,
+                      ),
+                    }).map((_, emptyIndex) => (
+                      <tr key={`empty-${pageIndex}-${emptyIndex}`}>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* FINAL PAGE ONLY */}
+                {isLastPage && (
+                  <div className="quotation-print-bottom">
+                    <div className="quotation-print-terms">
+                      <div className="quotation-print-terms-title">
+                        Terms & Conditions
+                      </div>
+
+                      <div className="quotation-print-terms-body">
+                        <div className="quotation-print-term-row">
+                          <span className="quotation-print-term-number">1.</span>
+
+                          <div className="quotation-print-term-text">
+                            <div>Bank Information - IBAN - Talaa Fakhir</div>
+                            <div>مؤسسة محمد عبدالله الملا</div>
+                            <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
+                          </div>
+                        </div>
+
+                        {quotationTerms
+                          .slice(0, 4)
+                          .map((term, termIndex) => (
+                            <div
+                              key={termIndex}
+                              className="quotation-print-term-row"
+                            >
+                              <span className="quotation-print-term-number">
+                                {termIndex + 2}.
+                              </span>
+
+                              <span className="quotation-print-term-text">
+                                {term.trim() || " "}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+
+                    <div className="quotation-print-totals">
                       <div>
                         <strong>Subtotal</strong>
-                        <span>{subtotal.toFixed(2)}</span>
+                        <span>{quotationSubtotal.toFixed(2)}</span>
                       </div>
 
                       <div>
@@ -1301,7 +1413,7 @@ IBAN: SA51 8000 0451 6080 1631 0298
 
                       <div>
                         <strong>VAT 15%</strong>
-                        <span>{vat.toFixed(2)}</span>
+                        <span>{quotationVat.toFixed(2)}</span>
                       </div>
 
                       <div>
@@ -1311,20 +1423,25 @@ IBAN: SA51 8000 0451 6080 1631 0298
 
                       <div className="quotation-print-total">
                         <strong>Total</strong>
-                        <span>{total.toFixed(2)}</span>
+                        <span>{quotationTotal.toFixed(2)}</span>
                       </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
+                    </div>
+                  </div>
+                )}
 
-            {/* FOOTER */}
-            <div className="quotation-print-footer">
-              <div className="quotation-print-footer-bar"></div>
-              <strong>Thank you!</strong>
-            </div>
-          </div>
+                {/* FOOTER */}
+                <div className="quotation-print-footer">
+                  <div className="quotation-print-thankyou">
+                    <span>Thank you!</span>
+                  </div>
+
+                  <div className="quotation-print-page-number">
+                    Page {pageIndex + 1} of {quotationPrintPages.length}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </main>
     </div>
