@@ -545,7 +545,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
         .quotation-print-page {
           width: 210mm;
-          height: 297mm;
+          height: 296mm;
           margin: 0;
           padding: 3mm;
           position: relative;
