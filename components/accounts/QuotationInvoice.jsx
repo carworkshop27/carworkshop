@@ -82,7 +82,24 @@ export default function QuotationInvoice({
   });
 
   const handlePrint = () => {
+    const originalTitle = document.title;
+
+    const customerId = String(quotation.quotation_no || "Pending")
+      .split(".")[0]
+      .trim();
+
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+
+    document.title = `INV-${customerId}-${dd}-${mm}-${yyyy}`;
+
     window.print();
+
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   };
 
   const ITEMS_PER_PRINT_PAGE = 7;

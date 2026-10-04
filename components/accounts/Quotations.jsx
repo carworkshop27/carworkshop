@@ -213,8 +213,28 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             <button
               type="button"
               onClick={() => {
+                const originalTitle = document.title;
+
+                const customerId = String(customerNo || "Pending")
+                  .split(".")[0]
+                  .trim();
+
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2, "0");
+                const mm = String(now.getMonth() + 1).padStart(2, "0");
+                const yyyy = now.getFullYear();
+
+                document.title = `Q-${customerId}-${dd}-${mm}-${yyyy}`;
+
                 setShowQuotationPreview(false);
-                setTimeout(() => window.print(), 150);
+
+                setTimeout(() => {
+                  window.print();
+
+                  setTimeout(() => {
+                    document.title = originalTitle;
+                  }, 1000);
+                }, 150);
               }}
               className="flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-teal-700"
             >
