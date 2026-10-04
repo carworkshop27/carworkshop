@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, FileText, Pencil } from "lucide-react";
+import { ArrowLeft, FileText, Pencil, Trash2 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useEffect, useState } from "react";
 
@@ -11,6 +11,50 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
   const [generatedInvoices, setGeneratedInvoices] = useState({});
   const [generatedTaxInvoices, setGeneratedTaxInvoices] = useState({});
   const [selectedTaxInvoice, setSelectedTaxInvoice] = useState(null);
+  const [quotationToDelete, setQuotationToDelete] = useState(null);
+
+  const handleDeleteQuotation = async () => {
+    if (!quotationToDelete) return;
+
+    const quotationId = quotationToDelete.id;
+
+    if (
+      generatedInvoices[quotationId] ||
+      generatedTaxInvoices[quotationId]
+    ) {
+      alert(
+        "This quotation cannot be deleted because an invoice or tax invoice already exists.",
+      );
+      setQuotationToDelete(null);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/quotations?id=${encodeURIComponent(quotationId)}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to delete quotation.");
+      }
+
+      setQuotations((previous) =>
+        previous.filter((quotation) => quotation.id !== quotationId),
+      );
+
+      setQuotationToDelete(null);
+      alert("Quotation deleted successfully.");
+    } catch (error) {
+      console.error("Delete quotation error:", error);
+      alert(error.message || "Failed to delete quotation.");
+    }
+  };
+
   const handleGenerateInvoice = async () => {
     if (!quotationToGenerate) return;
 
@@ -1015,6 +1059,8 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
 
                     <th className="px-5 py-4 text-center">Open</th>
 
+                    <th className="px-5 py-4 text-center">Delete</th>
+
                     <th className="px-5 py-4 text-center">Invoice</th>
                   </tr>
                 </thead>
@@ -1081,6 +1127,25 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                         </button>
                       </td>
 
+                      {/* DELETE */}
+                      <td className="px-5 py-4 text-center align-top">
+                        {!generatedInvoices[quotation.id] &&
+                        !generatedTaxInvoices[quotation.id] ? (
+                          <button
+                            type="button"
+                            onClick={() => setQuotationToDelete(quotation)}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-xs font-black text-white shadow-sm transition hover:bg-red-700"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </button>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-400">
+                            Protected
+                          </span>
+                        )}
+                      </td>
+
                       {/* GENERATE INVOICE */}
                       <td className="px-5 py-4 text-center align-top">
                         <div className="flex flex-col items-center gap-2">
@@ -1136,6 +1201,46 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
           )}
         </div>
       </div>
+
+      {quotationToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="text-xl font-black text-slate-900">
+              Delete Quotation
+            </h2>
+
+            <p className="mt-3 text-sm font-medium text-slate-600">
+              Are you sure you want to permanently delete quotation{" "}
+              <span className="font-black text-slate-900">
+                {quotationToDelete.quotation_no || "-"}
+              </span>
+              ?
+            </p>
+
+            <p className="mt-2 text-xs font-bold text-red-600">
+              This action cannot be undone.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setQuotationToDelete(null)}
+                className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteQuotation}
+                className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {quotationToGenerate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">

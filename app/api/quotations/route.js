@@ -589,3 +589,146 @@ export async function PUT(request) {
     );
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const quotationId = String(searchParams.get("id") || "").trim();
+
+    if (!quotationId) {
+      return NextResponse.json(
+        { error: "Quotation ID is required." },
+        { status: 400 },
+      );
+    }
+
+    // A quotation must never be deleted after an invoice exists.
+    const { data: existingInvoice, error: invoiceCheckError } =
+      await supabaseServer
+        .from("invoices")
+        .select("id, invoice_no")
+        .eq("quotation_id", quotationId)
+        .limit(1)
+        .maybeSingle();
+
+    if (invoiceCheckError) {
+      console.error("Quotation DELETE invoice check error:", invoiceCheckError);
+
+      return NextResponse.json(
+        { error: "Failed to verify invoice status." },
+        { status: 500 },
+      );
+    }
+
+    if (existingInvoice) {
+      return NextResponse.json(
+        {
+          error:
+            "This quotation cannot be deleted because an invoice has already been generated.",
+        },
+        { status: 409 },
+      );
+    }
+
+    // A quotation must never be deleted after a tax invoice exists.
+    const { data: existingTaxInvoice, error: taxInvoiceCheckError } =
+      await supabaseServer
+        .from("tax_invoices")
+        .select("id, tax_invoice_no")
+        .eq("quotation_id", quotationId)
+        .limit(1)
+        .maybeSingle();
+
+    if (taxInvoiceCheckError) {
+      console.error(
+        "Quotation DELETE tax invoice check error:",
+        taxInvoiceCheckError,
+      );
+
+      return NextResponse.json(
+        { error: "Failed to verify tax invoice status." },
+        { status: 500 },
+      );
+    }
+
+    if (existingTaxInvoice) {
+      return NextResponse.json(
+        {
+          error:
+            "This quotation cannot be deleted because a tax invoice has already been generated.",
+        },
+        { status: 409 },
+      );
+    }
+
+    // Delete child records first.
+    const { error: itemsDeleteError } = await supabaseServer
+      .from("quotation_items")
+      .delete()
+      .eq("quotation_id", quotationId);
+
+    if (itemsDeleteError) {
+      console.error("Quotation DELETE items error:", itemsDeleteError);
+
+      return NextResponse.json(
+        { error: "Failed to delete quotation items." },
+        { status: 500 },
+      );
+    }
+
+    const { error: termsDeleteError } = await supabaseServer
+      .from("quotation_terms")
+      .delete()
+      .eq("quotation_id", quotationId);
+
+    if (termsDeleteError) {
+      console.error("Quotation DELETE terms error:", termsDeleteError);
+
+      return NextResponse.json(
+        { error: "Failed to delete quotation terms." },
+        { status: 500 },
+      );
+    }
+
+    const { data: deletedQuotation, error: quotationDeleteError } =
+      await supabaseServer
+        .from("quotations")
+        .delete()
+        .eq("id", quotationId)
+        .select("id, quotation_no")
+        .maybeSingle();
+
+    if (quotationDeleteError) {
+      console.error("Quotation DELETE error:", quotationDeleteError);
+
+      return NextResponse.json(
+        {
+          error: "Failed to delete quotation.",
+          details: quotationDeleteError.message,
+        },
+        { status: 500 },
+      );
+    }
+
+    if (!deletedQuotation) {
+      return NextResponse.json(
+        { error: "Quotation not found." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Quotation deleted successfully.",
+      quotation: deletedQuotation,
+    });
+  } catch (error) {
+    console.error("Quotation DELETE request error:", error);
+
+    return NextResponse.json(
+      { error: error.message || "Failed to delete quotation." },
+      { status: 500 },
+    );
+  }
+}
+
