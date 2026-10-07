@@ -502,17 +502,15 @@ export default function Dashboard({
       action: () => setQuotationOpen((open) => !open),
     },
     {
+      label: "Customers",
+      icon: Users,
+      action: () => setActiveScreen("customer-records"),
+    },
+    {
       label: "Calendar",
       icon: CalendarDays,
       action: () => {
         scrollToSection("dashboard-top");
-      },
-    },
-    {
-      label: "Customers",
-      icon: Users,
-      action: () => {
-        scrollToSection("active-vehicles");
       },
     },
     {

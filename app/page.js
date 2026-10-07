@@ -18,6 +18,7 @@ import PurchaseRecords from "../components/accounts/PurchaseRecords";
 import MonthlyAccountStatement from "../components/accounts/MonthlyAccountStatement";
 import Quotations from "../components/accounts/Quotations";
 import QuotationRecords from "../components/accounts/QuotationRecords";
+import CustomerRecords from "../components/customers/CustomerRecords";
 import QuotationInvoice from "../components/accounts/QuotationInvoice";
 import ExpenseEntry from "../components/accounts/ExpenseEntry";
 import ExpenseRecords from "../components/accounts/ExpenseRecords";
@@ -3027,6 +3028,10 @@ const jobsResponse = await fetch("/api/jobs");
 
   if (activeScreen === "monthly-account-statement") {
     return <MonthlyAccountStatement setActiveScreen={setActiveScreen} />;
+  }
+
+  if (activeScreen === "customer-records") {
+    return <CustomerRecords setActiveScreen={setActiveScreen} />;
   }
 
   if (activeScreen === "quotation") {
