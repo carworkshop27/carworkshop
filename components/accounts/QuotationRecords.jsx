@@ -12,16 +12,14 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
   const [generatedTaxInvoices, setGeneratedTaxInvoices] = useState({});
   const [selectedTaxInvoice, setSelectedTaxInvoice] = useState(null);
   const [quotationToDelete, setQuotationToDelete] = useState(null);
+  const [quotationSearch, setQuotationSearch] = useState("");
 
   const handleDeleteQuotation = async () => {
     if (!quotationToDelete) return;
 
     const quotationId = quotationToDelete.id;
 
-    if (
-      generatedInvoices[quotationId] ||
-      generatedTaxInvoices[quotationId]
-    ) {
+    if (generatedInvoices[quotationId] || generatedTaxInvoices[quotationId]) {
       alert(
         "This quotation cannot be deleted because an invoice or tax invoice already exists.",
       );
@@ -285,6 +283,29 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
 
     return date.toLocaleDateString("en-GB");
   };
+
+  const normalizedQuotationSearch = quotationSearch.trim().toLowerCase();
+
+  const filteredQuotations = quotations.filter((quotation) => {
+    if (!normalizedQuotationSearch) return true;
+
+    const displayedDate = formatDate(
+      quotation.quotation_date || quotation.created_at,
+    );
+
+    const searchableValues = [
+      quotation.quotation_no,
+      quotation.customer_name,
+      quotation.address,
+      quotation.contact_number,
+      quotation.email,
+      displayedDate,
+    ];
+
+    return searchableValues.some((value) =>
+      String(value || "").toLowerCase().includes(normalizedQuotationSearch),
+    );
+  });
 
   const getQuotationTotal = (quotation) => {
     if (
@@ -1030,18 +1051,33 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
           </div>
         </div>
 
+        {/* QUOTATION SEARCH */}
+        <div className="mb-3 flex justify-start">
+          <div className="w-full max-w-md">
+            <input
+              type="search"
+              value={quotationSearch}
+              onChange={(event) => setQuotationSearch(event.target.value)}
+              placeholder="Search quotation number, customer info or date..."
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+        </div>
+
         {/* RECORDS TABLE */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {isLoading ? (
             <div className="p-10 text-center text-sm font-semibold text-slate-500">
               Loading quotation records...
             </div>
-          ) : quotations.length === 0 ? (
+          ) : filteredQuotations.length === 0 ? (
             <div className="p-10 text-center">
               <FileText className="mx-auto mb-3 h-10 w-10 text-slate-300" />
 
               <p className="text-sm font-bold text-slate-500">
-                No quotation records found.
+                {quotationSearch.trim()
+                  ? "No quotation matches your search."
+                  : "No quotation records found."}
               </p>
             </div>
           ) : (
@@ -1066,7 +1102,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                 </thead>
 
                 <tbody>
-                  {quotations.map((quotation) => (
+                  {filteredQuotations.map((quotation) => (
                     <tr
                       key={quotation.id}
                       className="border-t border-slate-200 transition hover:bg-slate-50"
