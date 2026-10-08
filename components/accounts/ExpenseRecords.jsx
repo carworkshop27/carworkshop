@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-export default function ExpenseRecords({ setActiveScreen }) {
+export default function ExpenseRecords({ setActiveScreen, currentUser }) {
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [isOpeningInvoice, setIsOpeningInvoice] = useState(false);
+  const [deletingExpenseId, setDeletingExpenseId] = useState(null);
+  const isSuperUser = currentUser?.role === "Super User";
 
   const loadExpenses = async () => {
     try {
@@ -110,6 +112,50 @@ export default function ExpenseRecords({ setActiveScreen }) {
       month: "long",
       year: "numeric",
     });
+  };
+
+  const handleDeleteExpense = async (expense) => {
+    if (!isSuperUser || deletingExpenseId !== null) return;
+
+    const confirmed = window.confirm(
+      `Permanently delete expense ${expense.expense_no || ""}?\n\n` +
+      "This will remove the expense and its details from the database. " +
+      "This action cannot be undone.",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingExpenseId(expense.id);
+
+      const response = await fetch(
+        `/api/expenses?id=${encodeURIComponent(expense.id)}`,
+        { method: "DELETE" },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to delete expense.");
+      }
+
+      setExpenses((previous) =>
+        previous.filter((record) => record.id !== expense.id),
+      );
+
+      setSelectedExpense((previous) =>
+        previous?.id === expense.id ? null : previous,
+      );
+
+      if (data.warning) {
+        alert(data.warning);
+      }
+    } catch (error) {
+      console.error("Expense deletion error:", error);
+      alert(error.message || "Failed to delete expense.");
+    } finally {
+      setDeletingExpenseId(null);
+    }
   };
 
   const handleViewInvoice = async () => {
@@ -354,13 +400,28 @@ export default function ExpenseRecords({ setActiveScreen }) {
                       </td>
 
                       <td className="px-5 py-4 text-center">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedExpense(expense)}
-                          className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-700"
-                        >
-                          View Details
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedExpense(expense)}
+                            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-700"
+                          >
+                            View Details
+                          </button>
+
+                          {isSuperUser && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteExpense(expense)}
+                              disabled={deletingExpenseId !== null}
+                              title="Delete expense"
+                              aria-label={`Delete expense ${expense.expense_no}`}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-lg font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))

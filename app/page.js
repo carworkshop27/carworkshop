@@ -3023,7 +3023,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "expense-records") {
-    return <ExpenseRecords setActiveScreen={setActiveScreen} />;
+    return <ExpenseRecords setActiveScreen={setActiveScreen} currentUser={currentUser} />;
   }
 
   if (activeScreen === "monthly-account-statement") {

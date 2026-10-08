@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
+import { requireWorkshopSuperUser } from "../../../lib/workshopAuth";
 
 const EXPENSE_BUCKET = "expense-invoices";
 
@@ -354,6 +355,113 @@ export async function POST(request) {
 
     return NextResponse.json(
       { error: error.message || "Failed to save expense." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const auth = await requireWorkshopSuperUser();
+
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status },
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const expenseId = searchParams.get("id");
+
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!expenseId || !uuidPattern.test(expenseId)) {
+      return NextResponse.json(
+        { error: "Invalid expense ID." },
+        { status: 400 },
+      );
+    }
+
+    const { data: expense, error: lookupError } = await supabaseServer
+      .from("expenses")
+      .select("id, expense_no, invoice_file_path")
+      .eq("id", expenseId)
+      .maybeSingle();
+
+    if (lookupError) {
+      console.error("Expense delete lookup error:", lookupError);
+
+      return NextResponse.json(
+        { error: "Unable to verify expense record." },
+        { status: 500 },
+      );
+    }
+
+    if (!expense) {
+      return NextResponse.json(
+        { error: "Expense record not found." },
+        { status: 404 },
+      );
+    }
+
+    const { data: deleted, error: deleteError } = await supabaseServer
+      .from("expenses")
+      .delete()
+      .eq("id", expenseId)
+      .select("id")
+      .maybeSingle();
+
+    if (deleteError || !deleted) {
+      console.error("Expense database deletion error:", deleteError);
+
+      return NextResponse.json(
+        { error: "Unable to delete expense record." },
+        { status: 500 },
+      );
+    }
+
+    // PostgreSQL ON DELETE CASCADE removes associated expense_items.
+    // Storage cleanup is performed only after successful database deletion.
+    let invoiceCleanupWarning = null;
+
+    if (expense.invoice_file_path) {
+      const { data: otherReferences, error: referenceError } =
+        await supabaseServer
+          .from("expenses")
+          .select("id")
+          .eq("invoice_file_path", expense.invoice_file_path)
+          .limit(1);
+
+      if (referenceError) {
+        console.error("Expense invoice reference check error:", referenceError);
+        invoiceCleanupWarning =
+          "Expense deleted, but invoice cleanup could not be verified.";
+      } else if (!otherReferences?.length) {
+        const { error: storageError } = await supabaseServer.storage
+          .from(EXPENSE_BUCKET)
+          .remove([expense.invoice_file_path]);
+
+        if (storageError) {
+          console.error("Expense invoice cleanup error:", storageError);
+          invoiceCleanupWarning =
+            "Expense deleted, but the attached invoice file could not be removed.";
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      deletedId: deleted.id,
+      message: "Expense record deleted successfully.",
+      warning: invoiceCleanupWarning,
+    });
+  } catch (error) {
+    console.error("Expense DELETE API error:", error);
+
+    return NextResponse.json(
+      { error: "Unable to delete expense record." },
       { status: 500 },
     );
   }
