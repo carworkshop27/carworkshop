@@ -86,9 +86,31 @@ export default function Dashboard({
     }
   };
 
-  const [accountsOpen, setAccountsOpen] = React.useState(false);
+  const [accountsOpen, setAccountsOpen] = React.useState(() =>
+    typeof window !== "undefined" &&
+    window.sessionStorage.getItem("workshop_accounts_open") === "true"
+  );
 
-  const [quotationOpen, setQuotationOpen] = React.useState(false);
+  const [quotationOpen, setQuotationOpen] = React.useState(() =>
+    typeof window !== "undefined" &&
+    window.sessionStorage.getItem("workshop_quotation_open") === "true"
+  );
+
+  const toggleAccounts = () => {
+    setAccountsOpen((open) => {
+      const next = !open;
+      window.sessionStorage.setItem("workshop_accounts_open", String(next));
+      return next;
+    });
+  };
+
+  const toggleQuotation = () => {
+    setQuotationOpen((open) => {
+      const next = !open;
+      window.sessionStorage.setItem("workshop_quotation_open", String(next));
+      return next;
+    });
+  };
 
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -494,12 +516,12 @@ export default function Dashboard({
     {
       label: "Accounts",
       icon: FileText,
-      action: () => setAccountsOpen((open) => !open),
+      action: toggleAccounts,
     },
     {
       label: "Quotation",
       icon: FileText,
-      action: () => setQuotationOpen((open) => !open),
+      action: toggleQuotation,
     },
     {
       label: "Customers",
