@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useMemo, useState } from "react";
 
 
@@ -11,6 +9,41 @@ export default function ExpenseEntry({ setActiveScreen }) {
     new Date().toISOString().split("T")[0],
   );
 
+  const [isActualAdmin, setIsActualAdmin] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch("/api/auth/me", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) return;
+
+        const result = await response.json();
+
+        if (!cancelled) {
+          setIsActualAdmin(
+            result.authenticated === true &&
+              result.user?.id ===
+                "4502b4f1-2e5b-4e62-81c5-0b6e93ec66a1" &&
+              result.user?.username?.trim().toLowerCase() === "admin",
+          );
+        }
+      } catch (error) {
+        console.error("Expense Admin verification error:", error);
+      }
+    };
+
+    checkAdmin();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [expenseTypes, setExpenseTypes] = useState([]);
   const [expenseType, setExpenseType] = useState("");
   const [vatRegistrationNumber, setVatRegistrationNumber] = useState("");
@@ -19,6 +52,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
   const [newCategory, setNewCategory] = useState("");
   const [newCategoryArabic, setNewCategoryArabic] = useState("");
   const [mainCategoryId, setMainCategoryId] = useState("");
+  const [newSubcategoryMainId, setNewSubcategoryMainId] = useState("");
   const [customCategories, setCustomCategories] = useState([]);
   const [mainCategories, setMainCategories] = useState([]);
   const [categorySaving, setCategorySaving] = useState(false);
@@ -33,6 +67,23 @@ export default function ExpenseEntry({ setActiveScreen }) {
 
     return labels;
   }, [customCategories]);
+
+  const filteredExpenseTypes = useMemo(() => {
+    if (!isActualAdmin) {
+      return expenseTypes;
+    }
+
+    if (!mainCategoryId) {
+      return [];
+    }
+
+    return customCategories
+      .filter(
+        (item) =>
+          String(item.main_category_id) === String(mainCategoryId),
+      )
+      .map((item) => item.name_en);
+  }, [isActualAdmin, mainCategoryId, customCategories, expenseTypes]);
 
   const displayExpenseLabel = (value) => {
     const arabic = expenseLabels.get(value);
@@ -125,7 +176,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
 
     setCategoryError("");
 
-    if (!mainCategoryId || !nameEn || !nameAr) {
+    if (!newSubcategoryMainId || !nameEn || !nameAr) {
       setCategoryError("Main category, English and Arabic are required.");
       return;
     }
@@ -146,7 +197,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mainCategoryId,
+          mainCategoryId: newSubcategoryMainId,
           nameEn,
           nameAr,
         }),
@@ -164,7 +215,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
 
       setNewCategory("");
       setNewCategoryArabic("");
-      setMainCategoryId("");
+      setNewSubcategoryMainId("");
       setShowAddCategory(false);
     } catch (error) {
       setCategoryError(error.message || "Unable to add expense type.");
@@ -242,8 +293,21 @@ export default function ExpenseEntry({ setActiveScreen }) {
       return;
     }
 
+    if (isActualAdmin && !mainCategoryId) {
+      alert("Please select a Main Category.");
+      return;
+    }
+
     if (!expenseType) {
       alert("Please select an expense type.");
+      return;
+    }
+
+    if (
+      isActualAdmin &&
+      !filteredExpenseTypes.includes(expenseType)
+    ) {
+      alert("Please select an Expense Type belonging to the selected Main Category.");
       return;
     }
 
@@ -382,6 +446,31 @@ export default function ExpenseEntry({ setActiveScreen }) {
               />
             </div>
 
+            {/* Main Category - Actual Admin Only */}
+            {isActualAdmin && (
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Main Category
+                </label>
+
+                <select
+                  value={mainCategoryId}
+                  onChange={(e) => {
+                    setMainCategoryId(e.target.value);
+                    setExpenseType("");
+                  }}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                >
+                  <option value="">Select Main Category</option>
+                  {mainCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name_en} — {category.name_ar}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Expense Type */}
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -393,7 +482,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
                 onChange={(e) => setExpenseType(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
               >
-                {expenseTypes.map((type) => (
+                {filteredExpenseTypes.map((type) => (
                   <option key={type} value={type}>
                     {displayExpenseLabel(type)}
                   </option>
@@ -408,15 +497,15 @@ export default function ExpenseEntry({ setActiveScreen }) {
                 + Add Expense Type
               </button>
 
-              {showAddCategory && (
+              {isActualAdmin && showAddCategory && (
                 <div className="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-slate-700">
                       Main Category
                     </label>
                     <select
-                      value={mainCategoryId}
-                      onChange={(e) => setMainCategoryId(e.target.value)}
+                      value={newSubcategoryMainId}
+                      onChange={(e) => setNewSubcategoryMainId(e.target.value)}
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                     >
                       <option value="">Select main category</option>

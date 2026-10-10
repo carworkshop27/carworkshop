@@ -1,6 +1,6 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
-import { requireWorkshopSuperUser } from "../../../lib/workshopAuth";
+import { requireWorkshopAdmin } from "../../../lib/workshopAuth";
 
 export async function GET() {
   try {
@@ -27,7 +27,7 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    const auth = await requireWorkshopSuperUser();
+    const auth = await requireWorkshopAdmin();
 
     if (!auth.authorized) {
       return NextResponse.json(
