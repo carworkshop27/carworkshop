@@ -1,27 +1,111 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const DEFAULT_EXPENSE_TYPES = [
-  "Salaries",
-  "Rent",
-  "Office Stationary",
-  "Workshop Equipment",
-  "Workshop Tools",
-  "Utilities Bill",
-];
+
+
+
 
 export default function ExpenseEntry({ setActiveScreen }) {
   const [expenseDate, setExpenseDate] = useState(
     new Date().toISOString().split("T")[0],
   );
 
-  const [expenseTypes, setExpenseTypes] = useState(DEFAULT_EXPENSE_TYPES);
-  const [expenseType, setExpenseType] = useState(DEFAULT_EXPENSE_TYPES[0]);
+  const [expenseTypes, setExpenseTypes] = useState([]);
+  const [expenseType, setExpenseType] = useState("");
   const [vatRegistrationNumber, setVatRegistrationNumber] = useState("");
 
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
+  const [newCategoryArabic, setNewCategoryArabic] = useState("");
+  const [mainCategoryId, setMainCategoryId] = useState("");
+  const [customCategories, setCustomCategories] = useState([]);
+  const [mainCategories, setMainCategories] = useState([]);
+  const [categorySaving, setCategorySaving] = useState(false);
+  const [categoryError, setCategoryError] = useState("");
+
+  const expenseLabels = useMemo(() => {
+    const labels = new Map();
+
+    for (const item of customCategories) {
+      labels.set(item.name_en, item.name_ar);
+    }
+
+    return labels;
+  }, [customCategories]);
+
+  const displayExpenseLabel = (value) => {
+    const arabic = expenseLabels.get(value);
+    return arabic ? `${value} — ${arabic}` : value;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCustomCategories = async () => {
+      try {
+        const response = await fetch("/api/expense-subcategories", {
+          cache: "no-store",
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Unable to load expense types.");
+        }
+
+        if (cancelled) return;
+
+        setCustomCategories(result);
+
+        const names = result.map((item) => item.name_en);
+
+        setExpenseTypes(names);
+        setExpenseType((previous) =>
+          names.includes(previous) ? previous : names[0] || "",
+        );
+      } catch (error) {
+        console.error("Custom expense category load error:", error);
+        if (!cancelled) {
+          setCategoryError(error.message);
+        }
+      }
+    };
+
+    loadCustomCategories();
+
+    const loadMainCategories = async () => {
+      try {
+        const response = await fetch("/api/expense-main-categories", {
+          cache: "no-store",
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !Array.isArray(result)) {
+          throw new Error(
+            result.error || "Unable to load main categories.",
+          );
+        }
+
+        if (!cancelled) {
+          setMainCategories(result);
+        }
+      } catch (error) {
+        console.error("Main category load error:", error);
+
+        if (!cancelled) {
+          setCategoryError(error.message);
+        }
+      }
+    };
+
+    loadMainCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [details, setDetails] = useState([
     {
@@ -35,34 +119,59 @@ export default function ExpenseEntry({ setActiveScreen }) {
   const [invoiceFile, setInvoiceFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const addCategory = () => {
-    const category = newCategory.trim();
+  const addCategory = async () => {
+    const nameEn = newCategory.trim();
+    const nameAr = newCategoryArabic.trim();
 
-    if (!category) return;
+    setCategoryError("");
 
-    const exists = expenseTypes.some(
-      (type) => type.toLowerCase() === category.toLowerCase(),
-    );
-
-    if (exists) {
-      setExpenseType(
-        expenseTypes.find(
-          (type) => type.toLowerCase() === category.toLowerCase(),
-        ),
-      );
-      setNewCategory("");
-      setShowAddCategory(false);
+    if (!mainCategoryId || !nameEn || !nameAr) {
+      setCategoryError("Main category, English and Arabic are required.");
       return;
     }
 
-    const updatedTypes = [...expenseTypes, category];
+    if (
+      expenseTypes.some(
+        (type) => type.toLowerCase() === nameEn.toLowerCase(),
+      )
+    ) {
+      setCategoryError("This expense type already exists.");
+      return;
+    }
 
-    setExpenseTypes(updatedTypes);
-    setExpenseType(category);
-    setNewCategory("");
-    setShowAddCategory(false);
+    setCategorySaving(true);
+
+    try {
+      const response = await fetch("/api/expense-subcategories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mainCategoryId,
+          nameEn,
+          nameAr,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to add expense type.");
+      }
+
+      setCustomCategories((previous) => [...previous, result]);
+      setExpenseTypes((previous) => [...previous, result.name_en]);
+      setExpenseType(result.name_en);
+
+      setNewCategory("");
+      setNewCategoryArabic("");
+      setMainCategoryId("");
+      setShowAddCategory(false);
+    } catch (error) {
+      setCategoryError(error.message || "Unable to add expense type.");
+    } finally {
+      setCategorySaving(false);
+    }
   };
-
   const addDetailRow = () => {
     setDetails((prev) => [
       ...prev,
@@ -145,13 +254,19 @@ export default function ExpenseEntry({ setActiveScreen }) {
 
     const incompleteDetail = validDetails.find(
       (item) =>
-        !item.description.trim() ||
-        Number(item.amount || 0) < 0 ||
+        !Number.isFinite(Number(item.amount)) ||
+        Number(item.amount) <= 0 ||
+        !Number.isFinite(Number(item.vat || 0)) ||
         Number(item.vat || 0) < 0,
     );
 
     if (incompleteDetail) {
-      alert("Please complete all expense details correctly.");
+      alert("Please enter a valid amount greater than zero for every expense detail.");
+      return;
+    }
+
+    if (!invoiceFile || invoiceFile.size === 0) {
+      alert("Please upload an expense invoice before saving.");
       return;
     }
 
@@ -233,7 +348,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
             onClick={() => setActiveScreen("dashboard")}
             className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
-            ← Back to Dashboard
+            &larr; Back to Dashboard
           </button>
 
           <div>
@@ -280,7 +395,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
               >
                 {expenseTypes.map((type) => (
                   <option key={type} value={type}>
-                    {type}
+                    {displayExpenseLabel(type)}
                   </option>
                 ))}
               </select>
@@ -294,30 +409,66 @@ export default function ExpenseEntry({ setActiveScreen }) {
               </button>
 
               {showAddCategory && (
-                <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <div className="flex gap-2">
+                <div className="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                      Main Category
+                    </label>
+                    <select
+                      value={mainCategoryId}
+                      onChange={(e) => setMainCategoryId(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    >
+                      <option value="">Select main category</option>
+                      {mainCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name_en} — {category.name_ar}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                      New Subcategory (English)
+                    </label>
                     <input
                       type="text"
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addCategory();
-                        }
-                      }}
-                      placeholder="New expense type"
-                      className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                      placeholder="Enter English subcategory"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                     />
-
-                    <button
-                      type="button"
-                      onClick={addCategory}
-                      className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                    >
-                      Add
-                    </button>
                   </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                      New Subcategory (Arabic)
+                    </label>
+                    <input
+                      type="text"
+                      dir="rtl"
+                      value={newCategoryArabic}
+                      onChange={(e) => setNewCategoryArabic(e.target.value)}
+                      placeholder="أدخل نوع المصروف بالعربية"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  {categoryError && (
+                    <p className="text-sm text-red-600" role="alert">
+                      {categoryError}
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={addCategory}
+                    disabled={categorySaving}
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  >
+                    {categorySaving ? "Saving..." : "Add Subcategory"}
+                  </button>
                 </div>
               )}
             </div>
@@ -455,7 +606,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
             <div className="p-5">
               <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center transition hover:border-slate-400 hover:bg-slate-100">
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl shadow-sm">
-                  📄
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v4h16v-4"/></svg>
                 </div>
 
                 <span className="text-sm font-semibold text-slate-700">
@@ -510,14 +661,14 @@ export default function ExpenseEntry({ setActiveScreen }) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Subtotal</span>
                   <span className="text-sm font-semibold text-slate-900">
-                    ⃁ {formatAmount(summary.subtotal)}
+                     &#x20C1; {formatAmount(summary.subtotal)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">VAT</span>
                   <span className="text-sm font-semibold text-slate-900">
-                    ⃁ {formatAmount(summary.vat)}
+                     &#x20C1; {formatAmount(summary.vat)}
                   </span>
                 </div>
 
@@ -527,7 +678,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
                       Grand Total
                     </span>
                     <span className="text-xl font-bold text-slate-900">
-                      ⃁ {formatAmount(summary.grandTotal)}
+                       &#x20C1; {formatAmount(summary.grandTotal)}
                     </span>
                   </div>
                 </div>

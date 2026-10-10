@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
-import { requireWorkshopSuperUser } from "../../../lib/workshopAuth";
+import { requireWorkshopSuperUser, requireWorkshopAdmin } from "../../../lib/workshopAuth";
 
 const EXPENSE_BUCKET = "expense-invoices";
 
@@ -134,18 +134,12 @@ export async function POST(request) {
       };
     });
 
-    if (cleanedItems.some((item) => !item.description)) {
-      return NextResponse.json(
-        { error: "Please enter a description for every expense detail." },
-        { status: 400 },
-      );
-    }
 
     if (
       cleanedItems.some(
         (item) =>
           !Number.isFinite(item.amount) ||
-          item.amount < 0 ||
+          item.amount <= 0 ||
           !Number.isFinite(item.vat) ||
           item.vat < 0,
       )
@@ -190,6 +184,18 @@ export async function POST(request) {
     }
 
     const invoiceFile = formData.get("invoiceFile");
+
+    if (
+      !invoiceFile ||
+      typeof invoiceFile !== "object" ||
+      typeof invoiceFile.size !== "number" ||
+      invoiceFile.size <= 0
+    ) {
+      return NextResponse.json(
+        { error: "Expense invoice is required." },
+        { status: 400 },
+      );
+    }
 
     if (
       invoiceFile &&
@@ -362,7 +368,7 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    const auth = await requireWorkshopSuperUser();
+    const auth = await requireWorkshopAdmin();
 
     if (!auth.authorized) {
       return NextResponse.json(
@@ -463,6 +469,304 @@ export async function DELETE(request) {
     return NextResponse.json(
       { error: "Unable to delete expense record." },
       { status: 500 },
+    );
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const auth = await requireWorkshopAdmin();
+
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      );
+    }
+
+    const isMultipart = request.headers
+      .get("content-type")
+      ?.toLowerCase()
+      .startsWith("multipart/form-data");
+
+    let replacementFile = null;
+    let body;
+
+    if (isMultipart) {
+      const formData = await request.formData();
+      replacementFile = formData.get("invoiceFile");
+
+      try {
+        body = JSON.parse(String(formData.get("expenseData") || ""));
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid expense information." },
+          { status: 400 }
+        );
+      }
+
+      if (
+        !replacementFile ||
+        typeof replacementFile.arrayBuffer !== "function" ||
+        !replacementFile.size ||
+        !ALLOWED_FILE_TYPES.includes(replacementFile.type) ||
+        replacementFile.size > MAX_FILE_SIZE
+      ) {
+        return NextResponse.json(
+          { error: "Choose a valid PDF, JPG, JPEG, or PNG invoice up to 10 MB." },
+          { status: 400 }
+        );
+      }
+    } else {
+      body = await request.json();
+    }
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: "Invalid request." },
+        { status: 400 }
+      );
+    }
+
+    const {
+      id,
+      expenseDate,
+      expenseType,
+      vatRegistrationNumber,
+      items,
+    } = body;
+
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (
+      typeof id !== "string" ||
+      !uuidPattern.test(id) ||
+      typeof expenseDate !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(expenseDate) ||
+      typeof expenseType !== "string" ||
+      !expenseType.trim() ||
+      (vatRegistrationNumber != null &&
+        typeof vatRegistrationNumber !== "string") ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
+      return NextResponse.json(
+        { error: "Invalid expense information." },
+        { status: 400 }
+      );
+    }
+
+    const cleanedItems = [];
+
+    for (const item of items) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        return NextResponse.json(
+          { error: "Invalid expense detail." },
+          { status: 400 }
+        );
+      }
+
+      const description =
+        typeof item.description === "string"
+          ? item.description.trim()
+          : "";
+
+      const amount = Number(item.amount);
+      const vat = Number(item.vat);
+
+      if (
+        !description ||
+        !Number.isFinite(amount) ||
+        amount < 0 ||
+        !Number.isFinite(vat) ||
+        vat < 0 ||
+        !Number.isInteger(Math.round(amount * 100)) ||
+        !Number.isInteger(Math.round(vat * 100)) ||
+        Math.abs(amount * 100 - Math.round(amount * 100)) > 0.000001 ||
+        Math.abs(vat * 100 - Math.round(vat * 100)) > 0.000001 ||
+        (item.id != null &&
+          (typeof item.id !== "string" ||
+            !uuidPattern.test(item.id)))
+      ) {
+        return NextResponse.json(
+          { error: "Invalid expense detail values." },
+          { status: 400 }
+        );
+      }
+
+      cleanedItems.push({
+        ...(item.id ? { id: item.id } : {}),
+        description,
+        amount: amount.toFixed(2),
+        vat: vat.toFixed(2),
+      });
+    }
+
+    let uploadedPath = null;
+    let previousPath = null;
+
+    if (replacementFile) {
+      const { data: currentExpense, error: lookupError } =
+        await supabaseServer
+          .from("expenses")
+          .select("id, expense_no, invoice_file_path")
+          .eq("id", id)
+          .maybeSingle();
+
+      if (lookupError || !currentExpense) {
+        return NextResponse.json(
+          { error: "Unable to verify the expense record." },
+          { status: lookupError ? 500 : 404 }
+        );
+      }
+
+      previousPath = currentExpense.invoice_file_path || null;
+
+      const expectedPath = body.expectedInvoicePath ?? null;
+
+      if (previousPath !== expectedPath) {
+        return NextResponse.json(
+          { error: "The invoice has changed. Refresh the expense before saving." },
+          { status: 409 }
+        );
+      }
+
+      const extensionByType = {
+        "application/pdf": "pdf",
+        "image/jpeg": "jpg",
+        "image/png": "png",
+      };
+
+      const extension = extensionByType[replacementFile.type];
+      const safeExpenseNo = String(currentExpense.expense_no)
+        .replace(/[^a-zA-Z0-9_-]/g, "-");
+
+      uploadedPath =
+        `expenses/${safeExpenseNo}/replacement-${crypto.randomUUID()}.${extension}`;
+
+      const fileBuffer = Buffer.from(await replacementFile.arrayBuffer());
+
+      const { error: uploadError } = await supabaseServer.storage
+        .from(EXPENSE_BUCKET)
+        .upload(uploadedPath, fileBuffer, {
+          contentType: replacementFile.type,
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("Expense replacement upload error:", uploadError);
+
+        return NextResponse.json(
+          { error: "Unable to upload replacement invoice." },
+          { status: 500 }
+        );
+      }
+
+      let replacementResult;
+
+      try {
+        replacementResult = await supabaseServer.rpc(
+          "admin_update_expense_with_invoice",
+          {
+            p_expense_id: id,
+            p_expense_date: expenseDate,
+            p_expense_type: expenseType.trim(),
+            p_vat_registration_number:
+              (vatRegistrationNumber || "").trim(),
+            p_items: cleanedItems,
+            p_expected_invoice_path: expectedPath,
+            p_invoice_file_name: replacementFile.name,
+            p_invoice_file_path: uploadedPath,
+          }
+        );
+      } catch (rpcError) {
+        replacementResult = { error: rpcError };
+      }
+
+      if (replacementResult.error) {
+        console.error(
+          "Expense invoice replacement transaction error:",
+          replacementResult.error
+        );
+
+        const { error: cleanupError } = await supabaseServer.storage
+          .from(EXPENSE_BUCKET)
+          .remove([uploadedPath]);
+
+        if (cleanupError) {
+          console.error("Failed replacement upload cleanup:", cleanupError);
+        }
+
+        return NextResponse.json(
+          { error: "Expense update failed. The original invoice was preserved." },
+          { status: 500 }
+        );
+      }
+
+      let warning = null;
+
+      if (previousPath && previousPath !== uploadedPath) {
+        const { data: references, error: referenceError } =
+          await supabaseServer
+            .from("expenses")
+            .select("id")
+            .eq("invoice_file_path", previousPath)
+            .limit(1);
+
+        if (referenceError) {
+          warning = "Expense saved, but previous invoice cleanup could not be verified.";
+        } else if (!references?.length) {
+          const { error: removeError } = await supabaseServer.storage
+            .from(EXPENSE_BUCKET)
+            .remove([previousPath]);
+
+          if (removeError) {
+            console.error("Previous invoice cleanup error:", removeError);
+            warning = "Expense saved, but the previous invoice file could not be removed.";
+          }
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        result: replacementResult.data,
+        invoiceReplaced: true,
+        warning,
+      });
+    }
+
+    const { data, error } = await supabaseServer.rpc(
+      "admin_update_expense",
+      {
+        p_expense_id: id,
+        p_expense_date: expenseDate,
+        p_expense_type: expenseType.trim(),
+        p_vat_registration_number:
+          (vatRegistrationNumber || "").trim(),
+        p_items: cleanedItems,
+      }
+    );
+
+    if (error) {
+      console.error("Expense update error:", error);
+
+      return NextResponse.json(
+        { error: "Unable to update expense." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      result: data,
+    });
+  } catch (error) {
+    console.error("Expense PUT API error:", error);
+
+    return NextResponse.json(
+      { error: "Unable to process expense update." },
+      { status: 500 }
     );
   }
 }

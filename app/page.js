@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import LoginScreen from "../components/auth/LoginScreen";
 import SuperUserSetup from "../components/auth/SuperUserSetup";
@@ -22,6 +22,7 @@ import CustomerRecords from "../components/customers/CustomerRecords";
 import QuotationInvoice from "../components/accounts/QuotationInvoice";
 import ExpenseEntry from "../components/accounts/ExpenseEntry";
 import ExpenseRecords from "../components/accounts/ExpenseRecords";
+import ExpenseEdit from "../components/accounts/ExpenseEdit";
 import DailyLedger from "../components/Sales/DailyLedger";
 import MonthlyLedger from "../components/Sales/MonthlyLedger";
 import PartsOrders from "../components/parts-orders/PartsOrders";
@@ -755,6 +756,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("list");
   const [activeScreen, setActiveScreen] = useState("dashboard");
+  const [expenseToEdit, setExpenseToEdit] = useState(null);
   const [quotationToEdit, setQuotationToEdit] = useState(null);
   const [detailedJobCard, setDetailedJobCard] = useState(null);
   const [printJobCard, setPrintJobCard] = useState(false);
@@ -3023,7 +3025,33 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "expense-records") {
-    return <ExpenseRecords setActiveScreen={setActiveScreen} currentUser={currentUser} />;
+    return (
+      <ExpenseRecords
+        setActiveScreen={setActiveScreen}
+        currentUser={currentUser}
+        onEditExpense={(expense) => {
+          setExpenseToEdit(expense);
+          setActiveScreen("expense-edit");
+        }}
+      />
+    );
+  }
+
+  if (activeScreen === "expense-edit") {
+    return (
+      <ExpenseEdit
+        expense={expenseToEdit}
+        currentUser={currentUser}
+        onCancel={() => {
+          setExpenseToEdit(null);
+          setActiveScreen("expense-records");
+        }}
+        onSaved={() => {
+          setExpenseToEdit(null);
+          setActiveScreen("expense-records");
+        }}
+      />
+    );
   }
 
   if (activeScreen === "monthly-account-statement") {

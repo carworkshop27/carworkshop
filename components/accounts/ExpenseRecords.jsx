@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getExpenseLabel } from "../../lib/expenseCategories";
 
-export default function ExpenseRecords({ setActiveScreen, currentUser }) {
+export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExpense }) {
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -10,7 +11,9 @@ export default function ExpenseRecords({ setActiveScreen, currentUser }) {
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [isOpeningInvoice, setIsOpeningInvoice] = useState(false);
   const [deletingExpenseId, setDeletingExpenseId] = useState(null);
-  const isSuperUser = currentUser?.role === "Super User";
+  const isExpenseAdmin =
+    currentUser?.id === "4502b4f1-2e5b-4e62-81c5-0b6e93ec66a1" &&
+    currentUser?.username?.trim().toLowerCase() === "admin";
 
   const loadExpenses = async () => {
     try {
@@ -115,7 +118,7 @@ export default function ExpenseRecords({ setActiveScreen, currentUser }) {
   };
 
   const handleDeleteExpense = async (expense) => {
-    if (!isSuperUser || deletingExpenseId !== null) return;
+    if (!isExpenseAdmin || deletingExpenseId !== null) return;
 
     const confirmed = window.confirm(
       `Permanently delete expense ${expense.expense_no || ""}?\n\n` +
@@ -197,7 +200,7 @@ export default function ExpenseRecords({ setActiveScreen, currentUser }) {
             onClick={() => setActiveScreen("dashboard")}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
-            ← Back to Dashboard
+            â† Back to Dashboard
           </button>
 
           <div>
@@ -368,7 +371,7 @@ export default function ExpenseRecords({ setActiveScreen, currentUser }) {
                       </td>
 
                       <td className="px-5 py-4 text-sm font-bold text-slate-800">
-                        {expense.expense_type || "-"}
+                        {expense.expense_type ? getExpenseLabel(expense.expense_type) : "-"}
                       </td>
 
                       <td className="px-5 py-4 text-sm font-semibold text-slate-600">
@@ -409,7 +412,18 @@ export default function ExpenseRecords({ setActiveScreen, currentUser }) {
                             View Details
                           </button>
 
-                          {isSuperUser && (
+                          {isExpenseAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => onEditExpense?.(expense)}
+                              disabled={deletingExpenseId !== null}
+                              className="inline-flex items-center justify-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-black text-white transition hover:bg-amber-600 disabled:opacity-50"
+                            >
+                              Edit
+                            </button>
+                          )}
+
+                          {isExpenseAdmin && (
                             <button
                               type="button"
                               onClick={() => handleDeleteExpense(expense)}
@@ -418,7 +432,7 @@ export default function ExpenseRecords({ setActiveScreen, currentUser }) {
                               aria-label={`Delete expense ${expense.expense_no}`}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-lg font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              ×
+                              Ã—
                             </button>
                           )}
                         </div>
@@ -467,7 +481,7 @@ export default function ExpenseRecords({ setActiveScreen, currentUser }) {
                 onClick={() => setSelectedExpense(null)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-xl font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
               >
-                ×
+                Ã—
               </button>
             </div>
 
@@ -502,7 +516,7 @@ export default function ExpenseRecords({ setActiveScreen, currentUser }) {
                       Expense Type
                     </p>
                     <p className="mt-1 text-sm font-black text-slate-900">
-                      {selectedExpense.expense_type || "-"}
+                      {selectedExpense.expense_type ? getExpenseLabel(selectedExpense.expense_type) : "-"}
                     </p>
                   </div>
 
