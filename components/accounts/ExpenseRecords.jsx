@@ -200,7 +200,7 @@ export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExp
             onClick={() => setActiveScreen("dashboard")}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
-            â† Back to Dashboard
+            &larr; Back to Dashboard
           </button>
 
           <div>
