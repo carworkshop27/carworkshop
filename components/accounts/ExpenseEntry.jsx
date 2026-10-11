@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 
-
-
-
-
 export default function ExpenseEntry({ setActiveScreen }) {
   const [expenseDate, setExpenseDate] = useState(
     new Date().toISOString().split("T")[0],
@@ -27,8 +23,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
         if (!cancelled) {
           setIsActualAdmin(
             result.authenticated === true &&
-              result.user?.id ===
-                "4502b4f1-2e5b-4e62-81c5-0b6e93ec66a1" &&
+              result.user?.id === "4502b4f1-2e5b-4e62-81c5-0b6e93ec66a1" &&
               result.user?.username?.trim().toLowerCase() === "admin",
           );
         }
@@ -79,8 +74,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
 
     return customCategories
       .filter(
-        (item) =>
-          String(item.main_category_id) === String(mainCategoryId),
+        (item) => String(item.main_category_id) === String(mainCategoryId),
       )
       .map((item) => item.name_en);
   }, [isActualAdmin, mainCategoryId, customCategories, expenseTypes]);
@@ -134,9 +128,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
         const result = await response.json();
 
         if (!response.ok || !Array.isArray(result)) {
-          throw new Error(
-            result.error || "Unable to load main categories.",
-          );
+          throw new Error(result.error || "Unable to load main categories.");
         }
 
         if (!cancelled) {
@@ -182,9 +174,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
     }
 
     if (
-      expenseTypes.some(
-        (type) => type.toLowerCase() === nameEn.toLowerCase(),
-      )
+      expenseTypes.some((type) => type.toLowerCase() === nameEn.toLowerCase())
     ) {
       setCategoryError("This expense type already exists.");
       return;
@@ -303,11 +293,10 @@ export default function ExpenseEntry({ setActiveScreen }) {
       return;
     }
 
-    if (
-      isActualAdmin &&
-      !filteredExpenseTypes.includes(expenseType)
-    ) {
-      alert("Please select an Expense Type belonging to the selected Main Category.");
+    if (isActualAdmin && !filteredExpenseTypes.includes(expenseType)) {
+      alert(
+        "Please select an Expense Type belonging to the selected Main Category.",
+      );
       return;
     }
 
@@ -325,7 +314,9 @@ export default function ExpenseEntry({ setActiveScreen }) {
     );
 
     if (incompleteDetail) {
-      alert("Please enter a valid amount greater than zero for every expense detail.");
+      alert(
+        "Please enter a valid amount greater than zero for every expense detail.",
+      );
       return;
     }
 
@@ -658,7 +649,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
                           updateDetail(item.id, "vat", e.target.value)
                         }
                         placeholder="0.00"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                       />
                     </td>
 
@@ -695,7 +686,22 @@ export default function ExpenseEntry({ setActiveScreen }) {
             <div className="p-5">
               <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center transition hover:border-slate-400 hover:bg-slate-100">
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v4h16v-4"/></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 16V4" />
+                    <path d="m7 9 5-5 5 5" />
+                    <path d="M4 16v4h16v-4" />
+                  </svg>
                 </div>
 
                 <span className="text-sm font-semibold text-slate-700">
@@ -750,14 +756,14 @@ export default function ExpenseEntry({ setActiveScreen }) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Subtotal</span>
                   <span className="text-sm font-semibold text-slate-900">
-                     &#x20C1; {formatAmount(summary.subtotal)}
+                    &#x20C1; {formatAmount(summary.subtotal)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">VAT</span>
                   <span className="text-sm font-semibold text-slate-900">
-                     &#x20C1; {formatAmount(summary.vat)}
+                    &#x20C1; {formatAmount(summary.vat)}
                   </span>
                 </div>
 
@@ -767,7 +773,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
                       Grand Total
                     </span>
                     <span className="text-xl font-bold text-slate-900">
-                       &#x20C1; {formatAmount(summary.grandTotal)}
+                      &#x20C1; {formatAmount(summary.grandTotal)}
                     </span>
                   </div>
                 </div>
