@@ -574,7 +574,7 @@ export default function ExpenseRecords({
                               aria-label={`Delete expense ${expense.expense_no}`}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-lg font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              Ã—
+                              &times;
                             </button>
                           )}
                         </div>
@@ -623,7 +623,7 @@ export default function ExpenseRecords({
                 onClick={() => setSelectedExpense(null)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-xl font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
               >
-                Ã—
+                &times;
               </button>
             </div>
 
