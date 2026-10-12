@@ -3,11 +3,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { getExpenseLabel } from "../../lib/expenseCategories";
 
-export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExpense }) {
+export default function ExpenseRecords({
+  setActiveScreen,
+  currentUser,
+  onEditExpense,
+}) {
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMainCategory, setSelectedMainCategory] = useState("all");
+  const [selectedExpenseType, setSelectedExpenseType] = useState("all");
+  const [mainCategories, setMainCategories] = useState([]);
+  const [expenseSubcategories, setExpenseSubcategories] = useState([]);
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [isOpeningInvoice, setIsOpeningInvoice] = useState(false);
   const [deletingExpenseId, setDeletingExpenseId] = useState(null);
@@ -47,6 +56,41 @@ export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExp
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCategories = async () => {
+      try {
+        const [mainResponse, subResponse] = await Promise.all([
+          fetch("/api/expense-main-categories", { cache: "no-store" }),
+          fetch("/api/expense-subcategories", { cache: "no-store" }),
+        ]);
+
+        if (!mainResponse.ok || !subResponse.ok) {
+          throw new Error("Unable to load expense categories.");
+        }
+
+        const [mainData, subData] = await Promise.all([
+          mainResponse.json(),
+          subResponse.json(),
+        ]);
+
+        if (!cancelled) {
+          setMainCategories(Array.isArray(mainData) ? mainData : []);
+          setExpenseSubcategories(Array.isArray(subData) ? subData : []);
+        }
+      } catch (error) {
+        console.error("Expense category filter load error:", error);
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const availableMonths = useMemo(() => {
     const months = new Set();
 
@@ -59,17 +103,77 @@ export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExp
     return Array.from(months).sort().reverse();
   }, [expenses]);
 
-  const filteredExpenses = useMemo(() => {
-    if (selectedMonth === "all") {
-      return expenses;
-    }
-
-    return expenses.filter(
-      (expense) =>
-        expense.expense_date &&
-        expense.expense_date.slice(0, 7) === selectedMonth,
+  const availableExpenseTypes = useMemo(() => {
+    return expenseSubcategories.filter(
+      (item) =>
+        selectedMainCategory === "all" ||
+        String(item.main_category_id) === String(selectedMainCategory),
     );
-  }, [expenses, selectedMonth]);
+  }, [expenseSubcategories, selectedMainCategory]);
+
+  const filteredExpenses = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return expenses.filter((expense) => {
+      if (
+        selectedMonth !== "all" &&
+        expense.expense_date?.slice(0, 7) !== selectedMonth
+      ) {
+        return false;
+      }
+
+      const expenseType = String(expense.expense_type || "");
+
+      const matchingSubcategory = expenseSubcategories.find(
+        (item) => item.name_en === expenseType,
+      );
+
+      if (
+        selectedMainCategory !== "all" &&
+        String(matchingSubcategory?.main_category_id) !==
+          String(selectedMainCategory)
+      ) {
+        return false;
+      }
+
+      if (
+        selectedExpenseType !== "all" &&
+        expenseType !== selectedExpenseType
+      ) {
+        return false;
+      }
+
+      if (!query) return true;
+
+      const date = String(expense.expense_date || "").slice(0, 10);
+      const [year, month, day] = date.split("-");
+      const displayDate = year && month && day ? `${day}/${month}/${year}` : "";
+
+      const searchableValues = [
+        expense.expense_no,
+        expenseType,
+        getExpenseLabel(expenseType),
+        date,
+        displayDate,
+        formatAmount(expense.subtotal),
+        formatAmount(expense.vat_amount),
+        formatAmount(expense.grand_total),
+      ];
+
+      return searchableValues.some((value) =>
+        String(value ?? "")
+          .toLowerCase()
+          .includes(query),
+      );
+    });
+  }, [
+    expenses,
+    selectedMonth,
+    selectedMainCategory,
+    selectedExpenseType,
+    searchTerm,
+    expenseSubcategories,
+  ]);
 
   const totals = useMemo(() => {
     return filteredExpenses.reduce(
@@ -88,9 +192,9 @@ export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExp
     );
   }, [filteredExpenses]);
 
-  const formatAmount = (value) => {
+  function formatAmount(value) {
     return Number(value || 0).toFixed(2);
-  };
+  }
 
   const formatDate = (value) => {
     if (!value) return "-";
@@ -122,8 +226,8 @@ export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExp
 
     const confirmed = window.confirm(
       `Permanently delete expense ${expense.expense_no || ""}?\n\n` +
-      "This will remove the expense and its details from the database. " +
-      "This action cannot be undone.",
+        "This will remove the expense and its details from the database. " +
+        "This action cannot be undone.",
     );
 
     if (!confirmed) return;
@@ -229,6 +333,42 @@ export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExp
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search No. / Date / Type / Amount"
+                className="w-full min-w-0 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:w-64"
+              />
+
+              <select
+                value={selectedMainCategory}
+                onChange={(event) => {
+                  setSelectedMainCategory(event.target.value);
+                  setSelectedExpenseType("all");
+                }}
+                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="all">All Main Categories</option>
+                {mainCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name_en}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedExpenseType}
+                onChange={(event) => setSelectedExpenseType(event.target.value)}
+                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="all">All Expense Types</option>
+                {availableExpenseTypes.map((type) => (
+                  <option key={type.id} value={type.name_en}>
+                    {type.name_en}
+                  </option>
+                ))}
+              </select>
               <select
                 value={selectedMonth}
                 onChange={(event) => setSelectedMonth(event.target.value)}
@@ -371,7 +511,9 @@ export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExp
                       </td>
 
                       <td className="px-5 py-4 text-sm font-bold text-slate-800">
-                        {expense.expense_type ? getExpenseLabel(expense.expense_type) : "-"}
+                        {expense.expense_type
+                          ? getExpenseLabel(expense.expense_type)
+                          : "-"}
                       </td>
 
                       <td className="px-5 py-4 text-sm font-semibold text-slate-600">
@@ -516,7 +658,9 @@ export default function ExpenseRecords({ setActiveScreen, currentUser, onEditExp
                       Expense Type
                     </p>
                     <p className="mt-1 text-sm font-black text-slate-900">
-                      {selectedExpense.expense_type ? getExpenseLabel(selectedExpense.expense_type) : "-"}
+                      {selectedExpense.expense_type
+                        ? getExpenseLabel(selectedExpense.expense_type)
+                        : "-"}
                     </p>
                   </div>
 
