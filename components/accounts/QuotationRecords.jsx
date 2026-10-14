@@ -8,6 +8,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
   const [quotations, setQuotations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quotationToGenerate, setQuotationToGenerate] = useState(null);
+  const [invoiceLayout, setInvoiceLayout] = useState("professional");
   const [generatedInvoices, setGeneratedInvoices] = useState({});
   const [generatedTaxInvoices, setGeneratedTaxInvoices] = useState({});
   const [selectedTaxInvoice, setSelectedTaxInvoice] = useState(null);
@@ -477,6 +478,50 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
       <div className="min-h-screen bg-slate-100 p-6 text-slate-900">
         <div className="mx-auto max-w-7xl">
           {/* TOP CONTROLS */}
+          <div className="mb-4 flex flex-wrap items-center gap-3 print:hidden">
+            <span className="text-sm font-bold text-slate-700">
+              Print Layout / نموذج الطباعة:
+            </span>
+            <select
+              value={selectedTaxInvoice.printLayout || "professional"}
+              onChange={(event) =>
+                setSelectedTaxInvoice((previous) => ({
+                  ...previous,
+                  printLayout: event.target.value,
+                }))
+              }
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold"
+            >
+              <option value="professional">
+                Professional Invoice / فاتورة احترافية
+              </option>
+              <option value="workshop">
+                Detailed Workshop Invoice / فاتورة ورشة تفصيلية
+              </option>
+            </select>
+          </div>
+          <div className="mb-4 flex flex-wrap items-center gap-3 print:hidden">
+            <span className="text-sm font-bold text-slate-700">
+              Print Layout / نموذج الطباعة:
+            </span>
+            <select
+              value={selectedTaxInvoice.printLayout || "professional"}
+              onChange={(event) =>
+                setSelectedTaxInvoice((previous) => ({
+                  ...previous,
+                  printLayout: event.target.value,
+                }))
+              }
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold"
+            >
+              <option value="professional">
+                Professional Invoice / فاتورة احترافية
+              </option>
+              <option value="workshop">
+                Detailed Workshop Invoice / فاتورة ورشة تفصيلية
+              </option>
+            </select>
+          </div>
           <div className="mb-4 flex items-center justify-between print:hidden">
             <button
               type="button"
@@ -499,7 +544,53 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
             </button>
           </div>
 
-          <div className="tax-invoice-print bg-white text-slate-900">
+          <style jsx global>{`
+            .professional-invoice-layout {
+              max-width: 850px;
+              margin: 0 auto;
+              padding: 24px;
+              border: 1px solid #cbd5e1;
+              box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            }
+
+            .workshop-invoice-layout {
+              max-width: 1100px;
+              margin: 0 auto;
+              padding: 20px;
+              border: 3px solid #334155;
+              box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            }
+
+            .workshop-invoice-layout table thead {
+              background: #dbeafe;
+            }
+
+            .workshop-invoice-layout table th {
+              font-weight: 800;
+            }
+
+            @media print {
+              .professional-invoice-layout,
+              .workshop-invoice-layout {
+                max-width: none;
+                margin: 0;
+                padding: 8mm;
+                border: none;
+                box-shadow: none;
+              }
+
+              .workshop-invoice-layout table thead {
+                background: #dbeafe !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+              }
+            }
+          `}</style>
+          <div className={`tax-invoice-print bg-white text-slate-900 ${
+              selectedTaxInvoice.printLayout === "workshop"
+                ? "workshop-invoice-layout"
+                : "professional-invoice-layout"
+            }`}>
             {/* =====================================================
               HEADER
           ===================================================== */}
@@ -1213,9 +1304,10 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                               <button
                                 type="button"
                                 onClick={() =>
-                                  setSelectedTaxInvoice(
-                                    generatedTaxInvoices[quotation.id],
-                                  )
+                                  setSelectedTaxInvoice({
+                                      ...generatedTaxInvoices[quotation.id],
+                                      printLayout: invoiceLayout,
+                                    })
                                 }
                                 className="flex-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-center text-[11px] font-black text-white transition hover:bg-emerald-600"
                               >
@@ -1282,8 +1374,45 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <h2 className="text-xl font-black text-slate-900">
-              Generate Invoice
+              Invoice Format / نموذج الفاتورة
             </h2>
+            <div className="mt-4 grid gap-3">
+              {[
+                {
+                  id: "professional",
+                  en: "Option 1 — Professional Invoice",
+                  ar: "الخيار الأول — فاتورة احترافية",
+                },
+                {
+                  id: "workshop",
+                  en: "Option 2 — Detailed Workshop Invoice",
+                  ar: "الخيار الثاني — فاتورة ورشة تفصيلية",
+                },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setInvoiceLayout(option.id)}
+                  className={`rounded-xl border-2 p-4 text-left transition ${
+                    invoiceLayout === option.id
+                      ? "border-emerald-600 bg-emerald-50"
+                      : "border-slate-200 bg-white hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-black text-slate-900">
+                      {option.en}
+                    </span>
+                    <span className="text-lg text-emerald-700">
+                      {invoiceLayout === option.id ? "●" : "○"}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-slate-700" dir="rtl">
+                    {option.ar}
+                  </p>
+                </button>
+              ))}
+            </div>
 
             <p className="mt-3 text-sm font-medium text-slate-600">
               Do you want to generate the invoice and tax-invoice of quotation{" "}

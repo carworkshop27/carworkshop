@@ -13,6 +13,8 @@ import * as XLSX from "xlsx";
 import NewJobIntake from "../components/intake/NewJobIntake";
 import JobCards from "../components/jobs/JobCards";
 import Sales from "../components/accounts/Sales";
+import StandaloneSalesInvoice from "../components/accounts/StandaloneSalesInvoice";
+import StandaloneSalesInvoiceRecords from "../components/accounts/StandaloneSalesInvoiceRecords";
 import PurchaseEntry from "../components/accounts/PurchaseEntry";
 import PurchaseRecords from "../components/accounts/PurchaseRecords";
 import MonthlyAccountStatement from "../components/accounts/MonthlyAccountStatement";
@@ -756,6 +758,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("list");
   const [activeScreen, setActiveScreen] = useState("dashboard");
+  const [standaloneInvoiceToEdit, setStandaloneInvoiceToEdit] = useState(null);
   const [expenseToEdit, setExpenseToEdit] = useState(null);
   const [quotationToEdit, setQuotationToEdit] = useState(null);
   const [detailedJobCard, setDetailedJobCard] = useState(null);
@@ -3008,6 +3011,46 @@ const jobsResponse = await fetch("/api/jobs");
     );
   }
 
+  if (activeScreen === "standalone-sales-invoice-edit") {
+    return standaloneInvoiceToEdit ? (
+      <StandaloneSalesInvoice
+        key={standaloneInvoiceToEdit.id}
+        template={standaloneInvoiceToEdit.template_type}
+        initialInvoice={standaloneInvoiceToEdit}
+        backScreen="standalone-sales-invoice-records"
+        setActiveScreen={setActiveScreen}
+      />
+    ) : null;
+  }
+
+  if (activeScreen === "standalone-sales-invoice-records") {
+    return (
+      <StandaloneSalesInvoiceRecords
+        setActiveScreen={setActiveScreen}
+        onEdit={(record) => {
+          setStandaloneInvoiceToEdit(record);
+          setActiveScreen("standalone-sales-invoice-edit");
+        }}
+      />
+    );
+  }
+  if (activeScreen === "professional-sales-invoice") {
+    return (
+      <StandaloneSalesInvoice
+        template="professional"
+        setActiveScreen={setActiveScreen}
+      />
+    );
+  }
+
+  if (activeScreen === "workshop-sales-invoice") {
+    return (
+      <StandaloneSalesInvoice
+        template="workshop"
+        setActiveScreen={setActiveScreen}
+      />
+    );
+  }
   if (activeScreen === "sales") {
     return <Sales setActiveScreen={setActiveScreen} />;
   }

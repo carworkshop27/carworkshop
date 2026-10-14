@@ -33,6 +33,8 @@ export default function ExpenseEdit({
     expense?.vat_registration_number || "",
   );
   const [categories, setCategories] = useState([]);
+  const [mainCategories, setMainCategories] = useState([]);
+  const [chosenMainCategory, setChosenMainCategory] = useState("");
   const [categoryError, setCategoryError] = useState("");
   const [rows, setRows] = useState(() =>
     (expense?.items || []).map((item) => ({
@@ -50,12 +52,28 @@ export default function ExpenseEdit({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/expense-subcategories", { cache: "no-store" })
-      .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok || !Array.isArray(data))
-          throw new Error(data?.error || "Unable to load expense categories.");
-        if (!cancelled) setCategories(data);
+    Promise.all([
+      fetch("/api/expense-main-categories", { cache: "no-store" }),
+      fetch("/api/expense-subcategories", { cache: "no-store" }),
+    ])
+      .then(async ([mainResponse, subResponse]) => {
+        if (!mainResponse.ok || !subResponse.ok) {
+          throw new Error("Unable to load expense categories.");
+        }
+
+        const [mainData, subData] = await Promise.all([
+          mainResponse.json(),
+          subResponse.json(),
+        ]);
+
+        if (!Array.isArray(mainData) || !Array.isArray(subData)) {
+          throw new Error("Invalid expense category response.");
+        }
+
+        if (!cancelled) {
+          setMainCategories(mainData);
+          setCategories(subData);
+        }
       })
       .catch((err) => {
         if (!cancelled) setCategoryError(err.message);
@@ -167,13 +185,25 @@ export default function ExpenseEdit({
     );
   }
 
-  const categoryOptions = categories.some(
+  const matchedCategory = categories.find(
     (item) => item.name_en === expenseType,
-  )
-    ? categories
-    : expenseType
-      ? [{ id: "current", name_en: expenseType, name_ar: "" }, ...categories]
-      : categories;
+  );
+
+  const selectedMainCategory =
+    chosenMainCategory ||
+    (matchedCategory ? String(matchedCategory.main_category_id) : "");
+
+  const filteredCategories = categories.filter(
+    (item) =>
+      selectedMainCategory &&
+      String(item.main_category_id) === selectedMainCategory,
+  );
+
+  const categoryOptions =
+    expenseType &&
+    !filteredCategories.some((item) => item.name_en === expenseType)
+      ? [{ id: "current", name_en: expenseType, name_ar: "" }, ...filteredCategories]
+      : filteredCategories;
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
@@ -198,7 +228,7 @@ export default function ExpenseEdit({
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold">Expense Information</h2>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <label className="text-sm font-medium text-slate-700">
               Purchase Date
               <input
@@ -209,13 +239,31 @@ export default function ExpenseEdit({
               />
             </label>
             <label className="text-sm font-medium text-slate-700">
+              Main Category
+              <select
+                value={selectedMainCategory}
+                onChange={(event) => {
+                  setChosenMainCategory(event.target.value);
+                  setExpenseType("");
+                }}
+                className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2.5"
+              >
+                <option value="">Select main category</option>
+                {mainCategories.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name_en}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm font-medium text-slate-700">
               Expense Type
               <select
                 value={expenseType}
                 onChange={(event) => setExpenseType(event.target.value)}
                 className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2.5"
               >
-                {!expenseType && <option value="">Select expense type</option>}
+                <option value="">Select expense type</option>
                 {categoryOptions.map((item) => (
                   <option key={item.id} value={item.name_en}>
                     {item.name_en}
