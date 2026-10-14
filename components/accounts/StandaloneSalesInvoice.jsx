@@ -26,7 +26,9 @@ const newItem = (category = "item") => ({
 
 export default function StandaloneSalesInvoice({
   template = "professional",
-  setActiveScreen, initialInvoice = null, backScreen = "sales",
+  setActiveScreen,
+  initialInvoice = null,
+  backScreen = "sales",
 }) {
   const workshop = template === "workshop";
 
@@ -48,25 +50,27 @@ export default function StandaloneSalesInvoice({
     mileage: "",
     notes: "",
     discount: 0,
-    ...(initialInvoice ? {
-      number: initialInvoice.invoice_no || "",
-      date: initialInvoice.invoice_date || "",
-      company: initialInvoice.company_name || "",
-      companyArabic: initialInvoice.company_name_ar || "",
-      companyPhone: initialInvoice.company_phone || "",
-      companyAddress: initialInvoice.company_address || "",
-      customer: initialInvoice.customer_name || "",
-      customerArabic: initialInvoice.customer_name_ar || "",
-      customerPhone: initialInvoice.customer_phone || "",
-      customerAddress: initialInvoice.customer_address || "",
-      vehicleMake: initialInvoice.vehicle_make || "",
-      vehicleModel: initialInvoice.vehicle_model || "",
-      plateNumber: initialInvoice.plate_number || "",
-      chassisNumber: initialInvoice.chassis_number || "",
-      mileage: initialInvoice.mileage || "",
-      notes: initialInvoice.notes || "",
-      discount: initialInvoice.discount || 0,
-    } : {}),
+    ...(initialInvoice
+      ? {
+          number: initialInvoice.invoice_no || "",
+          date: initialInvoice.invoice_date || "",
+          company: initialInvoice.company_name || "",
+          companyArabic: initialInvoice.company_name_ar || "",
+          companyPhone: initialInvoice.company_phone || "",
+          companyAddress: initialInvoice.company_address || "",
+          customer: initialInvoice.customer_name || "",
+          customerArabic: initialInvoice.customer_name_ar || "",
+          customerPhone: initialInvoice.customer_phone || "",
+          customerAddress: initialInvoice.customer_address || "",
+          vehicleMake: initialInvoice.vehicle_make || "",
+          vehicleModel: initialInvoice.vehicle_model || "",
+          plateNumber: initialInvoice.plate_number || "",
+          chassisNumber: initialInvoice.chassis_number || "",
+          mileage: initialInvoice.mileage || "",
+          notes: initialInvoice.notes || "",
+          discount: initialInvoice.discount || 0,
+        }
+      : {}),
   }));
 
   const [saving, setSaving] = useState(false);
@@ -78,7 +82,7 @@ export default function StandaloneSalesInvoice({
           ...item,
           id: newItem().id,
         }))
-      : [newItem(workshop ? "part" : "item")]
+      : [newItem(workshop ? "part" : "item")],
   );
 
   // RW_CUSTOMER_LOOKUP_V1
@@ -168,7 +172,9 @@ export default function StandaloneSalesInvoice({
           customer.email,
           customer.originalId,
         ].some((value) =>
-          String(value || "").toLowerCase().includes(query)
+          String(value || "")
+            .toLowerCase()
+            .includes(query),
         );
 
         if (!searchable) return false;
@@ -213,8 +219,8 @@ export default function StandaloneSalesInvoice({
   const updateItem = (id, key, value) =>
     setItems((previous) =>
       previous.map((item) =>
-        item.id === id ? { ...item, [key]: value } : item
-      )
+        item.id === id ? { ...item, [key]: value } : item,
+      ),
     );
 
   const totals = useMemo(() => {
@@ -224,9 +230,9 @@ export default function StandaloneSalesInvoice({
         Math.max(
           0,
           Number(item.quantity || 0) * Number(item.unitPrice || 0) -
-            Number(item.discount || 0)
+            Number(item.discount || 0),
         ),
-      0
+      0,
     );
 
     const discount = Math.max(0, Number(invoice.discount || 0));
@@ -251,9 +257,7 @@ export default function StandaloneSalesInvoice({
     if (
       !items.length ||
       items.some(
-        (item) =>
-          !item.description.trim() ||
-          Number(item.quantity) <= 0
+        (item) => !item.description.trim() || Number(item.quantity) <= 0,
       )
     ) {
       setSaveError("Enter at least one valid invoice item.");
@@ -360,9 +364,8 @@ export default function StandaloneSalesInvoice({
               {filtered.map((item) => {
                 const amount = Math.max(
                   0,
-                  Number(item.quantity || 0) *
-                    Number(item.unitPrice || 0) -
-                    Number(item.discount || 0)
+                  Number(item.quantity || 0) * Number(item.unitPrice || 0) -
+                    Number(item.discount || 0),
                 );
 
                 return (
@@ -399,7 +402,7 @@ export default function StandaloneSalesInvoice({
                         type="button"
                         onClick={() =>
                           setItems((previous) =>
-                            previous.filter((row) => row.id !== item.id)
+                            previous.filter((row) => row.id !== item.id),
                           )
                         }
                         className="text-red-600"
@@ -417,7 +420,9 @@ export default function StandaloneSalesInvoice({
 
         <button
           type="button"
-          onClick={() => setItems((previous) => [...previous, newItem(category)])}
+          onClick={() =>
+            setItems((previous) => [...previous, newItem(category)])
+          }
           className="no-print mt-3 inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700"
         >
           <Plus size={16} /> Add {category === "labor" ? "Labor" : "Item"}
@@ -478,7 +483,11 @@ export default function StandaloneSalesInvoice({
             padding: 0 !important;
           }
 
-          .invoice-paper > header > div:not(.cw-print-logo) > div:last-child h1 {
+          .invoice-paper
+            > header
+            > div:not(.cw-print-logo)
+            > div:last-child
+            h1 {
             margin: 0 !important;
             padding: 0 !important;
             line-height: 1.1 !important;
@@ -533,7 +542,11 @@ export default function StandaloneSalesInvoice({
             padding: 0 !important;
           }
 
-          .invoice-paper > header > div:not(.cw-print-logo) > div:last-child h1 {
+          .invoice-paper
+            > header
+            > div:not(.cw-print-logo)
+            > div:last-child
+            h1 {
             margin: 0 !important;
             padding: 0 !important;
             line-height: 1 !important;
@@ -588,10 +601,16 @@ export default function StandaloneSalesInvoice({
             line-height: 1.2 !important;
           }
           /* CW_HIDE_PRINT_COMPANY_NAMES_V1 */
-          .invoice-paper > header > div:not(.cw-print-logo)
-          > div:first-child > input:nth-of-type(1),
-          .invoice-paper > header > div:not(.cw-print-logo)
-          > div:first-child > input:nth-of-type(2) {
+          .invoice-paper
+            > header
+            > div:not(.cw-print-logo)
+            > div:first-child
+            > input:nth-of-type(1),
+          .invoice-paper
+            > header
+            > div:not(.cw-print-logo)
+            > div:first-child
+            > input:nth-of-type(2) {
             display: none !important;
           }
           /* CW_PRINT_HEADER_FIX_V1 */
@@ -637,8 +656,8 @@ export default function StandaloneSalesInvoice({
             object-fit: contain !important;
           }
           @page {
-            size: A4;
-            margin: 12mm;
+            size: A4 portrait;
+            margin: 0.1in;
           }
           body {
             background: white !important;
@@ -673,7 +692,8 @@ export default function StandaloneSalesInvoice({
           onClick={() => setActiveScreen(backScreen)}
           className="inline-flex items-center gap-2 rounded-lg border bg-white px-4 py-2 font-semibold"
         >
-          <ArrowLeft size={17} /> {initialInvoice ? "Back to Records" : "Back to Sales"}
+          <ArrowLeft size={17} />{" "}
+          {initialInvoice ? "Back to Records" : "Back to Sales"}
         </button>
 
         <button
@@ -759,9 +779,7 @@ export default function StandaloneSalesInvoice({
                 onClick={() => selectExistingCustomer(customer)}
                 className="flex w-full items-center justify-between gap-3 border-b px-3 py-3 text-left text-sm hover:bg-blue-50"
               >
-                <span className="font-semibold">
-                  {customer.name}
-                </span>
+                <span className="font-semibold">{customer.name}</span>
                 <span className="text-slate-500">
                   {customer.phone || customer.email || ""}
                 </span>
@@ -911,9 +929,7 @@ export default function StandaloneSalesInvoice({
             Notes / ملاحظات
             <textarea
               value={invoice.notes}
-              onChange={(event) =>
-                updateInvoice("notes", event.target.value)
-              }
+              onChange={(event) => updateInvoice("notes", event.target.value)}
               rows={3}
               className="mt-2 w-full rounded-lg border p-3 text-sm font-normal"
               placeholder="Additional notes..."
@@ -924,13 +940,17 @@ export default function StandaloneSalesInvoice({
         {workshop && (
           <div className="mt-10 grid grid-cols-2 gap-8 text-sm">
             <div className="border-t pt-2">Prepared By / أعد بواسطة</div>
-            <div className="border-t pt-2">Customer Signature / توقيع العميل</div>
+            <div className="border-t pt-2">
+              Customer Signature / توقيع العميل
+            </div>
           </div>
         )}
 
         <footer className="mt-12 border-t pt-5 text-center">
           <p className="font-bold">Thank you for your business!</p>
-          <p className="font-bold" dir="rtl">شكراً لتعاملكم معنا</p>
+          <p className="font-bold" dir="rtl">
+            شكراً لتعاملكم معنا
+          </p>
 
           <div className="mt-5 text-[9px] leading-relaxed text-slate-500">
             <p>{DISCLAIMER_EN}</p>
