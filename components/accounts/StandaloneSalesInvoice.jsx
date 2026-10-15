@@ -655,6 +655,54 @@ export default function StandaloneSalesInvoice({
             max-height: 90px !important;
             object-fit: contain !important;
           }
+
+
+          /* CW_WINDOWS_A4_HEADER_ALIGNMENT_V2 */
+          .invoice-paper > header {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+            grid-template-rows: auto auto !important;
+            column-gap: 16px !important;
+            align-items: start !important;
+          }
+
+          .invoice-paper > header > .cw-print-logo {
+            display: flex !important;
+            grid-column: 1 !important;
+            grid-row: 1 !important;
+            width: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            align-items: flex-start !important;
+          }
+
+          .invoice-paper > header > .cw-print-logo img {
+            display: block !important;
+            max-width: 190px !important;
+            max-height: 90px !important;
+            width: auto !important;
+            height: auto !important;
+          }
+
+          .invoice-paper > header > div:not(.cw-print-logo) {
+            display: contents !important;
+          }
+
+          .invoice-paper > header > div:not(.cw-print-logo) > div:first-child {
+            grid-column: 1 !important;
+            grid-row: 2 !important;
+            align-self: start !important;
+          }
+
+          .invoice-paper > header > div:not(.cw-print-logo) > div:last-child {
+            grid-column: 2 !important;
+            grid-row: 1 / span 2 !important;
+            align-self: start !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+
           @page {
             size: A4 portrait;
             margin: 0.1in;
@@ -815,7 +863,7 @@ export default function StandaloneSalesInvoice({
               />
               <input
                 className="w-full text-sm outline-none"
-                placeholder="Company phone"
+                placeholder="+966 506620654"
                 value={invoice.companyPhone}
                 onChange={(event) =>
                   updateInvoice("companyPhone", event.target.value)
@@ -823,7 +871,7 @@ export default function StandaloneSalesInvoice({
               />
               <input
                 className="w-full text-sm outline-none"
-                placeholder="Company address"
+                placeholder="JEDDAH-SMART CITY ASFAN SHOP NO.2162 A.B"
                 value={invoice.companyAddress}
                 onChange={(event) =>
                   updateInvoice("companyAddress", event.target.value)
