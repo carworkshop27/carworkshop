@@ -866,7 +866,7 @@ export default function StandaloneSalesInvoice({
           <h2 className="mb-3 text-base font-black">
             Customer Details / بيانات العميل
           </h2>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3">
             {field("Customer Name", "customer")}
             {field("اسم العميل", "customerArabic")}
             {field("Phone / الهاتف", "customerPhone")}
