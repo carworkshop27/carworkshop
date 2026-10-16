@@ -726,6 +726,60 @@ export default function StandaloneSalesInvoice({
             resize: none !important;
           }
 
+          
+          /* CW_PRINT_INVOICE_DATE_ALIGNMENT_V2 */
+          .invoice-paper > header
+          > div:not(.cw-print-logo)
+          > div:last-child
+          > div.grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 110px !important;
+            width: 100% !important;
+            gap: 6px 8px !important;
+            align-items: center !important;
+          }
+
+          .invoice-paper > header
+          > div:not(.cw-print-logo)
+          > div:last-child
+          > div.grid input {
+            display: block !important;
+            box-sizing: border-box !important;
+            width: 110px !important;
+            min-width: 0 !important;
+            max-width: 110px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            text-align: right !important;
+            border: none !important;
+          }
+
+          .invoice-paper > header input[type="date"] {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+          }
+
+          .invoice-paper > header
+          input[type="date"]::-webkit-calendar-picker-indicator {
+            display: none !important;
+            -webkit-appearance: none !important;
+          }
+
+          .invoice-paper > header
+          input[type="date"]::-webkit-datetime-edit {
+            display: block !important;
+            width: 100% !important;
+            text-align: right !important;
+          }
+
+          .invoice-paper > header
+          input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+            display: flex !important;
+            width: 100% !important;
+            justify-content: flex-end !important;
+          }
+
+
           /* CW_PRINT_CUSTOMER_FIELD_BORDERS_V1 */
           .invoice-paper > section:first-of-type label input {
             border: 1px solid #000 !important;
