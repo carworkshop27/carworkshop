@@ -725,6 +725,16 @@ export default function StandaloneSalesInvoice({
             box-shadow: none !important;
             resize: none !important;
           }
+
+          /* CW_PRINT_CUSTOMER_FIELD_BORDERS_V1 */
+          .invoice-paper > section:first-of-type label input {
+            border: 1px solid #000 !important;
+            border-radius: 6px !important;
+            padding: 8px 12px !important;
+            background: #fff !important;
+            box-shadow: none !important;
+          }
+
           .invoice-paper table {
             page-break-inside: auto;
           }
