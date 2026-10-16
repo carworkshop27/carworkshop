@@ -804,6 +804,9 @@ justify-content: end !important;
           }
 
           .invoice-paper > section textarea {
+          border: 1px solid #000 !important;
+border-radius: 6px !important;
+box-sizing: border-box !important;
             height: 28px !important;
             min-height: 28px !important;
             max-height: 28px !important;
