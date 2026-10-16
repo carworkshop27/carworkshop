@@ -733,7 +733,8 @@ export default function StandaloneSalesInvoice({
           > div:last-child
           > div.grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 1fr) 110px !important;
+            grid-template-columns: 75px 110px !important;
+justify-content: end !important;
             width: 100% !important;
             gap: 6px 8px !important;
             align-items: center !important;
