@@ -795,6 +795,43 @@ export default function StandaloneSalesInvoice({
           .invoice-paper tr {
             page-break-inside: avoid;
           }
+          
+          /* CW_PRINT_COMPACT_NOTES_V1 */
+          .invoice-paper > section:has(textarea) {
+            margin-top: 12px !important;
+            margin-bottom: 0 !important;
+          }
+
+          .invoice-paper > section textarea {
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            padding: 4px 6px !important;
+            margin-top: 4px !important;
+            overflow: hidden !important;
+          }
+          
+          /* CW_PRINT_INVOICE_FOOTER_V2 */
+          .invoice-paper > footer {
+            display: block !important;
+            visibility: visible !important;
+            position: static !important;
+            width: 100% !important;
+            margin-top: 8px !important;
+            padding-top: 8px !important;
+            border-top: 1px solid #000 !important;
+            text-align: center !important;
+            break-inside: avoid !important;
+          }
+
+
+          .invoice-paper > footer p,
+          .invoice-paper > footer div {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+
         }
       `}</style>
 
