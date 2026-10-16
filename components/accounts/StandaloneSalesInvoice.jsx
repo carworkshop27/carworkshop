@@ -434,6 +434,30 @@ export default function StandaloneSalesInvoice({
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900 md:px-8">
       <style jsx global>{`
+      
+        /* CW_SALES_INVOICE_ALL_BLACK_TEXT_V1 */
+        .invoice-paper,
+        .invoice-paper h1,
+        .invoice-paper h2,
+        .invoice-paper h3,
+        .invoice-paper p,
+        .invoice-paper span,
+        .invoice-paper label,
+        .invoice-paper td,
+        .invoice-paper th,
+        .invoice-paper input,
+        .invoice-paper textarea,
+        .invoice-paper button {
+          color: #000000 !important;
+          -webkit-text-fill-color: #000000 !important;
+        }
+
+        .invoice-paper input::placeholder,
+        .invoice-paper textarea::placeholder {
+          color: #000000 !important;
+          opacity: 1 !important;
+        }
+
         .cw-print-logo {
           display: none;
         }
