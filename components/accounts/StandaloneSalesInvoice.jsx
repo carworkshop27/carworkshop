@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, Plus, Printer, Trash2 } from "lucide-react";
+import { ArrowLeft, House, Phone, Plus, Printer, Trash2 } from "lucide-react";
 
 const DISCLAIMER_EN =
   "This is not a tax invoice. Please request a tax invoice if required.";
@@ -962,22 +962,40 @@ export default function StandaloneSalesInvoice({
                   updateInvoice("companyArabic", event.target.value)
                 }
               />
-              <input
-                className="w-full text-sm outline-none"
-                placeholder="+966 506620654"
-                value={invoice.companyPhone}
-                onChange={(event) =>
-                  updateInvoice("companyPhone", event.target.value)
-                }
-              />
-              <input
-                className="w-full text-sm outline-none"
-                placeholder="JEDDAH-SMART CITY ASFAN SHOP NO.2162 A.B"
-                value={invoice.companyAddress}
-                onChange={(event) =>
-                  updateInvoice("companyAddress", event.target.value)
-                }
-              />
+              
+              {/* CW_COMPANY_CONTACT_ICONS_V1 */}
+              <div className="flex items-center gap-2">
+                <House
+                  size={15}
+                  strokeWidth={1.8}
+                  className="shrink-0 text-slate-700"
+                />
+                <input
+                  className="min-w-0 flex-1 text-sm outline-none"
+                  placeholder="JEDDAH-SMART CITY ASFAN SHOP NO.2162 A.B"
+                  value={invoice.companyAddress}
+                  onChange={(event) =>
+                    updateInvoice("companyAddress", event.target.value)
+                  }
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Phone
+                  size={15}
+                  strokeWidth={1.8}
+                  className="shrink-0 text-slate-700"
+                />
+                <input
+                  className="min-w-0 flex-1 text-sm outline-none"
+                  placeholder="+966 506620654"
+                  value={invoice.companyPhone}
+                  onChange={(event) =>
+                    updateInvoice("companyPhone", event.target.value)
+                  }
+                />
+              </div>
+
             </div>
 
             <div className="min-w-56">
