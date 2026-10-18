@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { ArrowLeft, House, Phone, Plus, Printer, Trash2 } from "lucide-react";
 
 const DISCLAIMER_EN =
@@ -317,6 +317,324 @@ export default function StandaloneSalesInvoice({
       setSaving(false);
     }
   };
+
+  // CW_A4_PRINT_ITEMS_V1
+  // Keep the original item order and use the existing invoice totals.
+    // CW_A4_PAGINATION_STATE_V1
+  const printPagesRef = useRef(null);
+  const [printPages, setPrintPages] = useState([]);
+  const [printLayoutReady, setPrintLayoutReady] = useState(false);
+    // CW_A4_ITEM_AMOUNT_V1
+  const getPrintItemAmount = (item) =>
+    Math.max(
+      0,
+      Number(item.quantity || 0) * Number(item.unitPrice || 0) -
+        Number(item.discount || 0),
+    );
+  const printItems = useMemo(
+    () =>
+      items.map((item) => ({
+        ...item,
+                amount: getPrintItemAmount(item),
+      })),
+    [items],
+  );
+
+    // CW_A4_PAGE_GENERATOR_V1
+  const prepareA4Print = () => {
+    const source = document.getElementById("cw-original-invoice");
+    const target = printPagesRef.current;
+
+    if (!source || !target) return false;
+
+    // Preserve the original invoice until the new pages are verified.
+    target.replaceChildren();
+
+    const sourceHeader = source.querySelector(":scope > header");
+    const sourceFooter = source.querySelector(":scope > footer");
+
+    if (!sourceHeader || !sourceFooter) return false;
+
+    const page = document.createElement("article");
+    page.className = "invoice-paper cw-a4-page";
+
+        const header = sourceHeader.cloneNode(true);
+    const footer = sourceFooter.cloneNode(true);
+
+    const sections = Array.from(source.children).filter(
+      (element) => element.tagName === "SECTION",
+    );
+
+    // Customer details, plus vehicle details for Workshop invoices.
+    const customerSection = sections[0];
+    const vehicleSection = workshop ? sections[1] : null;
+
+    // Locate the existing totals and Notes sections.
+    const totalsSection = sections.find(
+      (section) =>
+        section.textContent.includes("Subtotal / المجموع") &&
+        section.textContent.includes("Total / الإجمالي"),
+    );
+
+    const notesSection = sections.find(
+      (section) => section.querySelector("textarea"),
+    );
+
+    page.appendChild(header);
+
+    if (customerSection) {
+      page.appendChild(customerSection.cloneNode(true));
+    }
+
+    if (vehicleSection) {
+      page.appendChild(vehicleSection.cloneNode(true));
+    }
+
+    if (totalsSection) {
+      page.appendChild(totalsSection.cloneNode(true));
+    }
+
+    if (notesSection) {
+      page.appendChild(notesSection.cloneNode(true));
+    }
+
+        page.appendChild(footer);
+    target.appendChild(page);
+
+    // CW_A4_ITEM_TABLE_COLLECTION_V1
+    // Read the existing rendered tables without changing their contents.
+    const sourceTables = Array.from(source.querySelectorAll("table"));
+
+    const printableTables = sourceTables.map((table) => {
+      const originalSection = table.closest("section");
+      const heading = originalSection?.querySelector("h3");
+
+      return {
+        heading: heading?.textContent?.trim() || "",
+        header: table.querySelector("thead")?.cloneNode(true),
+        rows: Array.from(table.querySelectorAll("tbody > tr")).map((row) =>
+          row.cloneNode(true),
+        ),
+      };
+    });
+
+    // Preserve the exact order of items and table categories.
+    const totalPrintableRows = printableTables.reduce(
+      (count, table) => count + table.rows.length,
+      0,
+    );
+
+    if (totalPrintableRows !== items.length) {
+      console.error("A4 pagination: invoice item count mismatch.");
+      target.replaceChildren();
+      return false;
+    }
+
+        // CW_A4_ROW_PAGINATION_V1
+        // CW_A4_PAGE_HEIGHT_V2
+        // CW_A4_PAGE_CAPACITY_V3
+    const pageHeight = (297 - 5.08) * (96 / 25.4);
+    const safetySpace = 12;
+
+        // CW_A4_PAGE_CAPACITY_DEBUG_V1
+    console.log("A4 pagination capacity:", {
+      pageHeight,
+      safetySpace,
+      availableHeight: pageHeight - safetySpace,
+      targetWidth: target.getBoundingClientRect().width,
+    });
+
+        // CW_A4_REAL_CONTENT_OVERFLOW_V5
+    const pageExceedsA4 = (pageElement) => {
+      const footerElement = pageElement.querySelector(":scope > footer");
+      if (!footerElement) return true;
+
+      const pageTop = pageElement.getBoundingClientRect().top;
+      const footerBottom = footerElement.getBoundingClientRect().bottom;
+
+      // Measure the actual bottom of the printable content.
+      // Allow the page to use the full A4 printable height.
+      return footerBottom - pageTop > pageHeight;
+    };
+
+    // Remove the temporary page before generating the final pages.
+    target.replaceChildren();
+
+        const makePage = () => {
+      const newPage = page.cloneNode(true);
+      newPage.classList.add("cw-a4-page");
+
+      // Reserve payment summary space only on the final page.
+      const summarySection = Array.from(newPage.children).find(
+        (element) =>
+          element.tagName === "SECTION" &&
+          element.textContent.includes("Subtotal / المجموع") &&
+          element.textContent.includes("Total / الإجمالي"),
+      );
+
+      if (summarySection) {
+        summarySection.remove();
+      }
+
+      target.appendChild(newPage);
+      return newPage;
+    };
+
+    // CW_A4_TEN_ITEMS_PER_PAGE_V1
+const MAX_ITEMS_PER_PAGE = 10;
+
+let currentPage = makePage();
+let currentTableBody = null;
+let itemsOnCurrentPage = 0;
+
+    const createTable = (tableData) => {
+      const section = document.createElement("section");
+      section.className = "cw-a4-items-section";
+
+      if (tableData.heading) {
+        const heading = document.createElement("h3");
+        heading.textContent = tableData.heading;
+        section.appendChild(heading);
+      }
+
+      const table = document.createElement("table");
+      table.className = "cw-a4-items-table";
+
+      if (tableData.header) {
+        table.appendChild(tableData.header.cloneNode(true));
+      }
+
+      const body = document.createElement("tbody");
+      table.appendChild(body);
+      section.appendChild(table);
+
+            // CW_A4_ITEMS_BEFORE_FIXED_BOTTOM_V1
+      const bottomSections = Array.from(currentPage.children).filter(
+        (element) =>
+          element.tagName === "SECTION" &&
+          (element.textContent.includes("Subtotal / المجموع") ||
+            element.querySelector("textarea")),
+      );
+
+      const firstBottomSection = bottomSections[0];
+
+      if (firstBottomSection) {
+        currentPage.insertBefore(section, firstBottomSection);
+      } else {
+        const footerElement = currentPage.querySelector(":scope > footer");
+        currentPage.insertBefore(section, footerElement);
+      }
+
+      return body;
+    };
+
+    for (const tableData of printableTables) {
+      if (!tableData.rows.length) continue;
+
+      currentTableBody = createTable(tableData);
+
+      for (const originalRow of tableData.rows) {
+  if (itemsOnCurrentPage >= MAX_ITEMS_PER_PAGE) {
+    currentPage = makePage();
+    currentTableBody = createTable(tableData);
+    itemsOnCurrentPage = 0;
+  }
+
+  const row = originalRow.cloneNode(true);
+  currentTableBody.appendChild(row);
+  itemsOnCurrentPage += 1;
+
+                console.log("A4 item measurement:", {
+          item: row.querySelector("td")?.textContent?.trim(),
+          pageHeight: currentPage.getBoundingClientRect().height,
+          footerBottom:
+            currentPage.querySelector(":scope > footer")
+              ?.getBoundingClientRect().bottom -
+            currentPage.getBoundingClientRect().top,
+          exceeds: pageExceedsA4(currentPage),
+        });
+
+        if (pageExceedsA4(currentPage)) {
+  currentTableBody.removeChild(row);
+  itemsOnCurrentPage -= 1;
+
+  currentPage = makePage();
+  currentTableBody = createTable(tableData);
+  currentTableBody.appendChild(row);
+  itemsOnCurrentPage = 1;
+
+                    if (pageExceedsA4(currentPage)) {
+            console.error("A4 pagination: an item exceeds page capacity.");
+            target.replaceChildren();
+            return false;
+          }
+        }
+      }
+    }
+
+        // CW_A4_SUMMARY_LAST_PAGE_ONLY_V1
+    const generatedPages = Array.from(
+      target.querySelectorAll(".cw-a4-page"),
+    );
+
+    generatedPages.slice(0, -1).forEach((printedPage) => {
+      const summarySection = Array.from(printedPage.children).find(
+        (element) =>
+          element.tagName === "SECTION" &&
+          element.textContent.includes("Subtotal / المجموع") &&
+          element.textContent.includes("Total / الإجمالي"),
+      );
+
+      if (summarySection) {
+        summarySection.remove();
+      }
+    });
+
+        // Payment summary belongs only on the final printed page.
+    const lastPage = generatedPages[generatedPages.length - 1];
+
+    if (lastPage && totalsSection) {
+      const summary = totalsSection.cloneNode(true);
+      const notes = lastPage.querySelector(
+        ":scope > section:has(textarea)",
+      );
+
+      if (notes) {
+        lastPage.insertBefore(summary, notes);
+      } else {
+        lastPage.insertBefore(
+          summary,
+          lastPage.querySelector(":scope > footer"),
+        );
+      }
+
+      if (pageExceedsA4(lastPage)) {
+        console.warn(
+          "A4 pagination: final page summary requires more space.",
+        );
+      }
+    }
+
+    // CW_A4_PAGE_NUMBER_V1
+const numberedPages = Array.from(
+  target.querySelectorAll(".cw-a4-page"),
+);
+
+if (numberedPages.length > 1) {
+  numberedPages.forEach((printedPage, index) => {
+    const pageNumber = document.createElement("div");
+
+    pageNumber.className = "cw-a4-page-number";
+    pageNumber.textContent =
+      `Page ${index + 1}/${numberedPages.length}`;
+
+    printedPage.appendChild(pageNumber);
+  });
+}
+
+    return true;
+  };
+
   const inputClass =
     "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500";
 
@@ -462,7 +780,156 @@ export default function StandaloneSalesInvoice({
           display: none;
         }
 
+                        /* CW_A4_PAGINATION_CONTAINER_V2 */
+                /* CW_A4_MEASUREMENT_LAYOUT_V3 */
+        .cw-a4-print-pages {
+          position: absolute;
+          left: -20000px;
+          top: 0;
+          width: calc(210mm - 0.2in);
+          visibility: hidden;
+          pointer-events: none;
+        }
+
+        /* CW_A4_MEASUREMENT_PAGE_V4 */
+.cw-a4-print-pages .cw-a4-page {
+min-height: calc(297mm - 0.2in);
+display: flex;
+flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  background: white;
+}
+
+/* Keep Notes and the thank-you footer at the bottom of each A4 page */
+.cw-a4-print-pages .cw-a4-page > section:has(textarea) {
+  margin-top: auto !important;
+}
+
+.cw-a4-print-pages .cw-a4-page > footer {
+  flex-shrink: 0;
+}
+
+/* Match the compact printed header spacing during measurement */
+.cw-a4-print-pages .cw-a4-page > header {
+  margin-bottom: 20px !important;
+  padding-bottom: 12px !important;
+}
+
+/* Match the printed customer section */
+.cw-a4-print-pages .cw-a4-page > section:first-of-type {
+  margin-bottom: 16px !important;
+}
+
+/* Match the printed summary and notes spacing */
+.cw-a4-print-pages .cw-a4-page > section:has(textarea) {
+  margin-top: 12px !important;
+  margin-bottom: 0 !important;
+}
+
+.cw-a4-print-pages .cw-a4-page > section textarea {
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 4px 6px !important;
+  margin-top: 4px !important;
+}
+
+/* Match the compact printed footer */
+.cw-a4-print-pages .cw-a4-page > footer {
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+}
+
+        .cw-a4-print-pages .cw-a4-items-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 12px;
+        }
+
+        .cw-a4-print-pages .cw-a4-items-table th,
+        .cw-a4-print-pages .cw-a4-items-table td {
+          border: 1px solid #000;
+          padding: 6px;
+          overflow-wrap: anywhere;
+        }
+
+        .cw-a4-print-pages .cw-a4-items-section {
+          margin: 8px 0;
+        }
+
+        .cw-a4-print-pages .cw-a4-items-section h3 {
+          margin-bottom: 6px;
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        @media screen {
+          .cw-a4-print-pages {
+            overflow: hidden;
+          }
+        }
+
+        /* CW_A4_PAGE_NUMBER_V1 */
+.cw-a4-page {
+  position: relative;
+}
+
+.cw-a4-page-number {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #000;
+  line-height: 1;
+  pointer-events: none;
+}
+
+@media screen {
+  .cw-a4-page-number {
+    display: none;
+  }
+}
+
         @media print {
+
+/* CW_A4_TEST_PRINT_MODE_V1 */
+
+body:has(.cw-a4-print-pages.cw-test-print-active)
+  #cw-original-invoice {
+  display: none !important;
+}
+
+body:has(.cw-a4-print-pages.cw-test-print-active)
+  .cw-a4-print-pages {
+  display: block !important;
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  visibility: visible !important;
+  overflow: visible !important;
+}
+
+body:has(.cw-a4-print-pages.cw-test-print-active)
+  .cw-a4-page {
+  display: block !important;
+  width: 100% !important;
+  break-after: page !important;
+  page-break-after: always !important;
+}
+
+body:has(.cw-a4-print-pages.cw-test-print-active)
+  .cw-a4-page:last-child {
+  break-after: auto !important;
+  page-break-after: auto !important;
+}
+
           /* CW_FINAL_PRINT_HEADER_V1 */
 
           .invoice-paper > header {
@@ -889,7 +1356,37 @@ box-sizing: border-box !important;
         </button>
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={() => {
+  const success = prepareA4Print();
+
+  if (!success) {
+    alert("A4 pagination failed. Printing was cancelled.");
+    return;
+  }
+
+  const container = printPagesRef.current;
+  const pageCount = container?.querySelectorAll(".cw-a4-page").length || 0;
+
+  if (!pageCount) {
+    alert("No A4 pages were generated.");
+    return;
+  }
+
+  container.classList.add("cw-test-print-active");
+
+  const restoreOriginalPrinting = () => {
+    container.classList.remove("cw-test-print-active");
+    window.removeEventListener("afterprint", restoreOriginalPrinting);
+  };
+
+  window.addEventListener("afterprint", restoreOriginalPrinting);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.print();
+    });
+  });
+}}
           className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-2 font-bold text-white"
         >
           <Printer size={17} /> Print / Save as PDF
@@ -965,7 +1462,10 @@ box-sizing: border-box !important;
           </div>
         )}
       </section>
-      <main className="invoice-paper mx-auto max-w-5xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:p-10">
+      <main
+  id="cw-original-invoice"
+  className="invoice-paper mx-auto max-w-5xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:p-10"
+>
         <header className="mb-8 border-b-2 border-slate-800 pb-5">
           {/* CW_PRINT_LOGO_V1 */}
           <div className="cw-print-logo">
@@ -1152,7 +1652,15 @@ box-sizing: border-box !important;
             <p dir="rtl">{DISCLAIMER_AR}</p>
           </div>
         </footer>
-      </main>
+            </main>
+
+      {/* CW_A4_PAGINATION_CONTAINER_V1 */}
+            <div
+        ref={printPagesRef}
+        id="cw-a4-print-pages"
+        className="cw-a4-print-pages"
+        aria-hidden="true"
+      />
 
       <p className="no-print mx-auto mt-4 max-w-5xl text-center text-xs text-amber-700">
         Save the invoice to the database before printing the final copy.
