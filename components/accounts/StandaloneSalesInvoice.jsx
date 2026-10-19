@@ -481,7 +481,11 @@ export default function StandaloneSalesInvoice({
     };
 
     // CW_A4_TEN_ITEMS_PER_PAGE_V1
-const MAX_ITEMS_PER_PAGE = 10;
+// Regular Sales Invoice: maximum 10 items per page.
+// Workshop Invoice: use available A4 space.
+const MAX_ITEMS_PER_PAGE = workshop
+  ? Number.MAX_SAFE_INTEGER
+  : 10;
 
 let currentPage = makePage();
 let currentTableBody = null;
@@ -554,7 +558,13 @@ let itemsOnCurrentPage = 0;
           exceeds: pageExceedsA4(currentPage),
         });
 
-        if (pageExceedsA4(currentPage)) {
+        if (
+  workshop
+    ? currentTableBody.getBoundingClientRect().bottom -
+        currentPage.getBoundingClientRect().top >
+      pageHeight - safetySpace
+    : pageExceedsA4(currentPage)
+) {
   currentTableBody.removeChild(row);
   itemsOnCurrentPage -= 1;
 
@@ -590,30 +600,103 @@ let itemsOnCurrentPage = 0;
       }
     });
 
-        // Payment summary belongs only on the final printed page.
-    const lastPage = generatedPages[generatedPages.length - 1];
+        // CW_WORKSHOP_LOCKED_BOTTOM_V1
+// Keep the regular Sales Invoice printing unchanged.
+const lastPage = generatedPages[generatedPages.length - 1];
 
-    if (lastPage && totalsSection) {
-      const summary = totalsSection.cloneNode(true);
-      const notes = lastPage.querySelector(
-        ":scope > section:has(textarea)",
-      );
+if (lastPage && totalsSection) {
+  if (workshop) {
+    // Remove Notes and Thank You from earlier Workshop pages.
+    generatedPages.slice(0, -1).forEach((printedPage) => {
+      printedPage
+        .querySelector(":scope > section:has(textarea)")
+        ?.remove();
 
-      if (notes) {
-        lastPage.insertBefore(summary, notes);
-      } else {
-        lastPage.insertBefore(
-          summary,
-          lastPage.querySelector(":scope > footer"),
+      printedPage.querySelector(":scope > footer")?.remove();
+    });
+
+    // Collect the three sections into one indivisible group.
+    const bottomGroup = document.createElement("div");
+    bottomGroup.className = "cw-workshop-locked-bottom";
+
+    const summary = totalsSection.cloneNode(true);
+    const notes = lastPage.querySelector(
+      ":scope > section:has(textarea)"
+    );
+    const footer = lastPage.querySelector(":scope > footer");
+
+    bottomGroup.appendChild(summary);
+
+    if (notes) bottomGroup.appendChild(notes);
+    if (footer) bottomGroup.appendChild(footer);
+
+    lastPage.appendChild(bottomGroup);
+
+    // Measure whether the complete group fits on the A4 page.
+    const groupBottom =
+      bottomGroup.getBoundingClientRect().bottom -
+      lastPage.getBoundingClientRect().top;
+
+    if (groupBottom > pageHeight - safetySpace) {
+      // CW_WORKSHOP_FOOTER_ONLY_PAGE_V1
+// Create a clean page containing only the locked bottom group.
+// CW_WORKSHOP_REPEAT_HEADER_ON_FOOTER_PAGE_V1
+const newPage = document.createElement("article");
+newPage.className = "invoice-paper cw-a4-page cw-workshop-footer-only";
+
+// Repeat the same company and invoice header.
+newPage.appendChild(sourceHeader.cloneNode(true));
+
+// Repeat customer details.
+if (customerSection) {
+  newPage.appendChild(customerSection.cloneNode(true));
+}
+
+// Repeat vehicle details.
+if (vehicleSection) {
+  newPage.appendChild(vehicleSection.cloneNode(true));
+}
+
+// Keep the entire bottom group together.
+newPage.appendChild(bottomGroup);
+
+target.appendChild(newPage);
+
+      const newGroupBottom =
+        bottomGroup.getBoundingClientRect().bottom -
+        newPage.getBoundingClientRect().top;
+
+      if (newGroupBottom > pageHeight - safetySpace) {
+        console.error(
+          "Workshop invoice bottom group exceeds A4 capacity."
         );
-      }
-
-      if (pageExceedsA4(lastPage)) {
-        console.warn(
-          "A4 pagination: final page summary requires more space.",
-        );
+        target.replaceChildren();
+        return false;
       }
     }
+  } else {
+    // Preserve the existing regular Sales Invoice behavior.
+    const summary = totalsSection.cloneNode(true);
+    const notes = lastPage.querySelector(
+      ":scope > section:has(textarea)"
+    );
+
+    if (notes) {
+      lastPage.insertBefore(summary, notes);
+    } else {
+      lastPage.insertBefore(
+        summary,
+        lastPage.querySelector(":scope > footer")
+      );
+    }
+
+    if (pageExceedsA4(lastPage)) {
+      console.warn(
+        "A4 pagination: final page summary requires more space."
+      );
+    }
+  }
+}
 
     // CW_A4_PAGE_NUMBER_V1
 const numberedPages = Array.from(
@@ -897,6 +980,13 @@ flex-direction: column;
 }
 
         @media print {
+
+        /* CW_WORKSHOP_FOOTER_ONLY_PAGE_V1 */
+.cw-a4-print-pages .cw-workshop-footer-only {
+  display: block !important;
+  width: 100% !important;
+  break-after: auto;
+}
 
 /* CW_A4_TEST_PRINT_MODE_V1 */
 
@@ -1271,6 +1361,34 @@ justify-content: end !important;
             justify-content: flex-end !important;
           }
 
+/* CW_WORKSHOP_VEHICLE_PRINT_GRID_V1 */
+@media print {
+  .invoice-paper > section:has(h2) > div.grid.md\:grid-cols-3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .invoice-paper > section:has(h2) > div.grid.md\:grid-cols-3 > label {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .invoice-paper > section:has(h2) > div.grid.md\:grid-cols-3 input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* CW_WORKSHOP_VEHICLE_INPUT_BORDERS_V1 */
+.invoice-paper > section:has(.md\:grid-cols-3) input {
+  border: 1px solid #000 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  box-sizing: border-box !important;
+  padding: 8px 12px !important;
+}
 
           /* CW_PRINT_CUSTOMER_FIELD_BORDERS_V1 */
           .invoice-paper > section:first-of-type label input {
@@ -1305,6 +1423,33 @@ box-sizing: border-box !important;
             margin-top: 4px !important;
             overflow: hidden !important;
           }
+
+          /* CW_WORKSHOP_LOCKED_BOTTOM_PRINT_V1 */
+.cw-a4-print-pages .cw-workshop-locked-bottom {
+  display: flow-root !important;
+  width: 100% !important;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+.cw-workshop-locked-bottom > section:first-child {
+  margin-left: auto !important;
+}
+
+.cw-workshop-locked-bottom > section:has(textarea) {
+  margin-top: 12px !important;
+  margin-bottom: 0 !important;
+}
+
+.cw-workshop-locked-bottom > footer {
+  display: block !important;
+  visibility: visible !important;
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid #000 !important;
+  text-align: center !important;
+  break-inside: avoid !important;
+}
           
           /* CW_PRINT_INVOICE_FOOTER_V2 */
           .invoice-paper > footer {
