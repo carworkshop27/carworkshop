@@ -749,7 +749,15 @@ if (numberedPages.length > 1) {
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
+          <table className="cw-invoice-items-table w-full border-collapse text-sm">
+  <colgroup>
+    <col style={{ width: "46%" }} />
+    <col style={{ width: "9%" }} />
+    <col style={{ width: "11%" }} />
+    <col style={{ width: "11%" }} />
+    <col style={{ width: "14%" }} />
+    <col className="no-print" style={{ width: "9%" }} />
+  </colgroup>
             <thead>
               <tr className="bg-slate-100 text-left text-slate-700">
                 <th className="border p-2">Description / الوصف</th>
@@ -791,7 +799,7 @@ if (numberedPages.length > 1) {
                           onChange={(event) =>
                             updateItem(item.id, key, event.target.value)
                           }
-                          className="w-20 bg-transparent outline-none"
+                          className="w-full min-w-0 bg-transparent outline-none"
                         />
                       </td>
                     ))}
@@ -835,6 +843,47 @@ if (numberedPages.length > 1) {
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900 md:px-8">
       <style jsx global>{`
+
+      /* CW_WORKSHOP_INVOICE_COLUMN_WIDTHS_V1 */
+.cw-invoice-items-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.cw-invoice-items-table td,
+.cw-invoice-items-table th {
+  overflow-wrap: anywhere;
+}
+
+.cw-invoice-items-table input {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.cw-a4-print-pages .cw-a4-items-table th:nth-child(1),
+.cw-a4-print-pages .cw-a4-items-table td:nth-child(1) {
+  width: 50%;
+}
+
+.cw-a4-print-pages .cw-a4-items-table th:nth-child(2),
+.cw-a4-print-pages .cw-a4-items-table td:nth-child(2) {
+  width: 10%;
+}
+
+.cw-a4-print-pages .cw-a4-items-table th:nth-child(3),
+.cw-a4-print-pages .cw-a4-items-table td:nth-child(3) {
+  width: 12%;
+}
+
+.cw-a4-print-pages .cw-a4-items-table th:nth-child(4),
+.cw-a4-print-pages .cw-a4-items-table td:nth-child(4) {
+  width: 12%;
+}
+
+.cw-a4-print-pages .cw-a4-items-table th:nth-child(5),
+.cw-a4-print-pages .cw-a4-items-table td:nth-child(5) {
+  width: 16%;
+}
       
         /* CW_SALES_INVOICE_ALL_BLACK_TEXT_V1 */
         .invoice-paper,
