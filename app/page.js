@@ -985,7 +985,7 @@ export default function Home() {
         Customer: job.owner,
         Plate: job.plate,
         "Payment Status": job.paymentStatus || "Unpaid",
-        "Invoice Amount (âƒ)": grandTotal,
+        "Invoice Amount (SAR)": grandTotal,
         Date: job.date,
       };
     });
@@ -1708,7 +1708,7 @@ const jobsResponse = await fetch("/api/jobs");
     let text = `Hello ${job.owner}, here is an update from AutoFix Pro regarding your vehicle (${job.model} - ${job.plate}).\n\n`;
 
     text += `Current Workshop Status: ${job.status.toUpperCase()}\n`;
-    text += `Total Repair Estimate: âƒ${grandTotal.toFixed(2)}\n`;
+    text += `Total Repair Estimate: SAR${grandTotal.toFixed(2)}\n`;
     text += `Payment Status: ${job.paymentStatus || "Unpaid"}\n\n`;
 
     if (job.status === "Ready for Pickup") {
@@ -2181,7 +2181,7 @@ const jobsResponse = await fetch("/api/jobs");
       tableData.push([
         p.name,
         `Body Repair - ${info.label}${techStr}`,
-        `âƒ${info.cost.toFixed(2)}`,
+        `SAR${info.cost.toFixed(2)}`,
       ]);
     });
 
@@ -2190,7 +2190,7 @@ const jobsResponse = await fetch("/api/jobs");
       tableData.push([
         part.name,
         `Spare Part (x${part.qty})`,
-        `âƒ${part.price.toFixed(2)}`,
+        `SAR${part.price.toFixed(2)}`,
       ]);
     });
 
@@ -2207,14 +2207,14 @@ const jobsResponse = await fetch("/api/jobs");
         colSpan: 2,
         styles: { fontStyle: "bold", halign: "right" },
       },
-      { content: `âƒ${totalCost.toFixed(2)}`, styles: { fontStyle: "bold" } },
+      { content: `SAR${totalCost.toFixed(2)}`, styles: { fontStyle: "bold" } },
     ]);
 
     autoTable(doc, {
       startY: 75,
       head: [["Item Description", "Category / Details", "Amount"]],
       body:
-        tableData.length > 0 ? tableData : [["No items added", "N/A", "âƒ0.00"]],
+        tableData.length > 0 ? tableData : [["No items added", "N/A", "SAR0.00"]],
       theme: "striped",
       headStyles: { fillColor: [37, 99, 235] },
     });
@@ -2501,7 +2501,7 @@ const jobsResponse = await fetch("/api/jobs");
               </p>
 
               <h3 className="text-3xl font-black text-slate-900">
-                âƒ{totalJobCost.toFixed(2)}
+                SAR {totalJobCost.toFixed(2)}
               </h3>
             </div>
           </div>
@@ -2653,7 +2653,7 @@ const jobsResponse = await fetch("/api/jobs");
                         </div>
                       </div>
                       <span className="font-black text-slate-900">
-                        âƒ
+                        SAR
                         {(p.customRepairCost !== undefined &&
                         p.customRepairCost !== ""
                           ? Number(p.customRepairCost)
@@ -2716,7 +2716,7 @@ const jobsResponse = await fetch("/api/jobs");
                     <div>
                       <p className="text-xs font-bold text-slate-500">Cost</p>
                       <p className="font-semibold text-slate-900">
-                        {Number(item.cost || 0).toFixed(2)} âƒ
+                        {Number(item.cost || 0).toFixed(2)} SAR
                       </p>
                     </div>
                   </div>
@@ -2774,7 +2774,7 @@ const jobsResponse = await fetch("/api/jobs");
                     <div>
                       <p className="text-xs font-bold text-slate-500">Cost</p>
                       <p className="font-semibold text-slate-900">
-                        {Number(item.cost || 0).toFixed(2)} âƒ
+                        {Number(item.cost || 0).toFixed(2)} SAR
                       </p>
                     </div>
                   </div>
@@ -2886,7 +2886,7 @@ const jobsResponse = await fetch("/api/jobs");
                       </p>
                     </div>
                     <span className="font-black text-slate-900">
-                      âƒ{pt.price.toFixed(2)}
+                      SAR{pt.price.toFixed(2)}
                     </span>
                   </div>
                 ))}

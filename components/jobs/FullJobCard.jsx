@@ -115,7 +115,7 @@ export default function FullJobCard({
               Total Invoice Cost
             </p>
             <h3 className="text-3xl font-black text-slate-900">
-              ⃁${totalJobCost.toFixed(2)}
+              SAR {totalJobCost.toFixed(2)}
             </h3>
           </div>
         </div>
@@ -262,7 +262,7 @@ export default function FullJobCard({
                       </div>
                     </div>
                     <span className="font-black text-slate-900">
-                      ⃁${info.cost.toFixed(2)}
+                      SAR {info.cost.toFixed(2)}
                     </span>
                   </div>
                 );
@@ -298,7 +298,7 @@ export default function FullJobCard({
                     </p>
                   </div>
                   <span className="font-black text-slate-900">
-                    ⃁{pt.price.toFixed(2)}
+                    SAR {pt.price.toFixed(2)}
                   </span>
                 </div>
               ))}
