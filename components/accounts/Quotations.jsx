@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ArrowLeft, FileText, Plus, Printer, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -307,6 +307,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                           Garage AlTalaa AlFahir
                         </strong>
                         <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                    <p>VAT: 300096253100003</p>
                         <p>Phone: +966 50 662 0654</p>
                         <p>Email: talaa.alfakhir@gmail.com</p>
                       </div>
@@ -431,7 +432,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                             <span className="font-semibold">1.</span>
 
                             <div className="leading-6">
-                              <div>Bank Information - IBAN - Talaa Fakhir</div>
+                              <div>Bank Information</div>
                               <div>مؤسسة محمد عبدالله الملا</div>
                               <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
                             </div>
@@ -585,7 +586,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         .quotation-print-header {
           display: flex;
           width: 100%;
-          height: 44mm;
+          height: 52mm;
           background: #eefaf9;
           box-sizing: border-box;
         }
@@ -1336,6 +1337,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                     <div className="quotation-print-company">
                       <strong>Garage AlTalaa AlFahir</strong>
                       <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                    <p>VAT: 300096253100003</p>
                       <p>Phone: +966 50 662 0654</p>
                       <p>Email: talaa.alfakhir@gmail.com</p>
                     </div>
@@ -1424,7 +1426,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                           </span>
 
                           <div className="quotation-print-term-text">
-                            <div>Bank Information - IBAN - Talaa Fakhir</div>
+                            <div>Bank Information</div>
                             <div>مؤسسة محمد عبدالله الملا</div>
                             <div>IBAN: SA51 8000 0451 6080 1631 0298</div>
                           </div>
