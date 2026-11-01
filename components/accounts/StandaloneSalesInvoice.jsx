@@ -30,7 +30,8 @@ export default function StandaloneSalesInvoice({
   initialInvoice = null,
   backScreen = "sales",
 }) {
-  const workshop = template === "workshop";
+  const partnerWorkshop = template === "partner-workshop";
+  const workshop = template === "workshop" || partnerWorkshop;
 
   const [invoice, setInvoice] = useState(() => ({
     number: "",
@@ -367,7 +368,7 @@ export default function StandaloneSalesInvoice({
 
     // Customer details, plus vehicle details for Workshop invoices.
     const customerSection = sections[0];
-    const vehicleSection = workshop ? sections[1] : null;
+    const vehicleSection = workshop && !partnerWorkshop ? sections[1] : null;
 
     // Locate the existing totals and Notes sections.
     const totalsSection = sections.find(
@@ -1722,7 +1723,7 @@ box-sizing: border-box !important;
 
             <div className="min-w-56">
               <h1 className="text-right text-2xl font-black">
-                {workshop ? "WORKSHOP SALES INVOICE" : "SALES INVOICE"}
+                {partnerWorkshop ? "PARTNER WORKSHOP SALES INVOICE" : workshop ? "WORKSHOP SALES INVOICE" : "SALES INVOICE"}
               </h1>
               <p className="text-right text-lg font-bold" dir="rtl">
                 فاتورة مبيعات
@@ -1763,7 +1764,7 @@ box-sizing: border-box !important;
           </div>
         </section>
 
-        {workshop && (
+        {workshop && !partnerWorkshop && (
           <section className="mb-7 rounded-lg border bg-slate-50 p-4">
             <h2 className="mb-3 text-base font-black">
               Vehicle Details / بيانات المركبة

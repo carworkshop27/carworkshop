@@ -180,7 +180,7 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    if (!["professional", "workshop"].includes(body.template_type)) {
+    if (!["professional", "workshop", "partner-workshop"].includes(body.template_type)) {
       return respond("Invalid invoice template.", 400);
     }
 
@@ -194,9 +194,9 @@ export async function POST(request) {
 
     const items = body.items.map((item) => ({
       category:
-        body.template_type === "workshop" && item.category === "labor"
+        ["workshop", "partner-workshop"].includes(body.template_type) && item.category === "labor"
           ? "labor"
-          : body.template_type === "workshop"
+          : ["workshop", "partner-workshop"].includes(body.template_type)
             ? "part"
             : "item",
       description: String(item.description || "").trim(),
@@ -336,9 +336,9 @@ export async function PUT(request) {
 
     const items = body.items.map((item) => ({
       category:
-        existing.template_type === "workshop" && item.category === "labor"
+        ["workshop", "partner-workshop"].includes(existing.template_type) && item.category === "labor"
           ? "labor"
-          : existing.template_type === "workshop"
+          : ["workshop", "partner-workshop"].includes(existing.template_type)
             ? "part"
             : "item",
       description: String(item.description || "").trim(),

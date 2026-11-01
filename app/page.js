@@ -14,6 +14,7 @@ import NewJobIntake from "../components/intake/NewJobIntake";
 import JobCards from "../components/jobs/JobCards";
 import Sales from "../components/accounts/Sales";
 import StandaloneSalesInvoice from "../components/accounts/StandaloneSalesInvoice";
+import PartnerWorkshopSalesInvoice from "../components/accounts/PartnerWorkshopSalesInvoice";
 import StandaloneSalesInvoiceRecords from "../components/accounts/StandaloneSalesInvoiceRecords";
 import PurchaseEntry from "../components/accounts/PurchaseEntry";
 import PurchaseRecords from "../components/accounts/PurchaseRecords";
@@ -3043,6 +3044,13 @@ const jobsResponse = await fetch("/api/jobs");
     );
   }
 
+  if (activeScreen === "partner-workshop-sales-invoice") {
+    return (
+      <PartnerWorkshopSalesInvoice
+        setActiveScreen={setActiveScreen}
+      />
+    );
+  }
   if (activeScreen === "workshop-sales-invoice") {
     return (
       <StandaloneSalesInvoice
