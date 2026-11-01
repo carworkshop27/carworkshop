@@ -1,7 +1,7 @@
-import { supabase } from "../../../../lib/supabaseClient";
+import { supabaseServer } from "../../../../lib/supabaseServer";
 
 export async function GET() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServer
     .from("crm_customers")
     .select("*")
     .order("created_at", { ascending: false });
@@ -36,7 +36,7 @@ export async function POST(request) {
       );
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServer
       .from("crm_customers")
       .insert([
         {

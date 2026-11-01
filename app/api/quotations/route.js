@@ -118,10 +118,18 @@ export async function POST(request) {
     const contactNumber = String(body.contactNumber || "").trim();
 
     const email = String(body.email || "").trim();
+    const customerVat = String(body.customerVat || "").trim();
 
     const items = Array.isArray(body.items) ? body.items : [];
 
     const terms = Array.isArray(body.terms) ? body.terms : [];
+
+    if (!contactNumber) {
+      return Response.json(
+        { error: "Contact Number is required." },
+        { status: 400 },
+      );
+    }
 
     if (!customerName) {
       return NextResponse.json(
@@ -246,6 +254,8 @@ export async function POST(request) {
         address,
         contact_number: contactNumber,
         email,
+        customer_vat: customerVat || null,
+        customer_vat: customerVat || null,
       })
       .select()
       .single();
@@ -380,12 +390,20 @@ export async function PUT(request) {
     const address = String(body.address || "").trim();
     const contactNumber = String(body.contactNumber || "").trim();
     const email = String(body.email || "").trim();
+    const customerVat = String(body.customerVat || "").trim();
     const items = Array.isArray(body.items) ? body.items : [];
     const terms = Array.isArray(body.terms) ? body.terms : [];
 
     if (!quotationId) {
       return NextResponse.json(
         { error: "Quotation ID is required." },
+        { status: 400 },
+      );
+    }
+
+    if (!contactNumber) {
+      return Response.json(
+        { error: "Contact Number is required." },
         { status: 400 },
       );
     }
@@ -466,6 +484,8 @@ export async function PUT(request) {
         address,
         contact_number: contactNumber,
         email,
+        customer_vat: customerVat || null,
+        customer_vat: customerVat || null,
       })
       .eq("id", quotationId)
       .select()

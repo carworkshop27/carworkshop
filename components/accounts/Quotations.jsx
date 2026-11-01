@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, FileText, Plus, Printer, Save, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
   const [quotationItems, setQuotationItems] = useState(() =>
@@ -47,6 +47,109 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
   );
 
   const [email, setEmail] = useState(quotationToEdit?.email || "");
+  const [customerVat, setCustomerVat] = useState(
+    quotationToEdit?.customer_vat || "",
+  );
+  const [availableCustomers, setAvailableCustomers] = useState([]);
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCustomers() {
+      try {
+        const [crmResponse, quotationsResponse] = await Promise.all([
+          fetch("/api/crm/customers"),
+          fetch("/api/quotations"),
+        ]);
+
+        if (!crmResponse.ok || !quotationsResponse.ok) {
+          throw new Error("Unable to load customer records");
+        }
+
+        const crmData = await crmResponse.json();
+        const quotationData = await quotationsResponse.json();
+
+        const customerMap = new Map();
+
+        // Existing quotation customers, newest first.
+        for (const quotation of Array.isArray(quotationData) ? quotationData : []) {
+          const name = String(quotation.customer_name || "").trim();
+          if (!name) continue;
+
+          const key = name.toLocaleLowerCase();
+
+          if (!customerMap.has(key)) {
+            customerMap.set(key, {
+              id: `quotation-${quotation.id}`,
+              name,
+              address: quotation.address || "",
+              phone: quotation.contact_number || "",
+              email: quotation.email || "",
+              customer_vat: quotation.customer_vat || "",
+            });
+          }
+        }
+
+        // CRM records take priority, while missing details can come
+        // from the customer's latest quotation.
+        for (const customer of Array.isArray(crmData) ? crmData : []) {
+          const name = [customer.first_name, customer.last_name]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+
+          if (!name) continue;
+
+          const key = name.toLocaleLowerCase();
+          const previous = customerMap.get(key) || {};
+
+          customerMap.set(key, {
+            id: `crm-${customer.id}`,
+            name,
+            address: customer.address || previous.address || "",
+            phone: customer.phone || previous.phone || "",
+            email: customer.email || previous.email || "",
+            customer_vat: customer.customer_vat || previous.customer_vat || "",
+          });
+        }
+
+        if (active) {
+          setAvailableCustomers(
+            Array.from(customerMap.values()).sort((a, b) =>
+              a.name.localeCompare(b.name)
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Customer lookup error:", error);
+      }
+    }
+
+    loadCustomers();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const matchingCustomers = customerName.trim()
+    ? availableCustomers.filter((customer) =>
+        customer.name.toLocaleLowerCase().startsWith(
+          customerName.trim().toLocaleLowerCase()
+        )
+      )
+    : [];
+
+  const selectCustomer = (customer) => {
+    setCustomerName(customer.name);
+    setCustomerAddress(customer.address);
+    setContactNumber(customer.phone);
+    setEmail(customer.email);
+    setCustomerVat(customer.customer_vat);
+    setShowCustomerSuggestions(false);
+  };
+
   const [isSaving, setIsSaving] = useState(false);
   const [showQuotationPreview, setShowQuotationPreview] = useState(false);
   const [quotationId, setQuotationId] = useState(quotationToEdit?.id || "");
@@ -111,6 +214,11 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
       return;
     }
 
+    if (!contactNumber.trim()) {
+      alert("Contact Number is required.");
+      return;
+    }
+
     const invalidItemIndex = quotationItems.findIndex(
       (item) => !item.description.trim(),
     );
@@ -134,6 +242,8 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           address: customerAddress.trim(),
           contactNumber: contactNumber.trim(),
           email: email.trim(),
+          customerVat: customerVat.trim(),
+          customerVat: customerVat.trim(),
           items: quotationItems.map((item) => ({
             serialNumber: item.serialNumber,
             description: item.description.trim(),
@@ -324,6 +434,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                       <p>{customerAddress || "-"}</p>
                       <p>{contactNumber || "-"}</p>
                       <p>{email || "-"}</p>
+                      <p>Customer VAT: {customerVat || "-"}</p>
                     </div>
 
                     <div className="flex flex-col border-y border-r border-teal-300 text-sm">
@@ -988,7 +1099,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             </div>
 
             {/* Customer / Company */}
-            <div>
+            <div className="relative">
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Customer / Company
               </label>
@@ -996,10 +1107,34 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
               <input
                 type="text"
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e) => {
+                  setCustomerName(e.target.value);
+                  setShowCustomerSuggestions(true);
+                }}
+                onFocus={() => setShowCustomerSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 150)}
+                autoComplete="off"
                 placeholder="Enter customer or company name"
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
+              {showCustomerSuggestions && matchingCustomers.length > 0 && (
+                <div className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                  {matchingCustomers.map((customer, index) => (
+                    <button
+                      key={customer.id || index}
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => selectCustomer(customer)}
+                      className="block w-full border-b border-slate-100 px-4 py-3 text-left text-sm hover:bg-blue-50"
+                    >
+                      {customer.name}
+                      {customer.phone && (
+                        <span className="ml-2 text-xs text-slate-500">{customer.phone}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Address */}
@@ -1028,6 +1163,20 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                 value={contactNumber}
                 onChange={(e) => setContactNumber(e.target.value)}
                 placeholder="Enter contact number"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            {/* Customer VAT */}
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Customer VAT
+              </label>
+              <input
+                type="text"
+                value={customerVat}
+                onChange={(e) => setCustomerVat(e.target.value)}
+                placeholder="Enter customer VAT number"
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -1084,16 +1233,16 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                     Quantity
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
-                    Unit Price (âƒ)
+                    Unit Price (﷼)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
-                    Amount (âƒ)
+                    Amount (﷼)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
-                    VAT 15% (âƒ)
+                    VAT 15% (﷼)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
-                    Total (âƒ)
+                    Total (﷼)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-center text-xs font-black text-slate-600">
                     Action
@@ -1352,6 +1501,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                     <p>{customerAddress || "-"}</p>
                     <p>{contactNumber || "-"}</p>
                     <p>{email || "-"}</p>
+                    <p>Customer VAT: {customerVat || "-"}</p>
                   </div>
 
                   <div className="quotation-print-small-box">
