@@ -26,23 +26,39 @@ export default function QuotationInvoice({
     );
   }
 
+  const roundMoney = (value) => Number(Number(value || 0).toFixed(2));
+
   const items = Array.isArray(quotation.items)
     ? quotation.items.map((item, index) => ({
         serial_number: item.serial_number ?? item.serialNumber ?? index + 1,
         description: item.description || "",
         quantity: Number(item.quantity || 0),
         unit_price: Number(item.unit_price ?? item.unitPrice ?? 0),
+        discount_percent: Number(item.discount_percent ?? item.discountPercent ?? 0),
       }))
     : [];
 
-  const subtotal = items.reduce(
-    (sum, item) =>
-      sum + Number(item.quantity || 0) * Number(item.unit_price || 0),
-    0,
+  const subtotal = roundMoney(
+    items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0)
   );
 
-  const vat = subtotal * 0.15;
-  const total = subtotal + vat;
+  const itemDiscount = roundMoney(
+    items.reduce((sum, item) => {
+      const gross = roundMoney(item.quantity * item.unit_price);
+      return sum + roundMoney(gross * item.discount_percent / 100);
+    }, 0)
+  );
+
+  const taxableAmount = roundMoney(subtotal - itemDiscount);
+  const vat = roundMoney(taxableAmount * 0.15);
+
+  const additionalDiscount = Math.max(
+    0,
+    Number(quotation.additional_discount ?? quotation.additionalDiscount ?? 0)
+  );
+
+  const beforeAdditional = roundMoney(taxableAmount + vat);
+  const total = roundMoney(Math.max(0, beforeAdditional - additionalDiscount));
 
   const terms = Array.isArray(quotation.terms)
     ? quotation.terms
@@ -747,6 +763,12 @@ export default function QuotationInvoice({
                 </span>
               </div>
 
+              
+              <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                <strong className="px-4 py-3">Item Discounts</strong>
+                <span className="px-4 py-3 text-right">- {itemDiscount.toFixed(2)}</span>
+              </div>
+
               <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
                 <strong className="px-4 py-3">Tax Rate</strong>
                 <span className="px-4 py-3 text-right">15.00%</span>
@@ -757,13 +779,19 @@ export default function QuotationInvoice({
                 <span className="px-4 py-3 text-right">{vat.toFixed(2)}</span>
               </div>
 
+              
               <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                <strong className="px-4 py-3">Other</strong>
-                <span className="px-4 py-3 text-right">-</span>
+                <strong className="px-4 py-3">Total Before Additional Discount</strong>
+                <span className="px-4 py-3 text-right">{beforeAdditional.toFixed(2)}</span>
+              </div>
+
+              <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                <strong className="px-4 py-3">Additional Discount</strong>
+                <span className="px-4 py-3 text-right">- {additionalDiscount.toFixed(2)}</span>
               </div>
 
               <div className="grid grid-cols-2 border-b border-r border-teal-300 bg-teal-200 text-lg">
-                <strong className="px-4 py-3">Total</strong>
+                <strong className="px-4 py-3">Final Payable</strong>
                 <span className="px-4 py-3 text-right font-black">
                   {total.toFixed(2)}
                 </span>
@@ -960,9 +988,14 @@ export default function QuotationInvoice({
                     </div>
 
                     <div>
-                      <strong>Tax Rate</strong>
-                      <span>15.00%</span>
-                    </div>
+                        <strong>Item Discounts</strong>
+                        <span>- {itemDiscount.toFixed(2)}</span>
+                      </div>
+
+                      <div>
+                        <strong>Tax Rate</strong>
+                        <span>15.00%</span>
+                      </div>
 
                     <div>
                       <strong>VAT 15%</strong>
@@ -970,14 +1003,19 @@ export default function QuotationInvoice({
                     </div>
 
                     <div>
-                      <strong>Other</strong>
-                      <span>-</span>
-                    </div>
+                        <strong>Total Before Additional Discount</strong>
+                        <span>{beforeAdditional.toFixed(2)}</span>
+                      </div>
+
+                      <div>
+                        <strong>Additional Discount</strong>
+                        <span>- {additionalDiscount.toFixed(2)}</span>
+                      </div>
 
                     <div className="invoice-print-total">
-                      <strong>Total</strong>
-                      <span>{total.toFixed(2)}</span>
-                    </div>
+                        <strong>Final Payable</strong>
+                        <span>{total.toFixed(2)}</span>
+                      </div>
                   </div>
                 </div>
               )}

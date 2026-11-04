@@ -11,6 +11,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           description: item.description || "",
           quantity: item.quantity ?? 1,
           unitPrice: item.unit_price ?? 0,
+          discountPercent: item.discount_percent ?? 0,
         }))
       : [
           {
@@ -18,9 +19,12 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             description: "",
             quantity: 1,
             unitPrice: 0,
+            discountPercent: 0,
           },
         ],
   );
+
+  const [additionalDiscount, setAdditionalDiscount] = useState(quotationToEdit?.additional_discount ?? 0);
 
   const [quotationTerms, setQuotationTerms] = useState(() =>
     Array.isArray(quotationToEdit?.terms)
@@ -175,6 +179,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         description: "",
         quantity: 1,
         unitPrice: 0,
+        discountPercent: 0,
       },
     ]);
   };
@@ -243,12 +248,13 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           contactNumber: contactNumber.trim(),
           email: email.trim(),
           customerVat: customerVat.trim(),
-          customerVat: customerVat.trim(),
+          additionalDiscount: Number(additionalDiscount) || 0,
           items: quotationItems.map((item) => ({
             serialNumber: item.serialNumber,
             description: item.description.trim(),
             quantity: Number(item.quantity) || 0,
             unitPrice: Number(item.unitPrice) || 0,
+            discountPercent: Number(item.discountPercent) || 0,
           })),
           terms: quotationTerms.map((term) => term.trim()).filter(Boolean),
         }),
@@ -302,8 +308,14 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
     0,
   );
 
-  const quotationVat = quotationSubtotal * 0.15;
-  const quotationTotal = quotationSubtotal + quotationVat;
+  const quotationDiscount = quotationItems.reduce((sum, item) => {
+    const amount = (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
+    const percent = Math.min(100, Math.max(0, Number(item.discountPercent) || 0));
+    return sum + amount * percent / 100;
+  }, 0);
+  const quotationVat = (quotationSubtotal - quotationDiscount) * 0.15;
+  const quotationBeforeAdditional = quotationSubtotal - quotationDiscount + quotationVat;
+  const quotationTotal = Math.max(0, quotationBeforeAdditional - (Number(additionalDiscount) || 0));
 
   if (showQuotationPreview) {
     return (
@@ -456,49 +468,41 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                   <div className="mx-5 mt-4">
                     <table className="w-full table-fixed border-collapse text-sm">
                       <thead>
-                        <tr className="bg-teal-700 text-white">
-                          <th className="w-[11%] border border-teal-500 px-3 py-3 text-center">
-                            S.No.
-                          </th>
-                          <th className="w-[14%] border border-teal-500 px-3 py-3 text-center">
-                            Quantity
-                          </th>
-                          <th className="w-[42%] border border-teal-500 px-3 py-3 text-center">
-                            Description
-                          </th>
-                          <th className="w-[16.5%] border border-teal-500 px-3 py-3 text-center">
-                            Unit Price
-                          </th>
-                          <th className="w-[16.5%] border border-teal-500 px-3 py-3 text-center">
-                            Amount
-                          </th>
-                        </tr>
-                      </thead>
+        <tr className="bg-teal-700 text-white">
+          <th className="border border-teal-500 px-1 py-3 text-center text-xs" style={{ width: "7%" }}>S.No.</th>
+          <th className="border border-teal-500 px-1 py-3 text-center text-xs" style={{ width: "29%" }}>Description</th>
+          <th className="border border-teal-500 px-1 py-3 text-center text-xs" style={{ width: "7%" }}>Qty</th>
+          <th className="border border-teal-500 px-1 py-3 text-center text-xs" style={{ width: "12%" }}>Unit Price</th>
+          <th className="border border-teal-500 px-1 py-3 text-center text-xs" style={{ width: "12%" }}>Amount</th>
+          <th className="border border-teal-500 px-1 py-3 text-center text-xs" style={{ width: "11%" }}>Discount (%)</th>
+          <th className="border border-teal-500 px-1 py-3 text-center text-xs" style={{ width: "10%" }}>VAT 15%</th>
+          <th className="border border-teal-500 px-1 py-3 text-center text-xs" style={{ width: "12%" }}>Total</th>
+        </tr>
+      </thead>
 
                       <tbody>
                         {pageItems.map((item, itemIndex) => {
                           const quantity = Number(item.quantity) || 0;
                           const unitPrice = Number(item.unitPrice) || 0;
                           const amount = quantity * unitPrice;
+      const discountPercent = Math.min(100, Math.max(0,
+        Number(item.discountPercent ?? item.discount_percent ?? 0)));
+      const discountAmount = Math.round(amount * discountPercent) / 100;
+      const vat = Math.round((amount - discountAmount) * 15) / 100;
+      const total = amount - discountAmount + vat;
+
 
                           return (
                             <tr key={`${pageIndex}-${itemIndex}`}>
-                              <td className="h-9 border border-teal-200 px-3 text-center">
-                                {item.serialNumber}
-                              </td>
-                              <td className="h-9 border border-teal-200 px-3 text-center">
-                                {quantity}
-                              </td>
-                              <td className="h-9 border border-teal-200 px-3">
-                                {item.description || ""}
-                              </td>
-                              <td className="h-9 border border-teal-200 px-3 text-right">
-                                {unitPrice.toFixed(2)}
-                              </td>
-                              <td className="h-9 border border-teal-200 px-3 text-right">
-                                {amount.toFixed(2)}
-                              </td>
-                            </tr>
+<td className="h-9 border border-teal-200 px-1 text-center">{item.serialNumber}</td>
+<td className="h-9 border border-teal-200 px-1 ">{item.description || ""}</td>
+<td className="h-9 border border-teal-200 px-1 text-center">{quantity}</td>
+<td className="h-9 border border-teal-200 px-1 text-right">{unitPrice.toFixed(2)}</td>
+<td className="h-9 border border-teal-200 px-1 text-right">{amount.toFixed(2)}</td>
+<td className="h-9 border border-teal-200 px-1 text-center">{discountPercent.toFixed(2)}%</td>
+<td className="h-9 border border-teal-200 px-1 text-right">{vat.toFixed(2)}</td>
+<td className="h-9 border border-teal-200 px-1 text-right font-bold">{total.toFixed(2)}</td>
+</tr>
                           );
                         })}
 
@@ -509,22 +513,15 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                           ),
                         }).map((_, emptyIndex) => (
                           <tr key={`preview-empty-${pageIndex}-${emptyIndex}`}>
-                            <td className="h-9 border border-teal-200">
-                              &nbsp;
-                            </td>
-                            <td className="h-9 border border-teal-200">
-                              &nbsp;
-                            </td>
-                            <td className="h-9 border border-teal-200">
-                              &nbsp;
-                            </td>
-                            <td className="h-9 border border-teal-200">
-                              &nbsp;
-                            </td>
-                            <td className="h-9 border border-teal-200">
-                              &nbsp;
-                            </td>
-                          </tr>
+<td className="h-9 border border-teal-200">&nbsp;</td>
+<td className="h-9 border border-teal-200">&nbsp;</td>
+<td className="h-9 border border-teal-200">&nbsp;</td>
+<td className="h-9 border border-teal-200">&nbsp;</td>
+<td className="h-9 border border-teal-200">&nbsp;</td>
+<td className="h-9 border border-teal-200">&nbsp;</td>
+<td className="h-9 border border-teal-200">&nbsp;</td>
+<td className="h-9 border border-teal-200">&nbsp;</td>
+</tr>
                         ))}
                       </tbody>
                     </table>
@@ -572,6 +569,10 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                         </div>
 
                         <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                          <strong className="px-4 py-3">Item Discounts</strong>
+                          <span className="px-4 py-3 text-right">- {quotationDiscount.toFixed(2)}</span>
+                        </div>
+                        <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
                           <strong className="px-4 py-3">Tax Rate</strong>
                           <span className="px-4 py-3 text-right">15.00%</span>
                         </div>
@@ -584,12 +585,16 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                         </div>
 
                         <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                          <strong className="px-4 py-3">Other</strong>
-                          <span className="px-4 py-3 text-right">-</span>
+                          <strong className="px-4 py-3">Total Before Additional Discount</strong>
+                          <span className="px-4 py-3 text-right">{quotationBeforeAdditional.toFixed(2)}</span>
+                        </div>
+                        <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                          <strong className="px-4 py-3">Additional Discount</strong>
+                          <span className="px-4 py-3 text-right">- {(Number(additionalDiscount) || 0).toFixed(2)}</span>
                         </div>
 
                         <div className="grid grid-cols-2 border-b border-r border-teal-300 bg-teal-200 text-lg">
-                          <strong className="px-4 py-3">Total</strong>
+                          <strong className="px-4 py-3">Final Payable</strong>
                           <span className="px-4 py-3 text-right font-black">
                             {quotationTotal.toFixed(2)}
                           </span>
@@ -877,39 +882,51 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           vertical-align: middle;
         }
 
-        .quotation-print-items th:nth-child(1) {
-          width: 11%;
-          text-align: center;
+
+        /* EIGHT-COLUMN A4 PRINT TABLE */
+        .quotation-print-items {
+          width: 100%;
+          table-layout: fixed;
+          border-collapse: collapse;
+          font-size: 7pt;
         }
 
-        .quotation-print-items th:nth-child(2) {
-          width: 14%;
-          text-align: center;
+        .quotation-print-items th,
+        .quotation-print-items td {
+          padding: 1mm 0.8mm;
+          overflow-wrap: anywhere;
+          box-sizing: border-box;
         }
 
-        .quotation-print-items th:nth-child(3) {
-          width: 42%;
-          text-align: center;
+        .quotation-print-items th {
+          font-size: 6.8pt;
+          line-height: 1.2;
         }
 
-        .quotation-print-items th:nth-child(4) {
-          width: 16.5%;
-          text-align: center;
-        }
-
-        .quotation-print-items th:nth-child(5) {
-          width: 16.5%;
-          text-align: center;
-        }
+        .quotation-print-items th:nth-child(1) { width: 7%; }
+        .quotation-print-items th:nth-child(2) { width: 29%; }
+        .quotation-print-items th:nth-child(3) { width: 7%; }
+        .quotation-print-items th:nth-child(4) { width: 12%; }
+        .quotation-print-items th:nth-child(5) { width: 12%; }
+        .quotation-print-items th:nth-child(6) { width: 11%; }
+        .quotation-print-items th:nth-child(7) { width: 10%; }
+        .quotation-print-items th:nth-child(8) { width: 12%; }
 
         .quotation-print-items td:nth-child(1),
-        .quotation-print-items td:nth-child(2) {
+        .quotation-print-items td:nth-child(3),
+        .quotation-print-items td:nth-child(6) {
           text-align: center;
         }
 
         .quotation-print-items td:nth-child(4),
-        .quotation-print-items td:nth-child(5) {
+        .quotation-print-items td:nth-child(5),
+        .quotation-print-items td:nth-child(7),
+        .quotation-print-items td:nth-child(8) {
           text-align: right;
+        }
+
+        .quotation-print-items td:nth-child(8) {
+          font-weight: 700;
         }
 
         /* FINAL PAGE TERMS + TOTALS */
@@ -1239,6 +1256,9 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                     Amount (﷼)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
+                    Discount (%)
+                  </th>
+                  <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
                     VAT 15% (﷼)
                   </th>
                   <th className="border border-slate-200 px-3 py-3 text-left text-xs font-black text-slate-600">
@@ -1255,8 +1275,10 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                   const quantity = Number(item.quantity) || 0;
                   const unitPrice = Number(item.unitPrice) || 0;
                   const amount = quantity * unitPrice;
-                  const vat = amount * 0.15;
-                  const total = amount + vat;
+                  const discountPercent = Math.min(100, Math.max(0, Number(item.discountPercent) || 0));
+                  const discountAmount = Math.round(amount * discountPercent) / 100;
+                  const vat = Math.round((amount - discountAmount) * 15) / 100;
+                  const total = amount - discountAmount + vat;
 
                   return (
                     <tr key={index}>
@@ -1328,6 +1350,20 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
 
                       <td className="border border-slate-200 bg-slate-50 px-3 py-3 text-right text-sm font-bold text-slate-700">
                         {amount.toFixed(2)}
+                      </td>
+
+                      <td className="border border-slate-200 px-3 py-3">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          value={item.discountPercent ?? 0}
+                          onChange={(e) =>
+                            updateQuotationItem(index, "discountPercent", e.target.value)
+                          }
+                          className="w-24 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium"
+                        />
                       </td>
 
                       <td className="border border-slate-200 bg-slate-50 px-3 py-3 text-right text-sm font-bold text-slate-700">
@@ -1417,6 +1453,25 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
         </section>
 
         {/* SAVE + PRINT QUOTATION */}
+        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-black">Total Summary</h2>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span>Subtotal</span><strong>{quotationSubtotal.toFixed(2)} SAR</strong></div>
+            <div className="flex justify-between"><span>Item Discounts</span><strong>- {quotationDiscount.toFixed(2)} SAR</strong></div>
+            <div className="flex justify-between"><span>VAT 15%</span><strong>{quotationVat.toFixed(2)} SAR</strong></div>
+            <div className="flex justify-between"><span>Total Before Additional Discount</span><strong>{quotationBeforeAdditional.toFixed(2)} SAR</strong></div>
+            <label className="flex items-center justify-between gap-4">
+              <span>Additional Discount (SAR)</span>
+              <input type="number" min="0" max={quotationBeforeAdditional}
+                step="0.01" value={additionalDiscount}
+                onChange={(e) => setAdditionalDiscount(e.target.value)}
+                className="w-40 rounded-lg border border-slate-300 px-3 py-2 text-right" />
+            </label>
+            <div className="flex justify-between border-t pt-3 text-lg font-black">
+              <span>Final Payable</span><span>{quotationTotal.toFixed(2)} SAR</span>
+            </div>
+          </div>
+        </section>
         <div className="flex justify-end gap-3 pb-8">
           <button
             type="button"
@@ -1518,29 +1573,41 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                 {/* ITEMS TABLE */}
                 <table className="quotation-print-items">
                   <thead>
-                    <tr>
-                      <th>S.No.</th>
-                      <th>Quantity</th>
-                      <th>Description</th>
-                      <th>Unit Price</th>
-                      <th>Amount</th>
-                    </tr>
-                  </thead>
+        <tr>
+          <th>S.No.</th>
+          <th>Description</th>
+          <th>Qty</th>
+          <th>Unit Price</th>
+          <th>Amount</th>
+          <th>Discount (%)</th>
+          <th>VAT 15%</th>
+          <th>Total</th>
+        </tr>
+      </thead>
 
                   <tbody>
                     {pageItems.map((item, itemIndex) => {
                       const quantity = Number(item.quantity) || 0;
                       const unitPrice = Number(item.unitPrice) || 0;
                       const amount = quantity * unitPrice;
+      const discountPercent = Math.min(100, Math.max(0,
+        Number(item.discountPercent ?? item.discount_percent ?? 0)));
+      const discountAmount = Math.round(amount * discountPercent) / 100;
+      const vat = Math.round((amount - discountAmount) * 15) / 100;
+      const total = amount - discountAmount + vat;
+
 
                       return (
                         <tr key={`${pageIndex}-${itemIndex}`}>
-                          <td>{item.serialNumber}</td>
-                          <td>{quantity}</td>
-                          <td>{item.description || ""}</td>
-                          <td>{unitPrice.toFixed(2)}</td>
-                          <td>{amount.toFixed(2)}</td>
-                        </tr>
+<td>{item.serialNumber}</td>
+<td>{item.description || ""}</td>
+<td>{quantity}</td>
+<td>{unitPrice.toFixed(2)}</td>
+<td>{amount.toFixed(2)}</td>
+<td>{discountPercent.toFixed(2)}%</td>
+<td>{vat.toFixed(2)}</td>
+<td>{total.toFixed(2)}</td>
+</tr>
                       );
                     })}
 
@@ -1551,12 +1618,15 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                       ),
                     }).map((_, emptyIndex) => (
                       <tr key={`empty-${pageIndex}-${emptyIndex}`}>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                      </tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
                     ))}
                   </tbody>
                 </table>
@@ -1606,6 +1676,10 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                       </div>
 
                       <div>
+                        <strong>Item Discounts</strong>
+                        <span>- {quotationDiscount.toFixed(2)}</span>
+                      </div>
+                      <div>
                         <strong>Tax Rate</strong>
                         <span>15.00%</span>
                       </div>
@@ -1616,12 +1690,16 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
                       </div>
 
                       <div>
-                        <strong>Other</strong>
-                        <span>-</span>
+                        <strong>Total Before Additional Discount</strong>
+                        <span>{quotationBeforeAdditional.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <strong>Additional Discount</strong>
+                        <span>- {(Number(additionalDiscount) || 0).toFixed(2)}</span>
                       </div>
 
                       <div className="quotation-print-total">
-                        <strong>Total</strong>
+                        <strong>Final Payable</strong>
                         <span>{quotationTotal.toFixed(2)}</span>
                       </div>
                     </div>

@@ -58,26 +58,50 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
     if (!quotationToGenerate) return;
 
     try {
+      const roundMoney = (value) => Number(Number(value || 0).toFixed(2));
+
       const items = Array.isArray(quotationToGenerate.items)
-        ? quotationToGenerate.items.map((item, index) => ({
-            serial_number: item.serial_number ?? index + 1,
-            description: item.description || "",
-            quantity: Number(item.quantity) || 0,
-            unit_price: Number(item.unit_price) || 0,
-            total: Number(item.quantity || 0) * Number(item.unit_price || 0),
-          }))
+        ? quotationToGenerate.items.map((item, index) => {
+            const quantity = Number(item.quantity) || 0;
+            const unitPrice = Number(item.unit_price) || 0;
+            const grossAmount = roundMoney(quantity * unitPrice);
+            const discountPercent = Number(item.discount_percent) || 0;
+            const discountAmount = roundMoney(
+              grossAmount * discountPercent / 100
+            );
+
+            return {
+              serial_number: item.serial_number ?? index + 1,
+              description: item.description || "",
+              quantity,
+              unit_price: unitPrice,
+              total: grossAmount,
+              discount_percent: discountPercent,
+              discount_amount: discountAmount,
+            };
+          })
         : [];
 
-      const subtotal = items.reduce(
-        (sum, item) => sum + Number(item.total || 0),
-        0,
+      const subtotal = roundMoney(
+        items.reduce((sum, item) => sum + item.total, 0)
       );
 
-      const discount = 0;
-      const taxableAmount = subtotal - discount;
+      const discount = roundMoney(
+        items.reduce((sum, item) => sum + item.discount_amount, 0)
+      );
+
+      const taxableAmount = roundMoney(subtotal - discount);
       const vatRate = 15;
-      const vatAmount = taxableAmount * (vatRate / 100);
-      const totalAmount = taxableAmount + vatAmount;
+      const vatAmount = roundMoney(taxableAmount * vatRate / 100);
+
+      const additionalDiscount = Math.max(
+        0,
+        Number(quotationToGenerate.additional_discount) || 0
+      );
+
+      const totalAmount = roundMoney(
+        Math.max(0, taxableAmount + vatAmount - additionalDiscount)
+      );
 
       // =========================================================
       // REGULAR INVOICE
@@ -103,6 +127,9 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
               ? quotationToGenerate.terms
               : [],
             subtotal,
+            discount,
+            taxableAmount,
+            additionalDiscount,
             vatAmount,
             totalAmount,
           }),
@@ -148,6 +175,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
           subtotal,
           discount,
           taxableAmount,
+          additionalDiscount,
           vatRate,
           vatAmount,
           totalAmount,
@@ -322,20 +350,31 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
       ).toFixed(2);
     }
 
-    const total = Array.isArray(quotation?.items)
-      ? quotation.items.reduce((sum, item) => {
-          if (item?.total != null) {
-            return sum + Number(item.total || 0);
-          }
+    const items = Array.isArray(quotation?.items)
+      ? quotation.items
+      : [];
 
-          const quantity = Number(item?.quantity || 0);
-          const unitPrice = Number(item?.unit_price || 0);
+    const subtotal = items.reduce(
+      (sum, item) =>
+        sum + (Number(item.quantity) || 0) * (Number(item.unit_price) || 0),
+      0
+    );
 
-          return sum + quantity * unitPrice * 1.15;
-        }, 0)
-      : 0;
+    const itemDiscount = items.reduce((sum, item) => {
+      const gross = (Number(item.quantity) || 0) *
+        (Number(item.unit_price) || 0);
 
-    return total.toFixed(2);
+      return sum + gross * (Number(item.discount_percent) || 0) / 100;
+    }, 0);
+
+    const taxableAmount = subtotal - itemDiscount;
+    const vatAmount = taxableAmount * 0.15;
+    const additionalDiscount = Number(quotation?.additional_discount) || 0;
+
+    return Math.max(
+      0,
+      taxableAmount + vatAmount - additionalDiscount
+    ).toFixed(2);
   };
 
   if (selectedTaxInvoice) {
@@ -362,10 +401,21 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
         taxableAmount * (vatRate / 100),
     );
 
+    const additionalDiscount = Math.max(
+      0,
+      Number(
+        selectedTaxInvoice.additional_discount ??
+        selectedTaxInvoice.additionalDiscount ??
+        0
+      )
+    );
+
+    const beforeAdditional = taxableAmount + vatAmount;
+
     const totalAmount = Number(
       selectedTaxInvoice.total_amount ??
-        selectedTaxInvoice.totalAmount ??
-        taxableAmount + vatAmount,
+      selectedTaxInvoice.totalAmount ??
+      Math.max(0, beforeAdditional - additionalDiscount)
     );
 
     const taxInvoiceNumber =
@@ -1055,9 +1105,33 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                     </td>
                   </tr>
 
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold">
+                      Total Before Additional Discount
+                    </td>
+                    <td className="border border-slate-300 p-2 text-right" dir="rtl">
+                      الإجمالي قبل الخصم الإضافي
+                    </td>
+                    <td className="border border-slate-300 p-2 text-right">
+                      {formatAmount(beforeAdditional)}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold">
+                      Additional Discount
+                    </td>
+                    <td className="border border-slate-300 p-2 text-right" dir="rtl">
+                      الخصم الإضافي
+                    </td>
+                    <td className="border border-slate-300 p-2 text-right">
+                      {formatAmount(additionalDiscount)}
+                    </td>
+                  </tr>
+
                   <tr className="font-black">
                     <td className="border border-slate-300 p-2">
-                      Total Amount with VAT
+                      Final Payable
                     </td>
 
                     <td

@@ -183,9 +183,14 @@ export async function POST(request) {
 
       const amount = roundMoney(quantity * unitPrice);
 
-      const vatAmount = roundMoney(amount * (VAT_RATE / 100));
+      const discountPercent = Number(item.discountPercent || 0);
+      if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+        throw new Error("Discount must be between 0 and 100 percent.");
+      }
+      const discountAmount = roundMoney(amount * discountPercent / 100);
+      const vatAmount = roundMoney((amount - discountAmount) * (VAT_RATE / 100));
 
-      const total = roundMoney(amount + vatAmount);
+      const total = roundMoney(amount - discountAmount + vatAmount);
 
       return {
         serial_number: serialNumber,
@@ -193,6 +198,8 @@ export async function POST(request) {
         quantity,
         unit_price: roundMoney(unitPrice),
         amount,
+                discount_percent: discountPercent,
+        discount_amount: discountAmount,
         vat_rate: VAT_RATE,
         vat_amount: vatAmount,
         total,
@@ -205,6 +212,17 @@ export async function POST(request) {
      * The first line is always controlled by
      * the server and cannot be changed or deleted.
      */
+    const additionalDiscount = Number(body.additionalDiscount ?? 0);
+    const beforeAdditionalDiscount = roundMoney(
+      cleanedItems.reduce((sum, item) => sum + item.total, 0)
+    );
+
+    if (!Number.isFinite(additionalDiscount) ||
+        additionalDiscount < 0 ||
+        additionalDiscount > beforeAdditionalDiscount) {
+      throw new Error("Additional discount must be between 0 and the quotation total.");
+    }
+
     const cleanedTerms = [
       {
         line_number: 1,
@@ -255,7 +273,7 @@ export async function POST(request) {
         contact_number: contactNumber,
         email,
         customer_vat: customerVat || null,
-        customer_vat: customerVat || null,
+        additional_discount: additionalDiscount,
       })
       .select()
       .single();
@@ -284,6 +302,8 @@ export async function POST(request) {
       quantity: item.quantity,
       unit_price: item.unit_price,
       amount: item.amount,
+            discount_percent: item.discount_percent,
+      discount_amount: item.discount_amount,
       vat_rate: item.vat_rate,
       vat_amount: item.vat_amount,
       total: item.total,
@@ -446,8 +466,15 @@ export async function PUT(request) {
       }
 
       const amount = roundMoney(quantity * unitPrice);
-      const vatAmount = roundMoney(amount * (VAT_RATE / 100));
-      const total = roundMoney(amount + vatAmount);
+      const discountPercent = Number(item.discountPercent ?? item.discount_percent ?? 0);
+
+      if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+        throw new Error("Discount must be between 0 and 100 percent.");
+      }
+
+      const discountAmount = roundMoney(amount * discountPercent / 100);
+      const vatAmount = roundMoney((amount - discountAmount) * (VAT_RATE / 100));
+      const total = roundMoney(amount - discountAmount + vatAmount);
 
       return {
         serial_number: serialNumber,
@@ -455,11 +482,24 @@ export async function PUT(request) {
         quantity,
         unit_price: roundMoney(unitPrice),
         amount,
+        discount_percent: discountPercent,
+        discount_amount: discountAmount,
         vat_rate: VAT_RATE,
         vat_amount: vatAmount,
         total,
       };
     });
+
+    const additionalDiscount = Number(body.additionalDiscount ?? 0);
+    const beforeAdditionalDiscount = roundMoney(
+      cleanedItems.reduce((sum, item) => sum + item.total, 0)
+    );
+
+    if (!Number.isFinite(additionalDiscount) ||
+        additionalDiscount < 0 ||
+        additionalDiscount > beforeAdditionalDiscount) {
+      throw new Error("Additional discount must be between 0 and the quotation total.");
+    }
 
     const cleanedTerms = [
       {
@@ -485,7 +525,7 @@ export async function PUT(request) {
         contact_number: contactNumber,
         email,
         customer_vat: customerVat || null,
-        customer_vat: customerVat || null,
+        additional_discount: additionalDiscount,
       })
       .eq("id", quotationId)
       .select()
@@ -527,6 +567,8 @@ export async function PUT(request) {
       quantity: item.quantity,
       unit_price: item.unit_price,
       amount: item.amount,
+      discount_percent: item.discount_percent,
+      discount_amount: item.discount_amount,
       vat_rate: item.vat_rate,
       vat_amount: item.vat_amount,
       total: item.total,

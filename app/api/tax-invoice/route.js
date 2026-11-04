@@ -6,7 +6,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("tax_invoices")
       .select(
-        "id, quotation_id, quotation_no, tax_invoice_no, issue_date, issue_time, supply_date, customer_name, address, contact_number, email, customer_vat_number, customer_cr_number, subtotal, discount, taxable_amount, vat_rate, vat_amount, total_amount, items",
+        "id, quotation_id, quotation_no, tax_invoice_no, issue_date, issue_time, supply_date, customer_name, address, contact_number, email, customer_vat_number, customer_cr_number, subtotal, discount, additional_discount, taxable_amount, vat_rate, vat_amount, total_amount, items",
       )
       .order("issue_date", { ascending: false });
 
@@ -50,6 +50,7 @@ export async function POST(request) {
       items,
       subtotal,
       discount,
+      additionalDiscount,
       taxableAmount,
       vatRate,
       vatAmount,
@@ -126,6 +127,7 @@ export async function POST(request) {
 
         subtotal: Number(subtotal || 0),
         discount: Number(discount || 0),
+        additional_discount: Math.max(0, Number(additionalDiscount || 0)),
         taxable_amount: Number(taxableAmount || 0),
 
         vat_rate: Number(vatRate || 15),
