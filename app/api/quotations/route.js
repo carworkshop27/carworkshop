@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireWorkshopQuotationAccess } from "../../../lib/workshopAuth";
 import { supabaseServer } from "../../../lib/supabaseServer";
 
 const VAT_RATE = 15;
@@ -109,6 +110,15 @@ export async function POST(request) {
   let createdQuotationId = null;
 
   try {
+    const authorization = await requireWorkshopQuotationAccess("POST");
+
+    if (!authorization.authorized) {
+      return NextResponse.json(
+        { error: authorization.error },
+        { status: authorization.status }
+      );
+    }
+
     const body = await request.json();
 
     const customerName = String(body.customerName || "").trim();
@@ -152,8 +162,8 @@ export async function POST(request) {
     /*
      * Clean and calculate quotation items.
      *
-     * Amount = Quantity × Unit Price
-     * VAT = Amount × 15%
+     * Amount = Quantity Ã— Unit Price
+     * VAT = Amount Ã— 15%
      * Total = Amount + VAT
      */
     const cleanedItems = items.map((item, index) => {
@@ -403,6 +413,15 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
+
+    const authorization = await requireWorkshopQuotationAccess("PUT");
+
+    if (!authorization.authorized) {
+      return NextResponse.json(
+        { error: authorization.error },
+        { status: authorization.status }
+      );
+    }
     const body = await request.json();
 
     const quotationId = String(body.id || "").trim();
@@ -654,6 +673,15 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
+
+    const authorization = await requireWorkshopQuotationAccess("DELETE");
+
+    if (!authorization.authorized) {
+      return NextResponse.json(
+        { error: authorization.error },
+        { status: authorization.status }
+      );
+    }
     const { searchParams } = new URL(request.url);
     const quotationId = String(searchParams.get("id") || "").trim();
 
@@ -793,4 +821,3 @@ export async function DELETE(request) {
     );
   }
 }
-

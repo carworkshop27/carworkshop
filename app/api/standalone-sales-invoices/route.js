@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { calculateInvoiceTotals } from "../../../lib/zatca/invoiceTotals.mjs";
+import { ZATCA_SELLER } from "../../../lib/zatca/sellerConfig.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -157,6 +159,7 @@ export async function GET() {
     const { data, error } = await supabaseAdmin
       .from("standalone_sales_invoices")
       .select("*")
+
       .order("created_at", { ascending: false })
       .limit(500);
 
@@ -221,25 +224,13 @@ export async function POST(request) {
       return respond("Invalid invoice items or amounts.", 400);
     }
 
-    const round = (value) => Math.round(value * 100) / 100;
-
-    const subtotal = round(
-      items.reduce(
-        (sum, item) =>
-          sum + round(item.quantity * item.unitPrice - item.discount),
-        0
-      )
-    );
-
-    const discount = Number(body.discount || 0);
-
-    if (
-      !Number.isFinite(discount) ||
-      discount < 0 ||
-      discount > subtotal
-    ) {
-      return respond("Invalid additional discount.", 400);
+    let totals;
+    try {
+      totals = calculateInvoiceTotals(items, Number(body.discount || 0), ZATCA_SELLER.vatRate);
+    } catch (error) {
+      return respond(error.message || "Invalid invoice totals.", 400);
     }
+    const { subtotal, discount } = totals;
 
     const date = String(body.invoice_date || "");
 
@@ -248,6 +239,10 @@ export async function POST(request) {
       Number.isNaN(Date.parse(`${date}T00:00:00Z`))
     ) {
       return respond("Invalid invoice date.", 400);
+    }
+
+    if (date < ZATCA_SELLER.vatEffectiveDate) {
+      return respond("New VAT invoice date cannot precede VAT registration effective date.", 400);
     }
 
     const clean = (value) =>
@@ -272,8 +267,11 @@ export async function POST(request) {
       mileage: clean(body.mileage),
       items,
       subtotal,
-      discount: round(discount),
-      total_amount: round(subtotal - discount),
+      discount: totals.discount,
+      taxable_amount: totals.taxableAmount,
+      vat_rate: totals.vatRate,
+      vat_amount: totals.vatAmount,
+      total_amount: totals.totalAmount,
       currency: "SAR",
       notes: clean(body.notes),
       status: "draft",
@@ -315,12 +313,40 @@ export async function PUT(request) {
 
     const { data: existing, error: findError } = await supabaseAdmin
       .from("standalone_sales_invoices")
-      .select("id, invoice_no, template_type")
+      .select("id, invoice_no, template_type, status, issued_at, vat_amount")
       .eq("id", body.id)
       .maybeSingle();
 
     if (findError) throw findError;
     if (!existing) return respond("Invoice not found.", 404);
+
+    if (existing.status === "issued" || existing.issued_at) {
+      return respond("Issued invoices cannot be edited.", 409);
+    }
+
+    // Historical classification is based on the immutable registry, never on nullable VAT fields.
+    const { data: historical, error: historicalError } = await supabaseAdmin
+      .from("cw_zatca_historical_invoices")
+      .select("invoice_id")
+      .eq("invoice_id", existing.id)
+      .maybeSingle();
+
+    if (historicalError) throw historicalError;
+
+    if (historical) {
+      return respond(
+        "Historical invoices are protected and cannot be edited.",
+        409
+      );
+    }
+
+    if (existing.status !== "draft") {
+      return respond("Only draft invoices can be edited.", 409);
+    }
+
+    if (!historical && existing.vat_amount === null) {
+      return respond("VAT draft data is incomplete. Editing is blocked.", 409);
+    }
 
     if (body.template_type !== existing.template_type) {
       return respond("Invoice template cannot be changed.", 400);
@@ -363,25 +389,13 @@ export async function PUT(request) {
       return respond("Invalid invoice items or amounts.", 400);
     }
 
-    const round = (value) => Math.round(value * 100) / 100;
-
-    const subtotal = round(
-      items.reduce(
-        (sum, item) =>
-          sum + round(item.quantity * item.unitPrice - item.discount),
-        0
-      )
-    );
-
-    const discount = Number(body.discount || 0);
-
-    if (
-      !Number.isFinite(discount) ||
-      discount < 0 ||
-      discount > subtotal
-    ) {
-      return respond("Invalid additional discount.", 400);
+    let totals;
+    try {
+      totals = calculateInvoiceTotals(items, Number(body.discount || 0), ZATCA_SELLER.vatRate);
+    } catch (error) {
+      return respond(error.message || "Invalid invoice totals.", 400);
     }
+    const { subtotal, discount } = totals;
 
     const date = String(body.invoice_date || "");
 
@@ -412,8 +426,15 @@ export async function PUT(request) {
       mileage: clean(body.mileage),
       items,
       subtotal,
-      discount: round(discount),
-      total_amount: round(subtotal - discount),
+      discount: totals.discount,
+      ...(historical
+        ? { total_amount: totals.taxableAmount }
+        : {
+            taxable_amount: totals.taxableAmount,
+            vat_rate: totals.vatRate,
+            vat_amount: totals.vatAmount,
+            total_amount: totals.totalAmount,
+          }),
       notes: clean(body.notes),
       updated_at: new Date().toISOString(),
     };
@@ -422,10 +443,13 @@ export async function PUT(request) {
       .from("standalone_sales_invoices")
       .update(changes)
       .eq("id", existing.id)
+      .eq("status", "draft")
+      .is("issued_at", null)
       .select("*")
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) return respond("Invoice is no longer an editable draft.", 409);
 
     const customerRegistration = await registerInvoiceCustomer(data);
 

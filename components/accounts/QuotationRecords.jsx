@@ -58,141 +58,27 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
     if (!quotationToGenerate) return;
 
     try {
-      const roundMoney = (value) => Number(Number(value || 0).toFixed(2));
-
-      const items = Array.isArray(quotationToGenerate.items)
-        ? quotationToGenerate.items.map((item, index) => {
-            const quantity = Number(item.quantity) || 0;
-            const unitPrice = Number(item.unit_price) || 0;
-            const grossAmount = roundMoney(quantity * unitPrice);
-            const discountPercent = Number(item.discount_percent) || 0;
-            const discountAmount = roundMoney(
-              grossAmount * discountPercent / 100
-            );
-
-            return {
-              serial_number: item.serial_number ?? index + 1,
-              description: item.description || "",
-              quantity,
-              unit_price: unitPrice,
-              total: grossAmount,
-              discount_percent: discountPercent,
-              discount_amount: discountAmount,
-            };
-          })
-        : [];
-
-      const subtotal = roundMoney(
-        items.reduce((sum, item) => sum + item.total, 0)
-      );
-
-      const discount = roundMoney(
-        items.reduce((sum, item) => sum + item.discount_amount, 0)
-      );
-
-      const taxableAmount = roundMoney(subtotal - discount);
-      const vatRate = 15;
-      const vatAmount = roundMoney(taxableAmount * vatRate / 100);
-
-      const additionalDiscount = Math.max(
-        0,
-        Number(quotationToGenerate.additional_discount) || 0
-      );
-
-      const totalAmount = roundMoney(
-        Math.max(0, taxableAmount + vatAmount - additionalDiscount)
-      );
-
-      // =========================================================
-      // REGULAR INVOICE
-      // =========================================================
-
-      let invoiceData = null;
-
-      if (!generatedInvoices[quotationToGenerate.id]) {
-        const invoiceResponse = await fetch("/api/invoices", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            quotationId: quotationToGenerate.id,
-            quotationNo: quotationToGenerate.quotation_no,
-            customerName: quotationToGenerate.customer_name,
-            address: quotationToGenerate.address,
-            contactNumber: quotationToGenerate.contact_number,
-            email: quotationToGenerate.email,
-            items,
-            terms: Array.isArray(quotationToGenerate.terms)
-              ? quotationToGenerate.terms
-              : [],
-            subtotal,
-            discount,
-            taxableAmount,
-            additionalDiscount,
-            vatAmount,
-            totalAmount,
-          }),
-        });
-
-        invoiceData = await invoiceResponse.json();
-
-        if (!invoiceResponse.ok) {
-          throw new Error(invoiceData?.error || "Failed to generate invoice.");
-        }
-      }
-
-      // =========================================================
-      // TAX INVOICE
-      // =========================================================
-
-      const taxInvoiceResponse = await fetch("/api/tax-invoice", {
+      const response = await fetch("/api/quotation-invoices/issue", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           quotationId: quotationToGenerate.id,
-          quotationNo: quotationToGenerate.quotation_no,
-
-          customerName: quotationToGenerate.customer_name,
-          address: quotationToGenerate.address,
-          contactNumber: quotationToGenerate.contact_number,
-          email: quotationToGenerate.email,
-
-          customerVatNumber:
-            quotationToGenerate.customer_vat_number ||
-            quotationToGenerate.customerVatNumber ||
-            null,
-
-          customerCrNumber:
-            quotationToGenerate.customer_cr_number ||
-            quotationToGenerate.customerCrNumber ||
-            null,
-
-          items,
-
-          subtotal,
-          discount,
-          taxableAmount,
-          additionalDiscount,
-          vatRate,
-          vatAmount,
-          totalAmount,
         }),
       });
 
-      const taxInvoiceData = await taxInvoiceResponse.json();
+      const result = await response.json();
 
-      if (!taxInvoiceResponse.ok) {
+      if (!response.ok) {
         throw new Error(
-          taxInvoiceData?.error || "Failed to generate tax invoice.",
+          result?.error || "Failed to generate quotation invoices."
         );
       }
 
-      // =========================================================
-      // BOTH SAVED
-      // =========================================================
+      if (!result?.invoice || !result?.taxInvoice) {
+        throw new Error("Incomplete invoice issuance response.");
+      }
 
       setGeneratedInvoices((previous) => ({
         ...previous,
@@ -201,27 +87,19 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
 
       setGeneratedTaxInvoices((previous) => ({
         ...previous,
-        [quotationToGenerate.id]: taxInvoiceData?.taxInvoice || true,
+        [quotationToGenerate.id]: result.taxInvoice,
       }));
 
       setQuotationToGenerate(null);
 
       alert(
-        `Invoice and tax-invoice generated successfully.\nInvoice No.: ${
-          invoiceData?.invoice?.invoice_no ||
-          `INV-${quotationToGenerate.quotation_no}`
-        }\nTax Invoice No.: ${
-          taxInvoiceData?.taxInvoice?.tax_invoice_no ||
-          `TAX-${quotationToGenerate.quotation_no}`
-        }`,
+        `Invoice and tax-invoice generated successfully.\nInvoice No.: ${result.invoice.invoice_no}\nTax Invoice No.: ${result.taxInvoice.tax_invoice_no}`
       );
     } catch (error) {
       console.error("Generate invoice error:", error);
-
       alert(error.message || "Failed to generate invoice.");
     }
   };
-
   useEffect(() => {
     let cancelled = false;
 
@@ -410,7 +288,11 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
       )
     );
 
-    const beforeAdditional = taxableAmount + vatAmount;
+    const isZatcaInvoice = Boolean(selectedTaxInvoice.zatca_qr_payload);
+
+    const beforeAdditional = isZatcaInvoice
+      ? subtotal - discount
+      : taxableAmount + vatAmount;
 
     const totalAmount = Number(
       selectedTaxInvoice.total_amount ??
@@ -422,17 +304,24 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
       selectedTaxInvoice.tax_invoice_no ||
       `TAX-${selectedTaxInvoice.quotation_no || ""}`;
 
-    const issueDateValue =
-      selectedTaxInvoice.invoice_date ||
-      selectedTaxInvoice.tax_invoice_date ||
-      selectedTaxInvoice.created_at;
+    const issueDateValue = selectedTaxInvoice.zatca_qr_payload
+      ? (
+          selectedTaxInvoice.zatca_issued_at ||
+          selectedTaxInvoice.issue_date ||
+          selectedTaxInvoice.invoice_date
+        )
+      : (
+          selectedTaxInvoice.invoice_date ||
+          selectedTaxInvoice.tax_invoice_date ||
+          selectedTaxInvoice.created_at
+        );
 
     const issueDate = issueDateValue
-      ? new Date(issueDateValue).toLocaleDateString("en-GB")
+      ? new Date(issueDateValue).toLocaleDateString("en-GB", { timeZone: "Asia/Riyadh" })
       : "N/A";
 
     const issueTime = issueDateValue
-      ? new Date(issueDateValue).toLocaleTimeString("en-GB", {
+      ? new Date(issueDateValue).toLocaleTimeString("en-GB", { timeZone: "Asia/Riyadh",
           hour: "2-digit",
           minute: "2-digit",
         })
@@ -671,13 +560,13 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                 <div className="flex items-center justify-center border-l border-slate-300 p-4">
                   <div className="flex flex-col items-center justify-center">
                     <div className="bg-white p-2">
-                      <QRCode
-                        value={qrData}
+                      {selectedTaxInvoice?.zatca_qr_payload ? (<QRCode
+                        value={selectedTaxInvoice.zatca_qr_payload}
                         size={120}
                         bgColor="#ffffff"
                         fgColor="#000000"
                         level="M"
-                      />
+                      />) : null}
                     </div>
 
                     <div className="mt-1 text-[8px] font-semibold text-slate-500">
@@ -698,7 +587,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                   </div>
 
                   <div className="border-r border-slate-300 p-2">
-                    AutoFix Pro
+                    {isZatcaInvoice ? "مركز الطلاء الفاخر" : "AutoFix Pro"}
                   </div>
 
                   <div dir="rtl" className="p-2 text-right font-bold">
@@ -712,9 +601,11 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                   </div>
 
                   <div className="border-r border-slate-300 p-2">
-                    Street Address,
+                    Building 8693, Hamza Yaqut Sadawi Street,
                     <br />
-                    Saudi Arabia
+                    Industrial 1 District, Jeddah 23796,
+                    <br />
+                    Secondary No. 4232, Saudi Arabia
                   </div>
 
                   <div dir="rtl" className="p-2 text-right font-bold">
@@ -728,7 +619,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                   </div>
 
                   <div className="border-r border-slate-300 p-2">
-                    VAT NUMBER
+                    {isZatcaInvoice ? "300096253100003" : "VAT NUMBER"}
                   </div>
 
                   <div dir="rtl" className="p-2 text-right font-bold">
@@ -741,7 +632,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                     CR Number:
                   </div>
 
-                  <div className="border-r border-slate-300 p-2">CR NUMBER</div>
+                  <div className="border-r border-slate-300 p-2">7052309825</div>
 
                   <div dir="rtl" className="p-2 text-right font-bold">
                     رقم السجل التجاري :
@@ -1071,6 +962,50 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                     </td>
                   </tr>
 
+                  {isZatcaInvoice ? (
+                    <>
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold">
+                      Amount Before Additional Discount
+                    </td>
+                    <td className="border border-slate-300 p-2 text-right" dir="rtl"></td>
+                    <td className="border border-slate-300 p-2 text-right">
+                      {formatAmount(beforeAdditional)}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold">
+                      Additional Discount
+                    </td>
+                    <td className="border border-slate-300 p-2 text-right" dir="rtl"></td>
+                    <td className="border border-slate-300 p-2 text-right">
+                      {formatAmount(additionalDiscount)}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold">
+                      Total Taxable Amount
+                    </td>
+                    <td className="border border-slate-300 p-2 text-right" dir="rtl"></td>
+                    <td className="border border-slate-300 p-2 text-right">
+                      {formatAmount(taxableAmount)}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold">
+                      Total VAT
+                    </td>
+                    <td className="border border-slate-300 p-2 text-right" dir="rtl"></td>
+                    <td className="border border-slate-300 p-2 text-right">
+                      {formatAmount(vatAmount)}
+                    </td>
+                  </tr>
+                    </>
+                  ) : (
+                    <>
                   <tr>
                     <td className="border border-slate-300 p-2 font-semibold">
                       Total Taxable Amount
@@ -1128,6 +1063,9 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                       {formatAmount(additionalDiscount)}
                     </td>
                   </tr>
+
+                    </>
+                  )}
 
                   <tr className="font-black">
                     <td className="border border-slate-300 p-2">
@@ -1478,7 +1416,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                       {option.en}
                     </span>
                     <span className="text-lg text-emerald-700">
-                      {invoiceLayout === option.id ? "●" : "○"}
+                      {invoiceLayout === option.id ? "●" : "â—‹"}
                     </span>
                   </div>
                   <p className="mt-2 text-sm font-semibold text-slate-700" dir="rtl">

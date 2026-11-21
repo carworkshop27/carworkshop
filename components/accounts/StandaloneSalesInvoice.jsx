@@ -2,12 +2,13 @@
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { ArrowLeft, House, Phone, Plus, Printer, Trash2 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 const DISCLAIMER_EN =
   "This is not a tax invoice. Please request a tax invoice if required.";
 
 const DISCLAIMER_AR =
-  "هذه ليست فاتورة ضريبية. يرجى طلب فاتورة ضريبية عند الحاجة.";
+  "Ù‡Ø°Ù‡ Ù„ÙŠØ³Øª ÙØ§ØªÙˆØ±Ø© Ø¶Ø±ÙŠØ¨ÙŠØ©. ÙŠØ±Ø¬Ù‰ Ø·Ù„Ø¨ ÙØ§ØªÙˆØ±Ø© Ø¶Ø±ÙŠØ¨ÙŠØ© Ø¹Ù†Ø¯ Ø§Ù„Ø­Ø§Ø¬Ø©.";
 
 const money = (value) =>
   Number(value || 0).toLocaleString("en-SA", {
@@ -74,8 +75,38 @@ export default function StandaloneSalesInvoice({
       : {}),
   }));
 
-  const [saving, setSaving] = useState(false);
+  const [issuing, setIssuing] = useState(false);
+  const [issueError, setIssueError] = useState("");
   const [savedInvoice, setSavedInvoice] = useState(initialInvoice);
+  const isHistorical = Boolean(savedInvoice && savedInvoice.vat_amount == null && !savedInvoice.issued_at);
+  const isIssued = savedInvoice?.status === "issued";
+  const locked = isIssued;
+  const displayTotals = isIssued ? {
+    subtotal: Number(savedInvoice.subtotal), discount: Number(savedInvoice.discount),
+    taxable: Number(savedInvoice.taxable_amount), vat: Number(savedInvoice.vat_amount),
+    total: Number(savedInvoice.total_amount),
+  } : null;
+
+  const handleIssueInvoice = async () => {
+    if (!savedInvoice?.id || isHistorical || isIssued || issuing) return;
+    if (!window.confirm("Issue this VAT tax invoice? Once issued, it cannot be edited.")) return;
+    setIssuing(true);
+    setIssueError("");
+    try {
+      const response = await fetch("/api/standalone-sales-invoices/issue", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        credentials: "same-origin", body: JSON.stringify({ id: savedInvoice.id }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "Issuance failed.");
+      if (!result.invoice || result.invoice.status !== "issued" || !result.invoice.zatca_qr_payload) {
+        throw new Error("Invoice issuance response is incomplete. Reload records before retrying.");
+      }
+      setSavedInvoice(result.invoice);
+    } catch (error) { setIssueError(error.message || "Issuance failed."); }
+    finally { setIssuing(false); }
+  };
+  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [items, setItems] = useState(() =>
     initialInvoice?.items?.length
@@ -238,15 +269,13 @@ export default function StandaloneSalesInvoice({
 
     const discount = Math.max(0, Number(invoice.discount || 0));
 
-    return {
-      subtotal,
-      discount,
-      total: Math.max(0, subtotal - discount),
-    };
+    const taxable = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
+    const vat = Math.round((taxable * 0.15 + Number.EPSILON) * 100) / 100;
+    return { subtotal, discount, taxable, vat, total: taxable + vat };
   }, [items, invoice.discount]);
 
   const handleSaveInvoice = async () => {
-    if (saving || (savedInvoice && !initialInvoice)) return;
+    if (saving || locked || (savedInvoice && !initialInvoice)) return;
 
     setSaveError("");
 
@@ -373,8 +402,8 @@ export default function StandaloneSalesInvoice({
     // Locate the existing totals and Notes sections.
     const totalsSection = sections.find(
       (section) =>
-        section.textContent.includes("Subtotal / المجموع") &&
-        section.textContent.includes("Total / الإجمالي"),
+        section.textContent.includes("Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹") &&
+        section.textContent.includes("Total / Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ"),
     );
 
     const notesSection = sections.find(
@@ -469,8 +498,8 @@ export default function StandaloneSalesInvoice({
       const summarySection = Array.from(newPage.children).find(
         (element) =>
           element.tagName === "SECTION" &&
-          element.textContent.includes("Subtotal / المجموع") &&
-          element.textContent.includes("Total / الإجمالي"),
+          element.textContent.includes("Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹") &&
+          element.textContent.includes("Total / Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ"),
       );
 
       if (summarySection) {
@@ -517,7 +546,7 @@ let itemsOnCurrentPage = 0;
       const bottomSections = Array.from(currentPage.children).filter(
         (element) =>
           element.tagName === "SECTION" &&
-          (element.textContent.includes("Subtotal / المجموع") ||
+          (element.textContent.includes("Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹") ||
             element.querySelector("textarea")),
       );
 
@@ -592,8 +621,8 @@ let itemsOnCurrentPage = 0;
       const summarySection = Array.from(printedPage.children).find(
         (element) =>
           element.tagName === "SECTION" &&
-          element.textContent.includes("Subtotal / المجموع") &&
-          element.textContent.includes("Total / الإجمالي"),
+          element.textContent.includes("Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹") &&
+          element.textContent.includes("Total / Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ"),
       );
 
       if (summarySection) {
@@ -731,6 +760,7 @@ if (numberedPages.length > 1) {
         type={type}
         value={invoice[key]}
         onChange={(event) => updateInvoice(key, event.target.value)}
+        disabled={locked}
         className={inputClass}
       />
     </label>
@@ -761,11 +791,11 @@ if (numberedPages.length > 1) {
   </colgroup>
             <thead>
               <tr className="bg-slate-100 text-left text-slate-700">
-                <th className="border p-2">Description / الوصف</th>
-                <th className="border p-2">Qty / الكمية</th>
-                <th className="border p-2">Price / السعر</th>
-                <th className="border p-2">Discount / الخصم</th>
-                <th className="border p-2 text-right">Amount / المبلغ</th>
+                <th className="border p-2">Description / Ø§Ù„ÙˆØµÙ</th>
+                <th className="border p-2">Qty / Ø§Ù„ÙƒÙ…ÙŠØ©</th>
+                <th className="border p-2">Price / Ø§Ù„Ø³Ø¹Ø±</th>
+                <th className="border p-2">Discount / Ø§Ù„Ø®ØµÙ…</th>
+                <th className="border p-2 text-right">Amount / Ø§Ù„Ù…Ø¨Ù„Øº</th>
                 <th className="no-print border p-2">Action</th>
               </tr>
             </thead>
@@ -786,6 +816,7 @@ if (numberedPages.length > 1) {
                         onChange={(event) =>
                           updateItem(item.id, "description", event.target.value)
                         }
+                        disabled={locked}
                         className="w-full min-w-40 bg-transparent outline-none"
                         placeholder="Item or service"
                       />
@@ -800,6 +831,7 @@ if (numberedPages.length > 1) {
                           onChange={(event) =>
                             updateItem(item.id, key, event.target.value)
                           }
+                          disabled={locked}
                           className="w-full min-w-0 bg-transparent outline-none"
                         />
                       </td>
@@ -815,7 +847,8 @@ if (numberedPages.length > 1) {
                             previous.filter((row) => row.id !== item.id),
                           )
                         }
-                        className="text-red-600"
+                        disabled={locked}
+                        className="text-red-600 disabled:opacity-30"
                         aria-label="Remove item"
                       >
                         <Trash2 size={17} />
@@ -833,6 +866,7 @@ if (numberedPages.length > 1) {
           onClick={() =>
             setItems((previous) => [...previous, newItem(category)])
           }
+          disabled={locked}
           className="no-print mt-3 inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700"
         >
           <Plus size={16} /> Add {category === "labor" ? "Labor" : "Item"}
@@ -1538,7 +1572,7 @@ box-sizing: border-box !important;
         <button
           type="button"
           onClick={handleSaveInvoice}
-          disabled={saving || (Boolean(savedInvoice) && !initialInvoice)}
+          disabled={saving || locked || (Boolean(savedInvoice) && !initialInvoice)}
           className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-5 py-2 font-bold text-white disabled:opacity-50"
         >
           {saving
@@ -1549,6 +1583,12 @@ box-sizing: border-box !important;
                 ? `Saved: ${savedInvoice.invoice_no}`
                 : "Save to Database"}
         </button>
+        {savedInvoice && !isHistorical && !isIssued && (
+          <button type="button" onClick={handleIssueInvoice} disabled={issuing}
+            className="rounded-lg bg-amber-700 px-5 py-2 font-bold text-white disabled:opacity-50">
+            {issuing ? "Issuing..." : "Issue Tax Invoice / Ø¥ØµØ¯Ø§Ø± ÙØ§ØªÙˆØ±Ø© Ø¶Ø±ÙŠØ¨ÙŠØ©"}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {
@@ -1588,6 +1628,7 @@ box-sizing: border-box !important;
         </button>
       </div>
 
+      {issueError && <p className="no-print mx-auto mb-4 max-w-5xl rounded-lg bg-red-50 p-3 text-sm font-bold text-red-700">{issueError}</p>}
       {saveError && (
         <p className="no-print mx-auto mb-4 max-w-5xl rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-700">
           {saveError}
@@ -1601,7 +1642,7 @@ box-sizing: border-box !important;
       )}
       <section className="no-print mx-auto mb-4 max-w-5xl rounded-xl border border-blue-200 bg-white p-4">
         <h2 className="mb-3 text-base font-black text-slate-800">
-          Existing Customer Search / البحث عن عميل
+          Existing Customer Search / Ø§Ù„Ø¨Ø­Ø« Ø¹Ù† Ø¹Ù…ÙŠÙ„
         </h2>
 
         <div className="flex flex-wrap gap-2">
@@ -1679,7 +1720,7 @@ box-sizing: border-box !important;
               <input
                 dir="rtl"
                 className="w-full text-right text-lg font-bold outline-none"
-                placeholder="اسم الشركة / الورشة"
+                placeholder="Ø§Ø³Ù… Ø§Ù„Ø´Ø±ÙƒØ© / Ø§Ù„ÙˆØ±Ø´Ø©"
                 value={invoice.companyArabic}
                 onChange={(event) =>
                   updateInvoice("companyArabic", event.target.value)
@@ -1723,10 +1764,10 @@ box-sizing: border-box !important;
 
             <div className="min-w-56">
               <h1 className="text-right text-2xl font-black">
-                {partnerWorkshop ? "PARTNER WORKSHOP SALES INVOICE" : workshop ? "WORKSHOP SALES INVOICE" : "SALES INVOICE"}
+                {isIssued ? "TAX INVOICE" : partnerWorkshop ? "PARTNER WORKSHOP SALES INVOICE" : workshop ? "WORKSHOP SALES INVOICE" : "SALES INVOICE"}
               </h1>
               <p className="text-right text-lg font-bold" dir="rtl">
-                فاتورة مبيعات
+                {isIssued ? "ÙØ§ØªÙˆØ±Ø© Ø¶Ø±ÙŠØ¨ÙŠØ©" : "ÙØ§ØªÙˆØ±Ø© Ù…Ø¨ÙŠØ¹Ø§Øª"}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                 <span>Invoice No.</span>
@@ -1754,48 +1795,48 @@ box-sizing: border-box !important;
 
         <section className="mb-7">
           <h2 className="mb-3 text-base font-black">
-            Customer Details / بيانات العميل
+            Customer Details / Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„
           </h2>
           <div className="grid grid-cols-2 gap-3">
             {field("Customer Name", "customer")}
-            {field("اسم العميل", "customerArabic")}
-            {field("Phone / الهاتف", "customerPhone")}
-            {field("Address / العنوان", "customerAddress")}
+            {field("Ø§Ø³Ù… Ø§Ù„Ø¹Ù…ÙŠÙ„", "customerArabic")}
+            {field("Phone / Ø§Ù„Ù‡Ø§ØªÙ", "customerPhone")}
+            {field("Address / Ø§Ù„Ø¹Ù†ÙˆØ§Ù†", "customerAddress")}
           </div>
         </section>
 
         {workshop && !partnerWorkshop && (
           <section className="mb-7 rounded-lg border bg-slate-50 p-4">
             <h2 className="mb-3 text-base font-black">
-              Vehicle Details / بيانات المركبة
+              Vehicle Details / Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø±ÙƒØ¨Ø©
             </h2>
             <div className="grid gap-3 md:grid-cols-3">
-              {field("Make / الشركة", "vehicleMake")}
-              {field("Model / الطراز", "vehicleModel")}
-              {field("Plate Number / اللوحة", "plateNumber")}
-              {field("Chassis / الهيكل", "chassisNumber")}
-              {field("Mileage / العداد", "mileage")}
+              {field("Make / Ø§Ù„Ø´Ø±ÙƒØ©", "vehicleMake")}
+              {field("Model / Ø§Ù„Ø·Ø±Ø§Ø²", "vehicleModel")}
+              {field("Plate Number / Ø§Ù„Ù„ÙˆØ­Ø©", "plateNumber")}
+              {field("Chassis / Ø§Ù„Ù‡ÙŠÙƒÙ„", "chassisNumber")}
+              {field("Mileage / Ø§Ù„Ø¹Ø¯Ø§Ø¯", "mileage")}
             </div>
           </section>
         )}
 
         {workshop ? (
           <>
-            {renderTable("part", "Parts & Materials / قطع الغيار والمواد")}
-            {renderTable("labor", "Services & Labor / الخدمات وأجور العمل")}
+            {renderTable("part", "Parts & Materials / Ù‚Ø·Ø¹ Ø§Ù„ØºÙŠØ§Ø± ÙˆØ§Ù„Ù…ÙˆØ§Ø¯")}
+            {renderTable("labor", "Services & Labor / Ø§Ù„Ø®Ø¯Ù…Ø§Øª ÙˆØ£Ø¬ÙˆØ± Ø§Ù„Ø¹Ù…Ù„")}
           </>
         ) : (
-          renderTable("item", "Invoice Items / بنود الفاتورة")
+          renderTable("item", "Invoice Items / Ø¨Ù†ÙˆØ¯ Ø§Ù„ÙØ§ØªÙˆØ±Ø©")
         )}
 
         <section className="ml-auto mt-6 w-full max-w-sm space-y-3 rounded-lg border p-4">
           <div className="flex justify-between">
-            <span>Subtotal / المجموع</span>
+            <span>Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹</span>
             <strong>{money(totals.subtotal)} SAR</strong>
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <span>Additional Discount / خصم إضافي</span>
+            <span>Additional Discount / Ø®ØµÙ… Ø¥Ø¶Ø§ÙÙŠ</span>
             <input
               type="number"
               min="0"
@@ -1808,18 +1849,25 @@ box-sizing: border-box !important;
             />
           </div>
 
+          {!isHistorical && (
+            <>
+              <div className="flex justify-between"><span>Taxable Amount / Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ø®Ø§Ø¶Ø¹ Ù„Ù„Ø¶Ø±ÙŠØ¨Ø©</span><strong>{money(displayTotals?.taxable ?? totals.taxable)} SAR</strong></div>
+              <div className="flex justify-between"><span>VAT 15% / Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù‚ÙŠÙ…Ø© Ø§Ù„Ù…Ø¶Ø§ÙØ©</span><strong>{money(displayTotals?.vat ?? totals.vat)} SAR</strong></div>
+            </>
+          )}
           <div className="flex justify-between border-t-2 pt-3 text-lg font-black">
-            <span>Total / الإجمالي</span>
-            <span>{money(totals.total)} SAR</span>
+            <span>Total / Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ</span>
+            <span>{money(isHistorical ? totals.taxable : displayTotals?.total ?? totals.total)} SAR</span>
           </div>
         </section>
 
         <section className="mt-8">
           <label className="block text-sm font-bold">
-            Notes / ملاحظات
+            Notes / Ù…Ù„Ø§Ø­Ø¸Ø§Øª
             <textarea
               value={invoice.notes}
               onChange={(event) => updateInvoice("notes", event.target.value)}
+                disabled={locked}
               rows={3}
               className="mt-2 w-full rounded-lg border p-3 text-sm font-normal"
               placeholder="Additional notes..."
@@ -1829,9 +1877,9 @@ box-sizing: border-box !important;
 
         {workshop && (
           <div className="mt-10 grid grid-cols-2 gap-8 text-sm">
-            <div className="border-t pt-2">Prepared By / أعد بواسطة</div>
+            <div className="border-t pt-2">Prepared By / Ø£Ø¹Ø¯ Ø¨ÙˆØ§Ø³Ø·Ø©</div>
             <div className="border-t pt-2">
-              Customer Signature / توقيع العميل
+              Customer Signature / ØªÙˆÙ‚ÙŠØ¹ Ø§Ù„Ø¹Ù…ÙŠÙ„
             </div>
           </div>
         )}
@@ -1839,13 +1887,20 @@ box-sizing: border-box !important;
         <footer className="mt-12 border-t pt-5 text-center">
           <p className="font-bold">Thank you for your business!</p>
           <p className="font-bold" dir="rtl">
-            شكراً لتعاملكم معنا
+            Ø´ÙƒØ±Ø§Ù‹ Ù„ØªØ¹Ø§Ù…Ù„ÙƒÙ… Ù…Ø¹Ù†Ø§
           </p>
 
-          <div className="mt-5 text-[9px] leading-relaxed text-slate-500">
-            <p>{DISCLAIMER_EN}</p>
-            <p dir="rtl">{DISCLAIMER_AR}</p>
-          </div>
+          {isIssued && savedInvoice?.zatca_qr_payload ? (
+            <div className="mt-3 flex flex-col items-center gap-1">
+              <QRCodeSVG value={savedInvoice.zatca_qr_payload} size={110} level="M" />
+              <p className="text-[10px]">VAT No. / Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¶Ø±ÙŠØ¨ÙŠ: 300096253100003</p>
+              <p className="text-[10px]">Issued / ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¥ØµØ¯Ø§Ø±: {savedInvoice.issued_at ? new Date(savedInvoice.issued_at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", hour12: false }) : "-"}</p>
+            </div>
+          ) : (
+            <div className="mt-5 text-[9px] leading-relaxed text-slate-500">
+              <p>{DISCLAIMER_EN}</p><p dir="rtl">{DISCLAIMER_AR}</p>
+            </div>
+          )}
         </footer>
             </main>
 

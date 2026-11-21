@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ArrowLeft, Printer } from "lucide-react";
 import QRCode from "react-qr-code";
 
@@ -9,6 +10,51 @@ export default function QuotationInvoice({
   backScreen = "quotation-records",
   backLabel = "Back to Quotation Records",
 }) {
+  const [savedInvoice, setSavedInvoice] = useState(null);
+
+  useEffect(() => {
+    if (!quotation?.id) {
+      setSavedInvoice(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadSavedInvoice = async () => {
+      try {
+        setSavedInvoice(null);
+
+        const response = await fetch("/api/invoices", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load saved invoice.");
+        }
+
+        const invoices = await response.json();
+
+        const matchedInvoice = Array.isArray(invoices)
+          ? invoices.find(
+              (invoice) => invoice.quotation_id === quotation.id
+            )
+          : null;
+
+        if (!cancelled) {
+          setSavedInvoice(matchedInvoice || null);
+        }
+      } catch (error) {
+        console.error("Load saved invoice error:", error);
+      }
+    };
+
+    loadSavedInvoice();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [quotation?.id]);
+
   if (!quotation) {
     return (
       <div className="min-h-screen bg-slate-100 p-6">
@@ -49,16 +95,38 @@ export default function QuotationInvoice({
     }, 0)
   );
 
-  const taxableAmount = roundMoney(subtotal - itemDiscount);
-  const vat = roundMoney(taxableAmount * 0.15);
+  const isZatcaInvoice = Boolean(savedInvoice?.zatca_qr_payload);
 
-  const additionalDiscount = Math.max(
-    0,
-    Number(quotation.additional_discount ?? quotation.additionalDiscount ?? 0)
-  );
+  const displaySubtotal = isZatcaInvoice
+    ? roundMoney(savedInvoice.subtotal)
+    : subtotal;
 
-  const beforeAdditional = roundMoney(taxableAmount + vat);
-  const total = roundMoney(Math.max(0, beforeAdditional - additionalDiscount));
+  const displayItemDiscount = isZatcaInvoice
+    ? roundMoney(savedInvoice.discount)
+    : itemDiscount;
+
+  const additionalDiscount = isZatcaInvoice
+    ? roundMoney(savedInvoice.additional_discount)
+    : Math.max(
+        0,
+        Number(quotation.additional_discount ?? quotation.additionalDiscount ?? 0)
+      );
+
+  const taxableAmount = isZatcaInvoice
+    ? roundMoney(savedInvoice.taxable_amount)
+    : roundMoney(subtotal - itemDiscount);
+
+  const vat = isZatcaInvoice
+    ? roundMoney(savedInvoice.vat_amount)
+    : roundMoney(taxableAmount * 0.15);
+
+  const beforeAdditional = isZatcaInvoice
+    ? roundMoney(displaySubtotal - displayItemDiscount)
+    : roundMoney(taxableAmount + vat);
+
+  const total = isZatcaInvoice
+    ? roundMoney(savedInvoice.total_amount)
+    : roundMoney(Math.max(0, beforeAdditional - additionalDiscount));
 
   const terms = Array.isArray(quotation.terms)
     ? quotation.terms
@@ -70,10 +138,12 @@ export default function QuotationInvoice({
         .filter(Boolean)
     : [];
 
-  const quotationDate = quotation.quotation_date || quotation.created_at;
+  const quotationDate = savedInvoice?.zatca_qr_payload
+    ? (savedInvoice.zatca_issued_at || savedInvoice.invoice_date)
+    : (quotation.quotation_date || quotation.created_at);
 
   const formattedDate = quotationDate
-    ? new Date(quotationDate).toLocaleDateString("en-GB")
+    ? new Date(quotationDate).toLocaleDateString("en-GB", { timeZone: "Asia/Riyadh" })
     : "-";
 
   const qrData = JSON.stringify({
@@ -577,13 +647,13 @@ export default function QuotationInvoice({
                 />
 
                 <div className="flex flex-1 items-start justify-center pt-2">
-                  <QRCode
-                    value={qrData}
+                  {savedInvoice?.zatca_qr_payload ? (<QRCode
+                    value={savedInvoice.zatca_qr_payload}
                     size={102}
                     bgColor="#eefaf9"
                     fgColor="#075b5b"
                     level="M"
-                  />
+                  />) : null}
                 </div>
 
                 <div className="ml-auto w-[300px]">
@@ -759,36 +829,59 @@ export default function QuotationInvoice({
               <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
                 <strong className="px-4 py-3">Subtotal</strong>
                 <span className="px-4 py-3 text-right">
-                  {subtotal.toFixed(2)}
+                  {displaySubtotal.toFixed(2)}
                 </span>
               </div>
 
               
               <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
                 <strong className="px-4 py-3">Item Discounts</strong>
-                <span className="px-4 py-3 text-right">- {itemDiscount.toFixed(2)}</span>
+                <span className="px-4 py-3 text-right">- {displayItemDiscount.toFixed(2)}</span>
               </div>
 
-              <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                <strong className="px-4 py-3">Tax Rate</strong>
-                <span className="px-4 py-3 text-right">15.00%</span>
-              </div>
-
-              <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                <strong className="px-4 py-3">VAT 15%</strong>
-                <span className="px-4 py-3 text-right">{vat.toFixed(2)}</span>
-              </div>
-
-              
-              <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                <strong className="px-4 py-3">Total Before Additional Discount</strong>
-                <span className="px-4 py-3 text-right">{beforeAdditional.toFixed(2)}</span>
-              </div>
-
-              <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
-                <strong className="px-4 py-3">Additional Discount</strong>
-                <span className="px-4 py-3 text-right">- {additionalDiscount.toFixed(2)}</span>
-              </div>
+              {isZatcaInvoice ? (
+                <>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">Amount Before Additional Discount</strong>
+                    <span className="px-4 py-3 text-right">{beforeAdditional.toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">Additional Discount</strong>
+                    <span className="px-4 py-3 text-right">- {additionalDiscount.toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">Taxable Amount</strong>
+                    <span className="px-4 py-3 text-right">{taxableAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">Tax Rate</strong>
+                    <span className="px-4 py-3 text-right">15.00%</span>
+                  </div>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">VAT 15%</strong>
+                    <span className="px-4 py-3 text-right">{vat.toFixed(2)}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">Tax Rate</strong>
+                    <span className="px-4 py-3 text-right">15.00%</span>
+                  </div>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">VAT 15%</strong>
+                    <span className="px-4 py-3 text-right">{vat.toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">Total Before Additional Discount</strong>
+                    <span className="px-4 py-3 text-right">{beforeAdditional.toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 border-b border-r border-teal-300 text-sm">
+                    <strong className="px-4 py-3">Additional Discount</strong>
+                    <span className="px-4 py-3 text-right">- {additionalDiscount.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
 
               <div className="grid grid-cols-2 border-b border-r border-teal-300 bg-teal-200 text-lg">
                 <strong className="px-4 py-3">Final Payable</strong>
@@ -839,13 +932,13 @@ export default function QuotationInvoice({
                     />
 
                     <div className="invoice-print-qr">
-                      <QRCode
-                        value={qrData}
+                      {savedInvoice?.zatca_qr_payload ? (<QRCode
+                        value={savedInvoice.zatca_qr_payload}
                         size={91}
                         bgColor="#eefaf9"
                         fgColor="#075b5b"
                         level="M"
-                      />
+                      />) : null}
                     </div>
 
                     <div className="invoice-print-heading-meta">
@@ -984,33 +1077,57 @@ export default function QuotationInvoice({
                   <div className="invoice-print-totals">
                     <div>
                       <strong>Subtotal</strong>
-                      <span>{subtotal.toFixed(2)}</span>
+                      <span>{displaySubtotal.toFixed(2)}</span>
                     </div>
 
                     <div>
                         <strong>Item Discounts</strong>
-                        <span>- {itemDiscount.toFixed(2)}</span>
+                        <span>- {displayItemDiscount.toFixed(2)}</span>
                       </div>
 
-                      <div>
-                        <strong>Tax Rate</strong>
-                        <span>15.00%</span>
-                      </div>
-
-                    <div>
-                      <strong>VAT 15%</strong>
-                      <span>{vat.toFixed(2)}</span>
-                    </div>
-
-                    <div>
-                        <strong>Total Before Additional Discount</strong>
-                        <span>{beforeAdditional.toFixed(2)}</span>
-                      </div>
-
-                      <div>
-                        <strong>Additional Discount</strong>
-                        <span>- {additionalDiscount.toFixed(2)}</span>
-                      </div>
+                      {isZatcaInvoice ? (
+                      <>
+                        <div>
+                          <strong>Amount Before Additional Discount</strong>
+                          <span>{beforeAdditional.toFixed(2)}</span>
+                        </div>
+                        <div>
+                          <strong>Additional Discount</strong>
+                          <span>- {additionalDiscount.toFixed(2)}</span>
+                        </div>
+                        <div>
+                          <strong>Taxable Amount</strong>
+                          <span>{taxableAmount.toFixed(2)}</span>
+                        </div>
+                        <div>
+                          <strong>Tax Rate</strong>
+                          <span>15.00%</span>
+                        </div>
+                        <div>
+                          <strong>VAT 15%</strong>
+                          <span>{vat.toFixed(2)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <strong>Tax Rate</strong>
+                          <span>15.00%</span>
+                        </div>
+                        <div>
+                          <strong>VAT 15%</strong>
+                          <span>{vat.toFixed(2)}</span>
+                        </div>
+                        <div>
+                          <strong>Total Before Additional Discount</strong>
+                          <span>{beforeAdditional.toFixed(2)}</span>
+                        </div>
+                        <div>
+                          <strong>Additional Discount</strong>
+                          <span>- {additionalDiscount.toFixed(2)}</span>
+                        </div>
+                      </>
+                    )}
 
                     <div className="invoice-print-total">
                         <strong>Final Payable</strong>
