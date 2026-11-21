@@ -9,6 +9,7 @@ const newRow = () => ({
   description: "",
   amount: "",
   vat: "",
+  totalIncludingVat: "",
 });
 const formatMoney = (n) =>
   Number(n || 0).toLocaleString("en-US", {
@@ -43,6 +44,10 @@ export default function ExpenseEdit({
       description: item.description || "",
       amount: String(item.amount ?? ""),
       vat: String(item.vat ?? ""),
+      totalIncludingVat: (
+        (Math.round(Number(item.amount || 0) * 100) +
+          Math.round(Number(item.vat || 0) * 100)) / 100
+      ).toFixed(2),
     })),
   );
   const [replacementInvoice, setReplacementInvoice] = useState(null);
@@ -92,12 +97,57 @@ export default function ExpenseEdit({
     return { subtotal, vat, grandTotal: subtotal + vat };
   }, [rows]);
 
-  const changeRow = (key, field, value) =>
+  const changeRow = (key, field, value) => {
     setRows((previous) =>
-      previous.map((row) =>
-        row.key === key ? { ...row, [field]: value } : row,
-      ),
+      previous.map((row) => {
+        if (row.key !== key) return row;
+
+        if (field === "amount" || field === "totalIncludingVat") {
+          if (value === "") {
+            return {
+              ...row,
+              amount: "",
+              vat: "",
+              totalIncludingVat: "",
+            };
+          }
+
+          const input = Number(value);
+          if (!Number.isFinite(input) || input < 0) return row;
+
+          const inputCents = Math.round(input * 100);
+          let netCents;
+          let vatCents;
+          let totalCents;
+
+          if (field === "amount") {
+            netCents = inputCents;
+            vatCents = Math.round((netCents * 15) / 100);
+            totalCents = netCents + vatCents;
+          } else {
+            totalCents = inputCents;
+            vatCents = Math.round((totalCents * 15) / 115);
+            netCents = totalCents - vatCents;
+          }
+
+          return {
+            ...row,
+            amount:
+              field === "amount"
+                ? value
+                : (netCents / 100).toFixed(2),
+            vat: (vatCents / 100).toFixed(2),
+            totalIncludingVat:
+              field === "totalIncludingVat"
+                ? value
+                : (totalCents / 100).toFixed(2),
+          };
+        }
+
+        return { ...row, [field]: value };
+      }),
     );
+  };
 
   const handleSave = async () => {
     if (!isAdmin || saving) return;
@@ -120,9 +170,10 @@ export default function ExpenseEdit({
     if (
       rows.some(
         (row) =>
-          !row.description.trim() ||
           !validMoney(row.amount) ||
-          !validMoney(row.vat),
+          !validMoney(row.vat) ||
+          !validMoney(row.totalIncludingVat) ||
+          Number(row.totalIncludingVat) <= 0,
       )
     ) {
       setError(
@@ -301,12 +352,13 @@ export default function ExpenseEdit({
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="min-w-[900px] w-full text-sm">
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
                   <th className="p-4">Description</th>
-                  <th className="p-4">Amount</th>
-                  <th className="p-4">VAT</th>
+                  <th className="p-4">Amount Before VAT</th>
+                  <th className="p-4">VAT 15%</th>
+                  <th className="p-4">Total With VAT *</th>
                   <th className="p-4">Action</th>
                 </tr>
               </thead>
@@ -325,7 +377,7 @@ export default function ExpenseEdit({
                     </td>
                     <td className="p-3">
                       <input
-                        aria-label="Amount"
+                        aria-label="Amount Before VAT"
                         type="number"
                         min="0"
                         step="0.01"
@@ -338,15 +390,24 @@ export default function ExpenseEdit({
                     </td>
                     <td className="p-3">
                       <input
-                        aria-label="VAT"
+                        aria-label="VAT 15%"
                         type="number"
-                        min="0"
-                        step="0.01"
                         value={row.vat}
+                        readOnly
+                        className="w-36 rounded-lg border border-slate-200 bg-slate-100 p-2.5 text-slate-700"
+                      />
+                    </td>
+                    <td className="p-3">
+                      <input
+                        aria-label="Total With VAT"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={row.totalIncludingVat}
                         onChange={(event) =>
-                          changeRow(row.key, "vat", event.target.value)
+                          changeRow(row.key, "totalIncludingVat", event.target.value)
                         }
-                        className="w-36 rounded-lg border border-slate-300 p-2.5"
+                        className="w-36 rounded-lg border border-blue-300 bg-blue-50 p-2.5"
                       />
                     </td>
                     <td className="p-3">

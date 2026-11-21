@@ -576,7 +576,6 @@ export async function PUT(request) {
       const vat = Number(item.vat);
 
       if (
-        !description ||
         !Number.isFinite(amount) ||
         amount < 0 ||
         !Number.isFinite(vat) ||

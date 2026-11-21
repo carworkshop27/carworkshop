@@ -239,28 +239,46 @@ export default function ExpenseEntry({ setActiveScreen }) {
       prev.map((item) => {
         if (item.id !== id) return item;
 
-        if (field === "totalIncludingVat") {
+        if (field === "amount" || field === "totalIncludingVat") {
           if (value === "") {
             return {
               ...item,
-              totalIncludingVat: "",
               amount: "",
               vat: "",
+              totalIncludingVat: "",
             };
           }
 
-          const total = Number(value);
-          if (!Number.isFinite(total) || total < 0) return item;
+          const input = Number(value);
 
-          const totalCents = Math.round(total * 100);
-          const vatCents = Math.round((totalCents * 15) / 115);
-          const netCents = totalCents - vatCents;
+          if (!Number.isFinite(input) || input < 0) return item;
+
+          const inputCents = Math.round(input * 100);
+          let netCents;
+          let vatCents;
+          let totalCents;
+
+          if (field === "amount") {
+            netCents = inputCents;
+            vatCents = Math.round(netCents * 15 / 100);
+            totalCents = netCents + vatCents;
+          } else {
+            totalCents = inputCents;
+            vatCents = Math.round(totalCents * 15 / 115);
+            netCents = totalCents - vatCents;
+          }
 
           return {
             ...item,
-            totalIncludingVat: value,
-            amount: (netCents / 100).toFixed(2),
+            amount:
+              field === "amount"
+                ? value
+                : (netCents / 100).toFixed(2),
             vat: (vatCents / 100).toFixed(2),
+            totalIncludingVat:
+              field === "totalIncludingVat"
+                ? value
+                : (totalCents / 100).toFixed(2),
           };
         }
 
@@ -299,7 +317,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
     if (saving) return;
 
     const validDetails = details.filter(
-      (item) => item.description.trim() || item.totalIncludingVat !== "",
+      (item) => item.description.trim() || item.amount !== "" || item.totalIncludingVat !== "",
     );
 
     if (!expenseDate) {
@@ -331,8 +349,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
 
     const incompleteDetail = validDetails.find(
       (item) =>
-        !item.description.trim() ||
-        item.totalIncludingVat === "" ||
+        (item.amount === "" && item.totalIncludingVat === "") ||
         !Number.isFinite(Number(item.totalIncludingVat)) ||
         Number(item.totalIncludingVat) <= 0 ||
         !Number.isFinite(Number(item.amount)) ||
@@ -624,7 +641,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
             <table className="min-w-[900px] w-full">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Description *</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Description</th>
                   <th className="w-44 px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Amount Before VAT</th>
                   <th className="w-36 px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">VAT 15%</th>
                   <th className="w-44 px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Total With VAT *</th>
@@ -637,7 +654,6 @@ export default function ExpenseEntry({ setActiveScreen }) {
                     <td className="px-4 py-4">
                       <input
                         type="text"
-                        required
                         value={item.description}
                         onChange={(e) => updateDetail(item.id, "description", e.target.value)}
                         placeholder="Enter expense description"
@@ -648,7 +664,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
                       <input
                         type="number"
                         value={item.amount}
-                        readOnly
+                        onChange={(e) => updateDetail(item.id, "amount", e.target.value)}
                         placeholder="0.00"
                         className="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-700"
                       />
