@@ -156,6 +156,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
       description: "",
       amount: "",
       vat: "",
+      totalIncludingVat: "",
     },
   ]);
 
@@ -221,6 +222,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
         description: "",
         amount: "",
         vat: "",
+        totalIncludingVat: "",
       },
     ]);
   };
@@ -234,14 +236,36 @@ export default function ExpenseEntry({ setActiveScreen }) {
 
   const updateDetail = (id, field, value) => {
     setDetails((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
+      prev.map((item) => {
+        if (item.id !== id) return item;
+
+        if (field === "totalIncludingVat") {
+          if (value === "") {
+            return {
               ...item,
-              [field]: value,
-            }
-          : item,
-      ),
+              totalIncludingVat: "",
+              amount: "",
+              vat: "",
+            };
+          }
+
+          const total = Number(value);
+          if (!Number.isFinite(total) || total < 0) return item;
+
+          const totalCents = Math.round(total * 100);
+          const vatCents = Math.round((totalCents * 15) / 115);
+          const netCents = totalCents - vatCents;
+
+          return {
+            ...item,
+            totalIncludingVat: value,
+            amount: (netCents / 100).toFixed(2),
+            vat: (vatCents / 100).toFixed(2),
+          };
+        }
+
+        return { ...item, [field]: value };
+      }),
     );
   };
 
@@ -275,7 +299,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
     if (saving) return;
 
     const validDetails = details.filter(
-      (item) => item.description.trim() || item.amount || item.vat,
+      (item) => item.description.trim() || item.totalIncludingVat !== "",
     );
 
     if (!expenseDate) {
@@ -307,10 +331,14 @@ export default function ExpenseEntry({ setActiveScreen }) {
 
     const incompleteDetail = validDetails.find(
       (item) =>
+        !item.description.trim() ||
+        item.totalIncludingVat === "" ||
+        !Number.isFinite(Number(item.totalIncludingVat)) ||
+        Number(item.totalIncludingVat) <= 0 ||
         !Number.isFinite(Number(item.amount)) ||
-        Number(item.amount) <= 0 ||
-        !Number.isFinite(Number(item.vat || 0)) ||
-        Number(item.vat || 0) < 0,
+        Number(item.amount) < 0 ||
+        !Number.isFinite(Number(item.vat)) ||
+        Number(item.vat) < 0,
     );
 
     if (incompleteDetail) {
@@ -389,6 +417,7 @@ export default function ExpenseEntry({ setActiveScreen }) {
         description: "",
         amount: "",
         vat: "",
+        totalIncludingVat: "",
       },
     ]);
   };
@@ -592,73 +621,65 @@ export default function ExpenseEntry({ setActiveScreen }) {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full">
+            <table className="min-w-[900px] w-full">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Description
-                  </th>
-                  <th className="w-48 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Amount
-                  </th>
-                  <th className="w-48 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    VAT
-                  </th>
-                  <th className="w-20 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Action
-                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Description *</th>
+                  <th className="w-44 px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Amount Before VAT</th>
+                  <th className="w-36 px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">VAT 15%</th>
+                  <th className="w-44 px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Total With VAT *</th>
+                  <th className="w-24 px-4 py-3 text-center text-xs font-semibold uppercase text-slate-500">Action</th>
                 </tr>
               </thead>
-
               <tbody>
                 {details.map((item) => (
                   <tr key={item.id} className="border-b border-slate-100">
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4">
                       <input
                         type="text"
+                        required
                         value={item.description}
-                        onChange={(e) =>
-                          updateDetail(item.id, "description", e.target.value)
-                        }
+                        onChange={(e) => updateDetail(item.id, "description", e.target.value)}
                         placeholder="Enter expense description"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500"
                       />
                     </td>
-
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4">
                       <input
                         type="number"
-                        min="0"
-                        step="0.01"
                         value={item.amount}
-                        onChange={(e) =>
-                          updateDetail(item.id, "amount", e.target.value)
-                        }
+                        readOnly
                         placeholder="0.00"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-700"
                       />
                     </td>
-
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4">
                       <input
                         type="number"
-                        min="0"
-                        step="0.01"
                         value={item.vat}
-                        onChange={(e) =>
-                          updateDetail(item.id, "vat", e.target.value)
-                        }
+                        readOnly
                         placeholder="0.00"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-700"
                       />
                     </td>
-
-                    <td className="px-5 py-4 text-center">
+                    <td className="px-4 py-4">
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        required
+                        value={item.totalIncludingVat}
+                        onChange={(e) => updateDetail(item.id, "totalIncludingVat", e.target.value)}
+                        placeholder="Enter total"
+                        className="w-full rounded-lg border border-blue-300 bg-blue-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500"
+                      />
+                    </td>
+                    <td className="px-4 py-4 text-center">
                       <button
                         type="button"
                         onClick={() => removeDetailRow(item.id)}
                         disabled={details.length === 1}
-                        className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                        className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-slate-300"
                       >
                         Remove
                       </button>
