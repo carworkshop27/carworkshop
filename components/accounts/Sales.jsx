@@ -11,7 +11,7 @@ export default function Sales({ setActiveScreen }) {
         <div className="mb-6 flex items-start gap-4">
           <button
             type="button"
-            onClick={() => setActiveScreen("dashboard")}
+            onClick={() => setActiveScreen("desktop")}
             className="
       inline-flex
       items-center

@@ -39,7 +39,7 @@ export default function PartsOrders({
           <div className="flex items-center gap-4">
             <button
               type="button"
-              onClick={() => setActiveScreen?.("dashboard")}
+              onClick={() => setActiveScreen("desktop")}
               className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
             >
               <ArrowLeft className="h-4 w-4" />

@@ -301,7 +301,7 @@ export default function ExpenseRecords({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
           <button
             type="button"
-            onClick={() => setActiveScreen("dashboard")}
+            onClick={() => setActiveScreen("desktop")}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             &larr; Back to Dashboard

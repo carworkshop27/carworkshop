@@ -1,0 +1,160 @@
+"use client";
+
+import {
+  LayoutDashboard,
+  Wrench,
+  ClipboardList,
+  Users,
+  Package,
+  ShoppingCart,
+  FileText,
+  Receipt,
+  Wallet,
+  BookOpen,
+  CalendarDays,
+  Settings,
+  ArrowRight,
+  LogOut,
+} from "lucide-react";
+
+const applications = [
+  {
+    name: "Dashboard",
+    icon: LayoutDashboard,
+    color: "bg-violet-600",
+    screen: "dashboard",
+  },
+  {
+    name: "New Job / Intake",
+    icon: Wrench,
+    color: "bg-blue-600",
+    screen: "new-job-intake",
+  },
+  {
+    name: "Job Cards",
+    icon: ClipboardList,
+    color: "bg-orange-500",
+    screen: "job-cards",
+  },
+  {
+    name: "Customers",
+    icon: Users,
+    color: "bg-cyan-600",
+    screen: "customer-records",
+  },
+  {
+    name: "Inventory",
+    icon: Package,
+    color: "bg-emerald-600",
+    screen: "inventory-list",
+  },
+  {
+    name: "Parts Orders",
+    icon: ShoppingCart,
+    color: "bg-amber-600",
+    screen: "parts-orders",
+  },
+  {
+    name: "Quotations",
+    icon: FileText,
+    color: "bg-pink-600",
+    screen: "quotation-records",
+  },
+  {
+    name: "Sales",
+    icon: Receipt,
+    color: "bg-indigo-600",
+    screen: "sales",
+  },
+  {
+    name: "Purchases",
+    icon: ShoppingCart,
+    color: "bg-teal-600",
+    screen: "purchase-records",
+  },
+  {
+    name: "Expenses",
+    icon: Wallet,
+    color: "bg-rose-600",
+    screen: "expense-records",
+  },
+  {
+    name: "Daily Ledger",
+    icon: BookOpen,
+    color: "bg-sky-600",
+    screen: "daily-ledger",
+  },
+  {
+    name: "Monthly Ledger",
+    icon: CalendarDays,
+    color: "bg-purple-600",
+    screen: "monthly-ledger",
+  },
+];
+
+export default function OdooDesktop({ setActiveScreen, onLogout }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-violet-50">
+      <header className="border-b border-slate-200 bg-white px-6 py-5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={onLogout}
+            className="order-last ml-auto inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-700"
+          >
+            <LogOut className="h-4 w-4" />
+            Log Off
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900">
+              Car Workshop
+            </h1>
+            <p className="text-sm text-slate-500">
+              Workshop Management System
+            </p>
+          </div>
+
+          <span className="rounded-full bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700">
+            Applications
+          </span>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-8">
+          <h2 className="text-3xl font-black text-slate-900">
+            Applications
+          </h2>
+          <p className="mt-2 text-slate-500">
+            Select an application to open your workspace.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          {applications.map((app) => {
+            const Icon = app.icon;
+
+            return (
+              <button
+                key={app.name}
+                type="button"
+                onClick={() => setActiveScreen(app.screen)}
+                className="group flex flex-col items-center rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl"
+              >
+                <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${app.color} shadow-md`}>
+                  <Icon className="h-8 w-8 text-white" />
+                </div>
+
+                <span className="text-center text-sm font-bold text-slate-800">
+                  {app.name}
+                </span>
+
+                <ArrowRight className="mt-3 h-4 w-4 text-slate-300 transition group-hover:text-violet-600" />
+              </button>
+            );
+          })}
+        </div>
+      </main>
+    </div>
+  );
+}

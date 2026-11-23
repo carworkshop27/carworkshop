@@ -86,7 +86,7 @@ export default function StandaloneSalesInvoiceRecords({ setActiveScreen, onEdit 
 
             <button
               type="button"
-              onClick={() => setActiveScreen("dashboard")}
+              onClick={() => setActiveScreen("desktop")}
               className="rounded-lg border bg-white px-4 py-2 font-semibold"
             >
               <ArrowLeft size={15} className="mr-2 inline" />

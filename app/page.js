@@ -3,6 +3,8 @@
 import LoginScreen from "../components/auth/LoginScreen";
 import SuperUserSetup from "../components/auth/SuperUserSetup";
 import Dashboard from "../components/dashboard/Dashboard";
+import OdooDesktop from "../components/desktop/OdooDesktop";
+import OdooModuleLayout from "../components/desktop/OdooModuleLayout";
 import InventoryList from "../components/inventory/InventoryList";
 import SmsNotificationModal from "../components/notifications/SmsNotificationModal";
 import React, { useState, useEffect, useRef, Suspense } from "react";
@@ -758,7 +760,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("list");
-  const [activeScreen, setActiveScreen] = useState("dashboard");
+  const [activeScreen, setActiveScreen] = useState("desktop");
   const [standaloneInvoiceToEdit, setStandaloneInvoiceToEdit] = useState(null);
   const [expenseToEdit, setExpenseToEdit] = useState(null);
   const [quotationToEdit, setQuotationToEdit] = useState(null);
@@ -787,6 +789,14 @@ export default function Home() {
     setActiveScreen(screen);
   };
 
+  const handleBackNavigation = (screen) => {
+    if (screen === "dashboard") {
+      handleSetActiveScreen("desktop");
+      return;
+    }
+
+    handleSetActiveScreen(screen);
+  };
   const [invoiceJob, setInvoiceJob] = useState(null);
   const [showInvoice, setShowInvoice] = useState(false);
   const [isTaxInvoice, setIsTaxInvoice] = useState(false);
@@ -1199,7 +1209,7 @@ const jobsResponse = await fetch("/api/jobs");
 
       setCurrentUser(result.user);
       setLoginInput({ username: "", pin: "" });
-      setActiveScreen("dashboard");
+      setActiveScreen("desktop");
     } catch (error) {
       alert(error.message || "Login failed.");
     }
@@ -1462,7 +1472,7 @@ const jobsResponse = await fetch("/api/jobs");
     }
 
     if (resetPassword.length < 12 || resetPassword.length > 128) {
-      alert("Password must contain 12â€“128 characters.");
+      alert("Password must contain 12Ã¢â‚¬â€œ128 characters.");
       return;
     }
 
@@ -1713,9 +1723,9 @@ const jobsResponse = await fetch("/api/jobs");
     text += `Payment Status: ${job.paymentStatus || "Unpaid"}\n\n`;
 
     if (job.status === "Ready for Pickup") {
-      text += `ðŸš— Your vehicle is fully ready for pickup! Please visit our workshop at your earliest convenience.\n\n`;
+      text += `Ã°Å¸Å¡â€” Your vehicle is fully ready for pickup! Please visit our workshop at your earliest convenience.\n\n`;
     } else {
-      text += `ðŸ”§ Our team is actively processing your vehicle repair.\n\n`;
+      text += `Ã°Å¸â€Â§ Our team is actively processing your vehicle repair.\n\n`;
     }
 
     text += `Thank you for choosing AutoFix Pro!`;
@@ -2344,6 +2354,39 @@ const jobsResponse = await fetch("/api/jobs");
     );
   }
 
+  const odooSidebarScreens = new Set([
+    "new-job-intake",
+    "job-cards",
+    "customer-records",
+    "inventory-list",
+    "parts-orders",
+    "quotation-records",
+    "sales",
+    "purchase-records",
+    "expense-records",
+    "daily-ledger",
+    "monthly-ledger",
+  ]);
+
+  const renderWithOdooSidebar = (screenContent) => {
+    if (!odooSidebarScreens.has(activeScreen)) {
+      return screenContent;
+    }
+
+    return (
+      <OdooModuleLayout
+        activeScreen={activeScreen}
+        setActiveScreen={handleSetActiveScreen}
+      >
+        {screenContent}
+      </OdooModuleLayout>
+    );
+  };
+  if (activeScreen === "desktop") {
+    return (
+      <OdooDesktop setActiveScreen={handleSetActiveScreen} onLogout={handleLogout} />
+    );
+  }
   if (activeScreen === "invoice" && invoiceJob) {
     return (
       <div className="min-h-screen bg-slate-100 p-6">
@@ -2921,7 +2964,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "new-job-intake") {
-    return (
+    return renderWithOdooSidebar(
       <NewJobIntake
         formData={formData}
         setFormData={handleFormDataChange}
@@ -2945,7 +2988,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "job-cards") {
-    return (
+    return renderWithOdooSidebar(
       <JobCards
         searchTerm={searchTerm}
         viewMode={viewMode}
@@ -2962,7 +3005,7 @@ const jobsResponse = await fetch("/api/jobs");
         handleOpenSmsModal={handleOpenSmsModal}
         updateJobStatus={updateJobStatus}
         handleDeleteJob={handleDeleteJob}
-        setActiveScreen={handleSetActiveScreen}
+        setActiveScreen={handleBackNavigation}
         handleExportJobCardsExcel={handleExportJobCardsExcel}
         handleExportJobCardsPDF={handleExportJobCardsPDF}
         handleExportSalesExcel={handleExportSalesExcel}
@@ -2972,7 +3015,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "inventory-list") {
-    return (
+    return renderWithOdooSidebar(
       <InventoryList
         inventoryData={PAINT_CHEMICALS_INVENTORY}
         handleExportInventoryExcel={handleExportInventoryExcel}
@@ -2983,7 +3026,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "daily-ledger") {
-    return (
+    return renderWithOdooSidebar(
       <DailyLedger
         jobs={filteredJobs}
         getDamageInfo={getDamageInfo}
@@ -2994,7 +3037,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "parts-orders") {
-    return (
+    return renderWithOdooSidebar(
       <PartsOrders
         currentUser={currentUser}
         inventory={inventory}
@@ -3060,7 +3103,7 @@ const jobsResponse = await fetch("/api/jobs");
     );
   }
   if (activeScreen === "sales") {
-    return <Sales setActiveScreen={setActiveScreen} />;
+    return renderWithOdooSidebar(<Sales setActiveScreen={setActiveScreen} />);
   }
 
   if (activeScreen === "purchase") {
@@ -3068,7 +3111,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "purchase-records") {
-    return <PurchaseRecords setActiveScreen={setActiveScreen} />;
+    return renderWithOdooSidebar(<PurchaseRecords setActiveScreen={setActiveScreen} />);
   }
 
   if (activeScreen === "expense") {
@@ -3076,7 +3119,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "expense-records") {
-    return (
+    return renderWithOdooSidebar(
       <ExpenseRecords
         setActiveScreen={setActiveScreen}
         currentUser={currentUser}
@@ -3110,7 +3153,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "customer-records") {
-    return <CustomerRecords setActiveScreen={setActiveScreen} />;
+    return renderWithOdooSidebar(<CustomerRecords setActiveScreen={setActiveScreen} />);
   }
 
   if (activeScreen === "quotation") {
@@ -3144,7 +3187,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "quotation-records") {
-    return (
+    return renderWithOdooSidebar(
       <QuotationRecords
         setActiveScreen={setActiveScreen}
         onOpenQuotation={(quotation, openInvoice = false) => {
@@ -3162,7 +3205,7 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   if (activeScreen === "monthly-ledger") {
-    return (
+    return renderWithOdooSidebar(
       <MonthlyLedger
         jobs={filteredJobs}
         getDamageInfo={getDamageInfo}
@@ -3890,4 +3933,12 @@ const jobsResponse = await fetch("/api/jobs");
     </>
   );
 }
+
+
+
+
+
+
+
+
 

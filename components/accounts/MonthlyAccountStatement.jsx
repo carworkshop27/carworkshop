@@ -414,7 +414,7 @@ export default function MonthlyAccountStatement({ setActiveScreen }) {
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
           <button
             type="button"
-            onClick={() => setActiveScreen("dashboard")}
+            onClick={() => setActiveScreen("desktop")}
             className="
       inline-flex
       items-center
