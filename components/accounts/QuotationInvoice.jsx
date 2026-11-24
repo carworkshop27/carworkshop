@@ -76,7 +76,7 @@ export default function QuotationInvoice({
 
   const items = Array.isArray(quotation.items)
     ? quotation.items.map((item, index) => ({
-        serial_number: item.serial_number ?? item.serialNumber ?? index + 1,
+        serial_number: index + 1,
         description: item.description || "",
         quantity: Number(item.quantity || 0),
         unit_price: Number(item.unit_price ?? item.unitPrice ?? 0),
@@ -179,7 +179,7 @@ export default function QuotationInvoice({
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const yyyy = now.getFullYear();
 
-    document.title = `INV-${customerId}-${dd}-${mm}-${yyyy}`;
+    document.title = savedInvoice?.invoice_no || `INV-${customerId}-${dd}-${mm}-${yyyy}`;
 
     window.print();
 
@@ -276,7 +276,7 @@ export default function QuotationInvoice({
           .invoice-print-header {
             display: flex;
             width: 100%;
-            height: 52mm;
+            height: 64mm;
             background: #eefaf9;
             box-sizing: border-box;
           }
@@ -316,8 +316,14 @@ export default function QuotationInvoice({
           }
 
           .invoice-print-qr svg {
-            width: 24mm;
-            height: 24mm;
+            padding: 4mm;
+            background: #ffffff;
+            box-sizing: content-box;
+            flex-shrink: 0;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            width: 32mm;
+            height: 32mm;
             display: block;
           }
 
@@ -370,7 +376,7 @@ export default function QuotationInvoice({
           }
 
           .invoice-print-company {
-            margin-top: -4.5mm;
+            margin-top: -9mm;
             font-size: 9pt;
             line-height: 1.42;
           }
@@ -648,10 +654,10 @@ export default function QuotationInvoice({
 
                 <div className="flex flex-1 items-start justify-center pt-2">
                   {savedInvoice?.zatca_qr_payload ? (<QRCode
-                    value={savedInvoice.zatca_qr_payload}
-                    size={102}
-                    bgColor="#eefaf9"
-                    fgColor="#075b5b"
+                    value={savedInvoice.zatca_qr_payload.replace(/[\r\n]/g, "")}
+                    size={120} style={{ padding: 16, background: "#ffffff", boxSizing: "content-box" }}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
                     level="M"
                   />) : null}
                 </div>
@@ -672,7 +678,7 @@ export default function QuotationInvoice({
                       <strong className="text-left">Invoice #</strong>
                       <span className="text-center">:</span>
                       <span className="text-left">
-                        INV-{quotation.quotation_no || "-"}
+                        {savedInvoice?.invoice_no || (isZatcaInvoice ? "-" : `INV-${quotation.quotation_no || "-"}`)}
                       </span>
                     </div>
 
@@ -691,7 +697,9 @@ export default function QuotationInvoice({
                 <strong className="block text-base">
                   Garage AlTalaa AlFahir
                 </strong>
-                <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                <p>Building 8693, Hamza Yaqut Sadawi Street,</p>
+                    <p>Industrial 1 District, Jeddah 23796,</p>
+                    <p>Secondary No. 4232, Saudi Arabia</p>
                     <p>VAT: 300096253100003</p>
                 <p>Phone: +966 50 662 0654</p>
                 <p>Email: talaa.alfakhir@gmail.com</p>
@@ -933,10 +941,10 @@ export default function QuotationInvoice({
 
                     <div className="invoice-print-qr">
                       {savedInvoice?.zatca_qr_payload ? (<QRCode
-                        value={savedInvoice.zatca_qr_payload}
-                        size={91}
-                        bgColor="#eefaf9"
-                        fgColor="#075b5b"
+                        value={savedInvoice.zatca_qr_payload.replace(/[\r\n]/g, "")}
+                        size={120} style={{ padding: 16, background: "#ffffff", boxSizing: "content-box" }}
+                        bgColor="#ffffff"
+                        fgColor="#000000"
                         level="M"
                       />) : null}
                     </div>
@@ -952,7 +960,7 @@ export default function QuotationInvoice({
 
                         <div>
                           <strong>Invoice #</strong>
-                          <span>INV-{quotation.quotation_no || "-"}</span>
+                          <span>{savedInvoice?.invoice_no || (isZatcaInvoice ? "-" : `INV-${quotation.quotation_no || "-"}`)}</span>
                         </div>
 
                         <div>
@@ -965,7 +973,9 @@ export default function QuotationInvoice({
 
                   <div className="invoice-print-company">
                     <strong>Garage AlTalaa AlFahir</strong>
-                    <p>Jeddah-Smart City Asfan shop No.2162 A.B</p>
+                    <p>Building 8693, Hamza Yaqut Sadawi Street,</p>
+                    <p>Industrial 1 District, Jeddah 23796,</p>
+                    <p>Secondary No. 4232, Saudi Arabia</p>
                     <p>VAT: 300096253100003</p>
                     <p>Phone: +966 50 662 0654</p>
                     <p>Email: talaa.alfakhir@gmail.com</p>

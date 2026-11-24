@@ -291,7 +291,12 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
     const isZatcaInvoice = Boolean(selectedTaxInvoice.zatca_qr_payload);
 
     const beforeAdditional = isZatcaInvoice
-      ? subtotal - discount
+      ? Number((
+          items.reduce(
+            (sum, item) => sum + Number(item.total ?? 0),
+            0
+          )
+        ).toFixed(2))
       : taxableAmount + vatAmount;
 
     const totalAmount = Number(
@@ -403,7 +408,136 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
       }`;
     };
 
-    const amountInWords = `${numberToWords(totalAmount)} Saudi Riyal Only`;
+    const numberToArabicWords = (value, feminine = false) => {
+      const n = Math.floor(Number(value));
+
+      const ones = [
+        "صفر", "واحد", "اثنان", "ثلاثة", "أربعة",
+        "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"
+      ];
+
+      const feminineOnes = [
+        "صفر", "واحدة", "اثنتان", "ثلاث", "أربع",
+        "خمس", "ست", "سبع", "ثمان", "تسع"
+      ];
+
+      const tens = [
+        "", "", "عشرون", "ثلاثون", "أربعون",
+        "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"
+      ];
+
+      const hundreds = [
+        "", "مائة", "مائتان", "ثلاثمائة", "أربعمائة",
+        "خمسمائة", "ستمائة", "سبعمائة",
+        "ثمانمائة", "تسعمائة"
+      ];
+
+      const units = feminine ? feminineOnes : ones;
+
+      if (n < 10) return units[n];
+
+      if (n === 10) return feminine ? "عشر" : "عشرة";
+      if (n === 11) return feminine ? "إحدى عشرة" : "أحد عشر";
+      if (n === 12) return feminine ? "اثنتا عشرة" : "اثنا عشر";
+
+      if (n < 20) {
+        return units[n - 10] + (feminine ? " عشرة" : " عشر");
+      }
+
+      if (n < 100) {
+        const remainder = n % 10;
+        return [
+          remainder ? units[remainder] : "",
+          tens[Math.floor(n / 10)]
+        ].filter(Boolean).join(" و");
+      }
+
+      if (n < 1000) {
+        return [
+          hundreds[Math.floor(n / 100)],
+          n % 100 ? numberToArabicWords(n % 100, feminine) : ""
+        ].filter(Boolean).join(" و");
+      }
+
+      const scale = n >= 1000000 ? 1000000 : 1000;
+      const count = Math.floor(n / scale);
+      const remainder = n % scale;
+
+      const singular = scale === 1000000 ? "مليون" : "ألف";
+      const dual = scale === 1000000 ? "مليونان" : "ألفان";
+      const plural = scale === 1000000 ? "ملايين" : "آلاف";
+
+      const prefix =
+        count === 1 ? singular :
+        count === 2 ? dual :
+        count <= 10
+          ? numberToArabicWords(count) + " " + plural
+          : numberToArabicWords(count) + " " + (count % 100 >= 11 ? singular + "ًا" : singular);
+
+      return [
+        prefix,
+        remainder ? numberToArabicWords(remainder, feminine) : ""
+      ].filter(Boolean).join(" و");
+    };
+
+    const totalHalalas = Math.round(totalAmount * 100);
+    const wholeRiyals = Math.floor(totalHalalas / 100);
+    const remainingHalalas = totalHalalas % 100;
+
+    const formatArabicRiyals = (n) => {
+      if (n === 0) return "صفر ريال سعودي";
+      if (n === 1) return "ريال سعودي واحد";
+      if (n === 2) return "ريالان سعوديان";
+
+      if (n >= 3 && n <= 10) {
+        return numberToArabicWords(n) + " ريالات سعودية";
+      }
+
+      const remainder = n % 100;
+
+      if (n >= 100 && remainder >= 1 && remainder <= 10) {
+        return formatArabicRiyals(n - remainder) +
+          " و" + formatArabicRiyals(remainder);
+      }
+
+      if (remainder === 0) {
+        let words = numberToArabicWords(n);
+
+        words = words
+          .replace(/مائتان$/, "مائتا")
+          .replace(/ألفان$/, "ألفا")
+          .replace(/مليونان$/, "مليونا");
+
+        return words + " ريال سعودي";
+      }
+
+      return numberToArabicWords(n) + " ريالاً سعودياً";
+    };
+
+    const arabicRiyals = formatArabicRiyals(wholeRiyals);
+
+    const arabicHalalas =
+      remainingHalalas === 1 ? "هللة واحدة" :
+      remainingHalalas === 2 ? "هللتان" :
+      remainingHalalas >= 3 && remainingHalalas <= 10
+        ? numberToArabicWords(remainingHalalas, true) + " هللات"
+        : numberToArabicWords(remainingHalalas, true) + " هللة";
+
+    const amountInArabicWords =
+      "فقط " +
+      [
+        wholeRiyals > 0 || remainingHalalas === 0
+          ? arabicRiyals : "",
+        remainingHalalas > 0 ? arabicHalalas : ""
+      ].filter(Boolean).join(" و") +
+      " لا غير";
+
+const amountInWords =
+      `${numberToWords(wholeRiyals)} Saudi ${wholeRiyals === 1 ? "Riyal" : "Riyals"}` +
+      (remainingHalalas > 0
+        ? ` and ${numberToWords(remainingHalalas)} ${remainingHalalas === 1 ? "Halala" : "Halalas"}`
+        : "") +
+      " Only";
 
     const qrData = JSON.stringify({
       invoiceNo: taxInvoiceNumber,
@@ -476,7 +610,17 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
 
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={() => {
+                const originalTitle = document.title;
+                document.title = taxInvoiceNumber;
+                try {
+                  window.print();
+                } finally {
+                  setTimeout(() => {
+                    document.title = originalTitle;
+                  }, 1000);
+                }
+              }}
               className="rounded-lg bg-blue-600 px-5 py-2.5 font-bold text-white shadow-sm transition hover:bg-blue-700"
             >
               Print Tax Invoice
@@ -509,6 +653,57 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
             }
 
             @media print {
+              @page {
+                size: A4 portrait;
+                margin: 8mm;
+              }
+
+              html,
+              body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+              }
+
+              body:has(.tax-invoice-print) *:not(.tax-invoice-print):not(.tax-invoice-print *):not(:has(.tax-invoice-print)) {
+                display: none !important;
+              }
+
+              body:has(.tax-invoice-print) *:has(.tax-invoice-print) {
+                display: block !important;
+                position: static !important;
+                width: 100% !important;
+                max-width: none !important;
+                height: auto !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                background: white !important;
+                transform: none !important;
+              }
+
+              .tax-invoice-print {
+                position: static !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+                background: white !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+              }
+
+              .tax-invoice-print tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+              }
+
+              .tax-invoice-print thead {
+                display: table-header-group;
+              }
+
               .professional-invoice-layout,
               .workshop-invoice-layout {
                 max-width: none;
@@ -559,9 +754,9 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                 {/* QR */}
                 <div className="flex items-center justify-center border-l border-slate-300 p-4">
                   <div className="flex flex-col items-center justify-center">
-                    <div className="bg-white p-2">
+                    <div className="bg-white p-4">
                       {selectedTaxInvoice?.zatca_qr_payload ? (<QRCode
-                        value={selectedTaxInvoice.zatca_qr_payload}
+                        value={selectedTaxInvoice.zatca_qr_payload.replace(/[\r\n]/g, "")}
                         size={120}
                         bgColor="#ffffff"
                         fgColor="#000000"
@@ -861,7 +1056,11 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                         item.unit_price ?? item.unitPrice ?? 0,
                       );
 
-                      const amount = Number(item.total ?? quantity * unitPrice);
+                      const amount = Number(
+                        isZatcaInvoice
+                          ? (item.amount ?? quantity * unitPrice)
+                          : (item.total ?? quantity * unitPrice)
+                      );
 
                       const itemDiscount = Number(
                         item.discount ?? item.discount_amount ?? 0,
@@ -872,14 +1071,14 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
                         amount - itemDiscount,
                       );
 
-                      const rowVat = taxableItemAmount * (vatRate / 100);
+                      const rowVat = isZatcaInvoice && item.vat_amount != null ? Number(item.vat_amount) : taxableItemAmount * (vatRate / 100);
 
-                      const rowTotal = taxableItemAmount + rowVat;
+                      const rowTotal = isZatcaInvoice && item.total != null ? Number(item.total) : taxableItemAmount + rowVat;
 
                       return (
                         <tr key={index}>
                           <td className="border border-slate-300 p-2 text-center">
-                            {item.serial_number ?? index + 1}
+                            {index + 1}
                           </td>
 
                           <td className="border border-slate-300 p-2">
@@ -1108,7 +1307,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
               </div>
 
               <div dir="rtl" className="font-bold">
-                المبلغ كتابة: {amountInWords}
+                المبلغ كتابة: {amountInArabicWords}
               </div>
             </div>
 
@@ -1117,7 +1316,17 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
             <div className="mt-5 flex justify-end print:hidden">
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => {
+                const originalTitle = document.title;
+                document.title = taxInvoiceNumber;
+                try {
+                  window.print();
+                } finally {
+                  setTimeout(() => {
+                    document.title = originalTitle;
+                  }, 1000);
+                }
+              }}
                 className="rounded-lg bg-blue-600 px-5 py-2.5 font-bold text-white transition hover:bg-blue-700"
               >
                 Print Tax Invoice
