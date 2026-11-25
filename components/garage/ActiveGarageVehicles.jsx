@@ -145,7 +145,7 @@ export default function ActiveGarageVehicles({
 
                           <td className="py-4 px-6 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button
+                              {typeof handleDeleteJob === "function" && (<button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteJob(job.id);
@@ -154,7 +154,7 @@ export default function ActiveGarageVehicles({
                                 className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 hover:bg-rose-200 hover:text-rose-900 border border-rose-300 transition-colors"
                               >
                                 <X className="w-4 h-4" />
-                              </button>
+                              </button>)}
 
                               <button
                                 onClick={(e) => handleOpenSmsModal(job, e)}
@@ -255,7 +255,7 @@ export default function ActiveGarageVehicles({
                               </div>
 
                               <div className="flex items-center gap-1">
-                                <button
+                                {typeof handleDeleteJob === "function" && (<button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteJob(job.id);
@@ -264,7 +264,7 @@ export default function ActiveGarageVehicles({
                                   className="p-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded"
                                 >
                                   <X className="w-3.5 h-3.5" />
-                                </button>
+                                </button>)}
 
                                 <button
                                   onClick={(e) => handleOpenSmsModal(job, e)}
@@ -364,7 +364,7 @@ export default function ActiveGarageVehicles({
                               </div>
 
                               <div className="flex items-center gap-1">
-                                <button
+                                {typeof handleDeleteJob === "function" && (<button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteJob(job.id);
@@ -373,7 +373,7 @@ export default function ActiveGarageVehicles({
                                   className="p-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded"
                                 >
                                   <X className="w-3.5 h-3.5" />
-                                </button>
+                                </button>)}
 
                                 <button
                                   onClick={(e) => handleOpenSmsModal(job, e)}
@@ -469,7 +469,7 @@ export default function ActiveGarageVehicles({
                               </div>
 
                               <div className="flex items-center gap-1">
-                                <button
+                                {typeof handleDeleteJob === "function" && (<button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteJob(job.id);
@@ -478,7 +478,7 @@ export default function ActiveGarageVehicles({
                                   className="p-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded"
                                 >
                                   <X className="w-3.5 h-3.5" />
-                                </button>
+                                </button>)}
 
                                 <button
                                   onClick={(e) => handleOpenSmsModal(job, e)}

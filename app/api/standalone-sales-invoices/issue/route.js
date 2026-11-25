@@ -1,3 +1,4 @@
+import { enforceManagerApiAccess } from "../../../../lib/managerApiGuard";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
@@ -9,6 +10,13 @@ const respond = (message, status) =>
   NextResponse.json({ error: message }, { status });
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/standalone-sales-invoices/issue",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("workshop_access_token")?.value;

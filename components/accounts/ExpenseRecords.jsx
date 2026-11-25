@@ -554,7 +554,7 @@ export default function ExpenseRecords({
                             View Details
                           </button>
 
-                          {isExpenseAdmin && (
+                          {(isExpenseAdmin || currentUser?.role === "Manager") && (
                             <button
                               type="button"
                               onClick={() => onEditExpense?.(expense)}

@@ -1,3 +1,4 @@
+import { enforceManagerApiAccess } from "../../../../lib/managerApiGuard";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
@@ -9,6 +10,13 @@ export const dynamic = "force-dynamic";
 const EXPENSE_BUCKET = "expense-invoices";
 
 export async function GET(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/expenses/invoice",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("workshop_access_token")?.value;

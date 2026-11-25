@@ -1,6 +1,14 @@
+import { enforceManagerApiAccess } from "../../../../lib/managerApiGuard";
 import { supabaseServer } from "../../../../lib/supabaseServer";
 
 export async function GET(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/purchases/invoice",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const { searchParams } = new URL(request.url);
     const path = searchParams.get("path");

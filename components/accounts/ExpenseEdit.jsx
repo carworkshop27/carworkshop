@@ -23,8 +23,7 @@ export default function ExpenseEdit({
   onCancel,
   onSaved,
 }) {
-  const isAdmin =
-    currentUser?.id === ADMIN_ID &&
+  const isAdmin = currentUser?.role === "Manager" || currentUser?.id === ADMIN_ID &&
     currentUser?.username?.trim().toLowerCase() === "admin";
   const [expenseDate, setExpenseDate] = useState(
     expense?.expense_date?.slice(0, 10) || "",

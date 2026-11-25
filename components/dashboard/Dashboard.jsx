@@ -497,7 +497,43 @@ export default function Dashboard({
     minute: "2-digit",
   });
 
-  const sidebarItems = [
+  const sidebarItems = currentUser?.role === "Manager" ? [
+    {
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      action: () => scrollToSection("dashboard-top"),
+    },
+    {
+      label: "In-Take",
+      icon: ClipboardList,
+      action: () => setActiveScreen("workshop-intake"),
+    },
+    {
+      label: "New Job / Intake",
+      icon: Plus,
+      action: () => setActiveScreen("new-job-intake"),
+    },
+    {
+      label: "Job Cards",
+      icon: ClipboardList,
+      action: () => setActiveScreen("job-cards"),
+    },
+    {
+      label: "Customers",
+      icon: Users,
+      action: () => setActiveScreen("customer-records"),
+    },
+    {
+      label: "Quotation",
+      icon: FileText,
+      action: toggleQuotation,
+    },
+    {
+      label: "Expenses",
+      icon: FileText,
+      action: () => setActiveScreen("expense-records"),
+    },
+  ] : [
     {
       label: "Desktop Home",
       icon: LayoutDashboard,

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import {
@@ -23,6 +23,7 @@ const groups = [
     title: "WORKSHOP",
     items: [
       { label: "Dashboard", screen: "dashboard", icon: LayoutDashboard },
+      { label: "In-Take", labelAr: "استقبال المركبات", screen: "workshop-intake", icon: ClipboardList },
       { label: "New Job / Intake", screen: "new-job-intake", icon: Wrench },
       { label: "Job Cards", screen: "job-cards", icon: ClipboardList },
       { label: "Customers", screen: "customer-records", icon: Users },
@@ -42,6 +43,8 @@ const groups = [
       { label: "Sales", screen: "sales", icon: Receipt },
       { label: "Purchases", screen: "purchase-records", icon: ShoppingCart },
       { label: "Expenses", screen: "expense-records", icon: Wallet },
+      { label: "Customer Ledger", screen: "customer-ledger", icon: BookOpen },
+      { label: "Customer Statement", screen: "customer-statement", icon: BookOpen },
       { label: "Daily Ledger", screen: "daily-ledger", icon: BookOpen },
       { label: "Monthly Ledger", screen: "monthly-ledger", icon: CalendarDays },
     ],
@@ -51,8 +54,32 @@ const groups = [
 export default function OdooModuleLayout({
   activeScreen,
   setActiveScreen,
+  currentUser,
   children,
 }) {
+  const isManager = currentUser?.role === "Manager";
+
+  const managerScreens = new Set([
+    "dashboard",
+    "workshop-intake",
+    "new-job-intake",
+    "job-cards",
+    "customer-records",
+    "quotation-records",
+    "expense-records",
+  ]);
+
+  const visibleGroups = isManager
+    ? groups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter(
+            (item) => managerScreens.has(item.screen)
+          ),
+        }))
+        .filter((group) => group.items.length > 0)
+    : groups;
+
   const [collapsed, setCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState({
     WORKSHOP: true,
@@ -100,7 +127,7 @@ export default function OdooModuleLayout({
           </button>
 
           <nav className="mt-5 flex-1 space-y-3 overflow-y-auto px-3 pb-6">
-            {groups.map((group) => (
+            {visibleGroups.map((group) => (
               <div key={group.title}>
                 {!collapsed && (
                   <button
@@ -137,7 +164,16 @@ export default function OdooModuleLayout({
                         }`}
                       >
                         <Icon size={19} />
-                        {!collapsed && <span>{item.label}</span>}
+                        {!collapsed && (
+                          <div>
+                            <div>{item.label}</div>
+                            {item.labelAr && (
+                              <div lang="ar" className="text-lg font-bold">
+                                {item.labelAr}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </button>
                     );
                   })}

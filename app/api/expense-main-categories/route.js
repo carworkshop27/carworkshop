@@ -1,7 +1,15 @@
-﻿import { NextResponse } from "next/server";
+import { enforceManagerApiAccess } from "../../../lib/managerApiGuard";
+import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
 
 export async function GET() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/expense-main-categories",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const { data, error } = await supabaseServer
       .from("expense_main_categories")

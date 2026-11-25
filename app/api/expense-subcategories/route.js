@@ -1,8 +1,16 @@
+import { enforceManagerApiAccess } from "../../../lib/managerApiGuard";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
 import { requireWorkshopAdmin } from "../../../lib/workshopAuth";
 
 export async function GET() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/expense-subcategories",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const { data, error } = await supabaseServer
       .from("expense_subcategories")
@@ -26,6 +34,13 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/expense-subcategories",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const auth = await requireWorkshopAdmin();
 

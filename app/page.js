@@ -13,6 +13,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import NewJobIntake from "../components/intake/NewJobIntake";
+import WorkshopIntake from "../components/intake/WorkshopIntake";
+import IntakeModule from "../components/intake/IntakeModule";
+import IntakeRecords from "../components/intake/IntakeRecords";
+import JobFinancialSummary from "../components/jobs/JobFinancialSummary";
 import JobCards from "../components/jobs/JobCards";
 import Sales from "../components/accounts/Sales";
 import StandaloneSalesInvoice from "../components/accounts/StandaloneSalesInvoice";
@@ -21,6 +25,8 @@ import StandaloneSalesInvoiceRecords from "../components/accounts/StandaloneSale
 import PurchaseEntry from "../components/accounts/PurchaseEntry";
 import PurchaseRecords from "../components/accounts/PurchaseRecords";
 import MonthlyAccountStatement from "../components/accounts/MonthlyAccountStatement";
+import CustomerLedger from "../components/accounts/CustomerLedger";
+import CustomerStatement from "../components/accounts/CustomerStatement";
 import Quotations from "../components/accounts/Quotations";
 import QuotationRecords from "../components/accounts/QuotationRecords";
 import CustomerRecords from "../components/customers/CustomerRecords";
@@ -745,6 +751,7 @@ export default function Home() {
   });
 
   const [jobs, setJobs] = useState([]);
+  const [cacheOwnerId, setCacheOwnerId] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [panels, setPanels] = useState(
@@ -760,7 +767,51 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("list");
-  const [activeScreen, setActiveScreen] = useState("desktop");
+  const [activeScreenRaw, setActiveScreenRaw] = useState("desktop");
+
+  // WORKSHOP_MANAGER_NAVIGATION_V1
+  const managerAllowedScreens = new Set([
+    "desktop",
+    "dashboard",
+    "workshop-intake",
+    "workshop-intake-records",
+    "workshop-intake-new",
+    "new-job-intake",
+    "job-cards",
+    "full-job-card",
+    "customer-records",
+    "quotation",
+    "quotation-records",
+    "quotation-invoice",
+    "expense",
+    "expense-records",
+    "expense-edit",
+    "invoice",
+  ]);
+
+  const activeScreen =
+    currentUser?.role === "Manager" &&
+    !managerAllowedScreens.has(activeScreenRaw)
+      ? "dashboard"
+      : activeScreenRaw;
+
+  const setActiveScreen = (screen) => {
+    setActiveScreenRaw((previous) => {
+      const next =
+        typeof screen === "function"
+          ? screen(previous)
+          : screen;
+
+      if (
+        currentUser?.role === "Manager" &&
+        !managerAllowedScreens.has(next)
+      ) {
+        return "dashboard";
+      }
+
+      return next;
+    });
+  };
   const [standaloneInvoiceToEdit, setStandaloneInvoiceToEdit] = useState(null);
   const [expenseToEdit, setExpenseToEdit] = useState(null);
   const [quotationToEdit, setQuotationToEdit] = useState(null);
@@ -1108,13 +1159,30 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // WORKSHOP_AUTHENTICATED_DATA_LOADING_V1
+
+    setCacheOwnerId(null);
+
+    if (!currentUser?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+
     const loadData = async () => {
       setIsLoading(true);
 
       try {
 
-const jobsResponse = await fetch("/api/jobs");
+        const jobsResponse = await fetch("/api/jobs", {
+          cache: "no-store",
+          signal: controller.signal
+        });
         const jobsResult = await jobsResponse.json();
+
+        if (cancelled) return;
 
         if (!jobsResponse.ok || !Array.isArray(jobsResult)) {
           throw new Error(jobsResult?.error || "Failed to load jobs");
@@ -1129,16 +1197,69 @@ const jobsResponse = await fetch("/api/jobs");
           jobsMap.set(job.id, job);
         });
 
+        // WORKSHOP_DATABASE_JOB_AUTHORITY_V1
         localJobs.forEach((job) => {
+          if (!jobsMap.has(job.id)) return;
+
+          const databaseJob = jobsMap.get(job.id);
+
+          // WORKSHOP_INTAKE_AUTHORITY_V2
           jobsMap.set(job.id, {
-            ...jobsMap.get(job.id),
+            ...databaseJob,
             ...job,
+            status: databaseJob.status,
+
+            ...(databaseJob.intake_source ? {
+              id: databaseJob.id,
+              customer_id: databaseJob.customer_id,
+              customerId: databaseJob.customer_id,
+              owner: databaseJob.owner,
+              phone: databaseJob.phone,
+              email: databaseJob.email,
+              make: databaseJob.make,
+              model: databaseJob.model,
+              plate: databaseJob.plate,
+              issue: databaseJob.issue,
+              date: databaseJob.date,
+
+              approximate_cost: databaseJob.approximate_cost,
+              approximateCost: databaseJob.approximate_cost,
+
+              total_cost: databaseJob.total_cost,
+              totalCost: databaseJob.total_cost,
+
+              payment_status: databaseJob.payment_status,
+              paymentStatus: databaseJob.payment_status || "Unpaid",
+
+              intake_source: databaseJob.intake_source,
+              intake_completed_at: databaseJob.intake_completed_at,
+
+              created_at: databaseJob.created_at,
+              createdAt: databaseJob.created_at,
+
+              intake_date: databaseJob.intake_date,
+              intakeDate: databaseJob.intake_date,
+
+              intake_time: databaseJob.intake_time,
+              intakeTime: databaseJob.intake_time,
+            } : {}),
           });
         });
 
-        const mergedJobs = Array.from(jobsMap.values());
+        const mergedJobs = Array.from(jobsMap.values()).map((job) => ({
+          ...job,
+          panels: Array.isArray(job.panels) && job.panels.length > 0
+            ? job.panels
+            : DEFAULT_PANELS.map((panel) => ({
+                ...panel,
+                status: "ok",
+                assignedTech: "",
+                customRepairCost: "",
+              })),
+        }));
 
         setJobs(mergedJobs);
+        setCacheOwnerId(currentUser.id);
 
         if (mergedJobs.length > 0) {
           setSelectedJobId(mergedJobs[0].id);
@@ -1154,14 +1275,186 @@ const jobsResponse = await fetch("/api/jobs");
         const savedPOs = localStorage.getItem("autofix_purchase_orders_db");
         if (savedPOs) setPurchaseOrders(JSON.parse(savedPOs));
       } catch (err) {
-        console.error("Data Loading Error:", err);
+        if (!cancelled && err.name !== "AbortError") {
+          console.error("Data Loading Error:", err);
+        }
       }
 
-      setIsLoading(false);
+      if (!cancelled) {
+        setIsLoading(false);
+      }
     };
 
     loadData();
-  }, []);
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+
+  }, [currentUser?.id, currentUser?.role]);
+
+  // WORKSHOP_PERSISTENT_CACHE_SYNC_V2
+  useEffect(() => {
+    if (
+      !currentUser?.id ||
+      cacheOwnerId !== currentUser.id ||
+      isLoading
+    ) {
+      return;
+    }
+
+    try {
+      localStorage.setItem(
+        "autofix_offline_db",
+        JSON.stringify(jobs)
+      );
+    } catch (cacheError) {
+      console.warn(
+        "Persistent job cache update failed:",
+        cacheError
+      );
+    }
+  }, [jobs, isLoading, currentUser?.id, cacheOwnerId]);
+
+  // WORKSHOP_INTAKE_JOB_SYNC_V1
+  useEffect(() => {
+    if (!currentUser?.id || activeScreen !== "job-cards") return;
+
+    let cancelled = false;
+
+    async function refreshWorkshopJobs() {
+      setIsLoading(true);
+
+      try {
+        const response = await fetch("/api/jobs", {
+          cache: "no-store",
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !Array.isArray(result)) {
+          throw new Error(
+            result?.error || "Unable to refresh Job Cards."
+          );
+        }
+
+        if (cancelled) return;
+
+        setJobs((previousJobs) => {
+          const jobsMap = new Map(
+            previousJobs.map((job) => [job.id, job])
+          );
+
+          result.forEach((row) => {
+            const previous = jobsMap.get(row.id);
+
+            if (row.intake_source) {
+              jobsMap.set(row.id, {
+                ...row,
+                ...previous,
+
+                id: row.id,
+                customer_id: row.customer_id,
+                owner: row.owner,
+                phone: row.phone,
+                email: row.email,
+                make: row.make,
+                model: row.model,
+                plate: row.plate,
+                issue: row.issue,
+                date: row.date,
+
+                payment_status: row.payment_status,
+                created_at: row.created_at,
+                intake_date: row.intake_date,
+                intake_time: row.intake_time,
+                intake_completed_at: row.intake_completed_at,
+
+                customerId: row.customer_id,
+                approximateCost: row.approximate_cost,
+                approximate_cost: row.approximate_cost,
+                totalCost: row.total_cost,
+                total_cost: row.total_cost,
+                intake_source: row.intake_source,
+
+                paymentStatus:
+                  row.payment_status || "Unpaid",
+
+                createdAt: row.created_at,
+                intakeDate: row.intake_date,
+                intakeTime: row.intake_time,
+
+                panels: Array.isArray(previous?.panels)
+                  ? previous.panels
+                  : Array.isArray(row.panels) &&
+                    row.panels.length > 0
+                    ? row.panels
+                    : DEFAULT_PANELS.map((panel) => ({
+                        ...panel,
+                        status: "ok",
+                        assignedTech: "",
+                        customRepairCost: "",
+                      })),
+
+                parts:
+                  previous?.parts ||
+                  row.parts ||
+                  [],
+
+                electricalItems:
+                  previous?.electricalItems ||
+                  row.electrical_items ||
+                  [],
+
+                mechanicalItems:
+                  previous?.mechanicalItems ||
+                  row.mechanical_items ||
+                  [],
+              });
+            } else if (!previous) {
+              jobsMap.set(row.id, {
+                ...row,
+                createdAt: row.created_at,
+                intakeDate: row.intake_date,
+                intakeTime: row.intake_time,
+                paymentStatus:
+                  row.payment_status || "Unpaid",
+                electricalItems:
+                  row.electrical_items || [],
+                mechanicalItems:
+                  row.mechanical_items || [],
+              });
+            }
+          });
+
+          const databaseJobIds = new Set(
+            result.map((row) => row.id)
+          );
+
+          return Array.from(jobsMap.values()).filter(
+            (job) => databaseJobIds.has(job.id)
+          );
+        });
+
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Job synchronization error:", error);
+          alert("Unable to refresh Job Cards. Please try again.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    refreshWorkshopJobs();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeScreen]);
 
   useEffect(() => {
     const loadCustomers = async () => {
@@ -1235,6 +1528,12 @@ const jobsResponse = await fetch("/api/jobs");
     }
   };
   const handleDeleteJob = async (jobId) => {
+    // WORKSHOP_MANAGER_DELETE_PROTECTION_V1
+    if (currentUser?.role === "Manager") {
+      alert("Managers are not permitted to delete Job Cards.");
+      return;
+    }
+
     const jobToDelete = jobs.find((job) => job.id === jobId);
 
     if (!jobToDelete) return;
@@ -1472,7 +1771,7 @@ const jobsResponse = await fetch("/api/jobs");
     }
 
     if (resetPassword.length < 12 || resetPassword.length > 128) {
-      alert("Password must contain 12Ã¢â‚¬â€œ128 characters.");
+      alert("Password must contain 12ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“128 characters.");
       return;
     }
 
@@ -1584,6 +1883,45 @@ const jobsResponse = await fetch("/api/jobs");
     setDetailedJobCard(job);
     setPrintJobCard(shouldPrint);
     setActiveScreen("full-job-card");
+  };
+
+  // WORKSHOP_INVOICE_GENERATION_PROTECTION_V1
+  const registerInvoiceProtection = async (job) => {
+    try {
+      if (!job?.id) {
+        throw new Error("Job Card number is required.");
+      }
+
+      const response = await fetch("/api/jobs/invoice-protection", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ jobId: job.id }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error || "Invoice protection registration failed."
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Invoice protection:", error);
+      alert(error.message || "Invoice generation blocked.");
+      return false;
+    }
+  };
+
+  const handleProtectedInvoicePrint = async () => {
+    if (!(await registerInvoiceProtection(invoiceJob))) {
+      return;
+    }
+
+    window.print();
   };
 
   const handleOpenInvoice = async (job, taxInvoice = false) => {
@@ -1723,9 +2061,9 @@ const jobsResponse = await fetch("/api/jobs");
     text += `Payment Status: ${job.paymentStatus || "Unpaid"}\n\n`;
 
     if (job.status === "Ready for Pickup") {
-      text += `Ã°Å¸Å¡â€” Your vehicle is fully ready for pickup! Please visit our workshop at your earliest convenience.\n\n`;
+      text += `ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬â€ Your vehicle is fully ready for pickup! Please visit our workshop at your earliest convenience.\n\n`;
     } else {
-      text += `Ã°Å¸â€Â§ Our team is actively processing your vehicle repair.\n\n`;
+      text += `ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Our team is actively processing your vehicle repair.\n\n`;
     }
 
     text += `Thank you for choosing AutoFix Pro!`;
@@ -1908,23 +2246,101 @@ const jobsResponse = await fetch("/api/jobs");
     }
   };
 
-  const updateJobStatus = (jobId, newStatus, e) => {
+  // WORKSHOP_PERSISTENT_JOB_STATUS_V1
+  const updateJobStatus = async (jobId, newStatus, e) => {
     if (e) e.stopPropagation();
-    if (currentUser?.role === "Cashier")
+
+    if (currentUser?.role === "Cashier") {
       return alert("Cashiers cannot alter workshop repair progress.");
+    }
 
-    const updatedJobs = jobs.map((j) =>
-      j.id === jobId ? { ...j, status: newStatus } : j,
-    );
-    setJobs(updatedJobs);
-    localStorage.setItem("autofix_offline_db", JSON.stringify(updatedJobs));
+    if (!["Manager", "Super User"].includes(currentUser?.role)) {
+      return alert("You are not authorized to update Job Card status.");
+    }
 
-    if (detailedJobCard && detailedJobCard.id === jobId) {
-      setDetailedJobCard({ ...detailedJobCard, status: newStatus });
+    try {
+      if (newStatus === "In Repair / Workshop") {
+        const protectionResponse = await fetch(
+          "/api/jobs/repair-protection",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ jobId })
+          }
+        );
+
+        const protection = await protectionResponse.json();
+
+        if (!protectionResponse.ok || !protection.success) {
+          throw new Error(
+            protection.error || "Repair protection failed."
+          );
+        }
+      }
+
+      const response = await fetch("/api/jobs", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          jobId,
+          status: newStatus
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error || "Unable to update Job Card status."
+        );
+      }
+
+      const updatedJobs = jobs.map((job) =>
+        job.id === jobId
+          ? { ...job, status: result.status }
+          : job
+      );
+
+      setJobs(updatedJobs);
+
+      localStorage.setItem(
+        "autofix_offline_db",
+        JSON.stringify(updatedJobs)
+      );
+
+      setDetailedJobCard((previous) =>
+        previous?.id === jobId
+          ? { ...previous, status: result.status }
+          : previous
+      );
+
+    } catch (error) {
+      console.error("Job Card status update:", error);
+      alert(error.message || "Job Card status update failed.");
     }
   };
 
   const togglePaymentStatus = (jobId, e) => {
+    // WORKSHOP_LINKED_PAYMENT_PROTECTION_V1
+    if (e) e.stopPropagation();
+
+    const targetJob = jobs.find((job) => job.id === jobId);
+
+    if (
+      targetJob?.intake_source ||
+      targetJob?.customer_id ||
+      targetJob?.customerId
+    ) {
+      alert(
+        "Payment status for linked Job Cards is controlled by the Customer Ledger."
+      );
+      return;
+    }
+
     if (e) e.stopPropagation();
     const updatedJobs = jobs.map((j) => {
       if (j.id === jobId) {
@@ -2152,7 +2568,7 @@ const jobsResponse = await fetch("/api/jobs");
     }
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!activeJob) return alert("Please select a vehicle first.");
 
     const doc = new jsPDF();
@@ -2234,10 +2650,16 @@ const jobsResponse = await fetch("/api/jobs");
     doc.setTextColor(148, 163, 184);
     doc.text("Customer Signature: _______________________", 14, 260);
     doc.text("Thank you for choosing AutoFix Pro!", 14, 275);
+    if (!(await registerInvoiceProtection(activeJob))) {
+      return;
+    }
+
     doc.save(`${activeJob.id}_Sales_Invoice.pdf`);
   };
 
-  const selectedPanel = (panels || []).find((p) => p.id === selectedPanelId);
+  const selectedPanel = (
+    Array.isArray(panels) ? panels : []
+  ).find((p) => p.id === selectedPanelId);
   const filteredJobs = jobs.filter(
     (job) =>
       job.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2355,6 +2777,8 @@ const jobsResponse = await fetch("/api/jobs");
   }
 
   const odooSidebarScreens = new Set([
+    "customer-ledger",
+    "customer-statement",
     "new-job-intake",
     "job-cards",
     "customer-records",
@@ -2375,6 +2799,7 @@ const jobsResponse = await fetch("/api/jobs");
 
     return (
       <OdooModuleLayout
+        currentUser={currentUser}
         activeScreen={activeScreen}
         setActiveScreen={handleSetActiveScreen}
       >
@@ -2384,7 +2809,7 @@ const jobsResponse = await fetch("/api/jobs");
   };
   if (activeScreen === "desktop") {
     return (
-      <OdooDesktop setActiveScreen={handleSetActiveScreen} onLogout={handleLogout} />
+      <OdooDesktop currentUser={currentUser} setActiveScreen={handleSetActiveScreen} onLogout={handleLogout} />
     );
   }
   if (activeScreen === "invoice" && invoiceJob) {
@@ -2412,7 +2837,7 @@ const jobsResponse = await fetch("/api/jobs");
             job={invoiceJob}
             getDamageInfo={getDamageInfo}
             isTaxInvoice={isTaxInvoice}
-            onPrint={() => window.print()}
+            onPrint={handleProtectedInvoicePrint}
           />
         </div>
       </div>
@@ -2510,8 +2935,19 @@ const jobsResponse = await fetch("/api/jobs");
         </header>
 
         <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-          {/* --- PAYMENT STATUS --- */}
-          <div className="print:hidden bg-white rounded-2xl border border-slate-300 p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* WORKSHOP_JOB_FINANCIAL_UI_V1 */}
+          {(
+            detailedJobCard.intake_source ||
+            detailedJobCard.customer_id ||
+            detailedJobCard.customerId
+          ) ? (
+            <JobFinancialSummary
+              key={detailedJobCard.id}
+              jobId={detailedJobCard.id}
+              currentRepairCost={totalJobCost}
+            />
+          ) : (
+<div className="print:hidden bg-white rounded-2xl border border-slate-300 p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="bg-blue-100 p-3 rounded-xl text-blue-700">
                 <CreditCard className="w-6 h-6" />
@@ -2541,7 +2977,7 @@ const jobsResponse = await fetch("/api/jobs");
 
             <div className="text-right">
               <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-                Total Invoice Cost
+                Current Repair Cost (Excl. VAT)
               </p>
 
               <h3 className="text-3xl font-black text-slate-900">
@@ -2549,6 +2985,7 @@ const jobsResponse = await fetch("/api/jobs");
               </h3>
             </div>
           </div>
+          )}
 
           {/* --- JOB CARD HEADER --- */}
           <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-md">
@@ -2963,6 +3400,52 @@ const jobsResponse = await fetch("/api/jobs");
     );
   }
 
+  // WORKSHOP_INTAKE_MODULE_V1
+
+  if (activeScreen === "workshop-intake") {
+    return (
+      <OdooModuleLayout
+        currentUser={currentUser}
+        activeScreen="workshop-intake"
+        setActiveScreen={handleSetActiveScreen}
+      >
+        <IntakeModule
+          setActiveScreen={handleSetActiveScreen}
+        />
+      </OdooModuleLayout>
+    );
+  }
+
+  if (activeScreen === "workshop-intake-records") {
+    return (
+      <OdooModuleLayout
+        currentUser={currentUser}
+        activeScreen="workshop-intake"
+        setActiveScreen={handleSetActiveScreen}
+      >
+        <IntakeRecords
+          setActiveScreen={handleSetActiveScreen}
+        />
+      </OdooModuleLayout>
+    );
+  }
+
+  if (activeScreen === "workshop-intake-new") {
+    return (
+      <OdooModuleLayout
+        currentUser={currentUser}
+        activeScreen="workshop-intake"
+        setActiveScreen={handleSetActiveScreen}
+      >
+        <WorkshopIntake
+          setActiveScreen={handleSetActiveScreen}
+        />
+      </OdooModuleLayout>
+    );
+  }
+
+
+
   if (activeScreen === "new-job-intake") {
     return renderWithOdooSidebar(
       <NewJobIntake
@@ -3004,7 +3487,7 @@ const jobsResponse = await fetch("/api/jobs");
         handleConfirmMechanicalItem={handleConfirmMechanicalItem}
         handleOpenSmsModal={handleOpenSmsModal}
         updateJobStatus={updateJobStatus}
-        handleDeleteJob={handleDeleteJob}
+        handleDeleteJob={currentUser?.role === "Manager" ? undefined : handleDeleteJob}
         setActiveScreen={handleBackNavigation}
         handleExportJobCardsExcel={handleExportJobCardsExcel}
         handleExportJobCardsPDF={handleExportJobCardsPDF}
@@ -3148,6 +3631,24 @@ const jobsResponse = await fetch("/api/jobs");
     );
   }
 
+  // WORKSHOP_CUSTOMER_STATEMENT_V1
+  if (activeScreen === "customer-statement") {
+    return renderWithOdooSidebar(
+      <CustomerStatement
+        setActiveScreen={handleSetActiveScreen}
+      />
+    );
+  }
+
+  // WORKSHOP_CUSTOMER_LEDGER_V1
+  if (activeScreen === "customer-ledger") {
+    return renderWithOdooSidebar(
+      <CustomerStatement
+        setActiveScreen={handleSetActiveScreen}
+      />
+    );
+  }
+
   if (activeScreen === "monthly-account-statement") {
     return <MonthlyAccountStatement setActiveScreen={setActiveScreen} />;
   }
@@ -3189,6 +3690,7 @@ const jobsResponse = await fetch("/api/jobs");
   if (activeScreen === "quotation-records") {
     return renderWithOdooSidebar(
       <QuotationRecords
+        currentUser={currentUser}
         setActiveScreen={setActiveScreen}
         onOpenQuotation={(quotation, openInvoice = false) => {
           setQuotationToEdit(quotation);
@@ -3269,7 +3771,7 @@ const jobsResponse = await fetch("/api/jobs");
         handlePurchaseOrderSubmit={handlePurchaseOrderSubmit}
         handleSelectJob={handleSelectJob}
         togglePaymentStatus={togglePaymentStatus}
-        handleDeleteJob={handleDeleteJob}
+        handleDeleteJob={currentUser?.role === "Manager" ? undefined : handleDeleteJob}
         updateJobStatus={updateJobStatus}
         setActiveScreen={handleSetActiveScreen}
         onNewQuotation={() => {
@@ -3396,7 +3898,7 @@ const jobsResponse = await fetch("/api/jobs");
                         Super User (Full Control)
                       </option>
                       <option value="Manager">
-                        Manager (Purchase Orders & Admin)
+                        Manager (Workshop Operations)
                       </option>
                       <option value="Mechanic">
                         Mechanic (3D Inspection & Workshop)
@@ -3933,6 +4435,10 @@ const jobsResponse = await fetch("/api/jobs");
     </>
   );
 }
+
+
+
+
 
 
 

@@ -1,4 +1,5 @@
-﻿import { NextResponse } from "next/server";
+import { enforceManagerApiAccess } from "../../../../lib/managerApiGuard";
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { requireWorkshopSuperUser } from "../../../../lib/workshopAuth";
 
@@ -19,6 +20,13 @@ function fail(message, status) {
 }
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/users/create",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const auth = await requireWorkshopSuperUser();
 

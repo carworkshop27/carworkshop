@@ -1,6 +1,14 @@
+import { enforceManagerApiAccess } from "../../../lib/managerApiGuard";
 import { supabaseServer } from "../../../lib/supabaseServer";
 
 export async function GET() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/purchases",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const { data, error } = await supabaseServer
       .from("purchases")
@@ -39,6 +47,13 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/purchases",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   let uploadedInvoicePath = null;
 
   try {

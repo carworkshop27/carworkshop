@@ -1,6 +1,7 @@
+import { enforceManagerApiAccess } from "../../../lib/managerApiGuard";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
-import { requireWorkshopSuperUser, requireWorkshopAdmin } from "../../../lib/workshopAuth";
+import { requireWorkshopSuperUser, requireWorkshopAdmin, requireWorkshopAdminOrManager } from "../../../lib/workshopAuth";
 
 const EXPENSE_BUCKET = "expense-invoices";
 
@@ -9,6 +10,13 @@ const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export async function GET() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/expenses",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const { data: expenses, error: expensesError } = await supabaseServer
       .from("expenses")
@@ -70,6 +78,13 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/expenses",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   let uploadedFilePath = null;
   let createdExpenseId = null;
 
@@ -367,6 +382,13 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/expenses",
+    "DELETE"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const auth = await requireWorkshopAdmin();
 
@@ -474,8 +496,15 @@ export async function DELETE(request) {
 }
 
 export async function PUT(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/expenses",
+    "PUT"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
-    const auth = await requireWorkshopAdmin();
+    const auth = await requireWorkshopAdminOrManager();
 
     if (!auth.authorized) {
       return NextResponse.json(

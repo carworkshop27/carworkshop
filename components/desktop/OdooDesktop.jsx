@@ -20,79 +20,124 @@ import {
 const applications = [
   {
     name: "Dashboard",
+    nameAr: "لوحة التحكم",
     icon: LayoutDashboard,
     color: "bg-violet-600",
     screen: "dashboard",
   },
   {
+    name: "In-Take",
+    nameAr: "استقبال المركبات",
+    icon: ClipboardList,
+    color: "bg-blue-600",
+    screen: "workshop-intake",
+  },
+  {
     name: "New Job / Intake",
+    nameAr: "أمر عمل جديد / استقبال",
     icon: Wrench,
     color: "bg-blue-600",
     screen: "new-job-intake",
   },
   {
     name: "Job Cards",
+    nameAr: "بطاقات العمل",
     icon: ClipboardList,
     color: "bg-orange-500",
     screen: "job-cards",
   },
   {
     name: "Customers",
+    nameAr: "العملاء",
     icon: Users,
     color: "bg-cyan-600",
     screen: "customer-records",
   },
   {
+    name: "Customer Ledger",
+    nameAr: "حسابات العملاء",
+    icon: BookOpen,
+    color: "bg-indigo-600",
+    screen: "customer-ledger",
+  },
+  {
     name: "Inventory",
+    nameAr: "المخزون",
     icon: Package,
     color: "bg-emerald-600",
     screen: "inventory-list",
   },
   {
     name: "Parts Orders",
+    nameAr: "طلبات قطع الغيار",
     icon: ShoppingCart,
     color: "bg-amber-600",
     screen: "parts-orders",
   },
   {
     name: "Quotations",
+    nameAr: "عروض الأسعار",
     icon: FileText,
     color: "bg-pink-600",
     screen: "quotation-records",
   },
   {
     name: "Sales",
+    nameAr: "المبيعات",
     icon: Receipt,
     color: "bg-indigo-600",
     screen: "sales",
   },
   {
     name: "Purchases",
+    nameAr: "المشتريات",
     icon: ShoppingCart,
     color: "bg-teal-600",
     screen: "purchase-records",
   },
   {
     name: "Expenses",
+    nameAr: "المصروفات",
     icon: Wallet,
     color: "bg-rose-600",
     screen: "expense-records",
   },
   {
     name: "Daily Ledger",
+    nameAr: "دفتر الحسابات اليومية",
     icon: BookOpen,
     color: "bg-sky-600",
     screen: "daily-ledger",
   },
   {
     name: "Monthly Ledger",
+    nameAr: "دفتر الحسابات الشهرية",
     icon: CalendarDays,
     color: "bg-purple-600",
     screen: "monthly-ledger",
   },
 ];
 
-export default function OdooDesktop({ setActiveScreen, onLogout }) {
+export default function OdooDesktop({ setActiveScreen, onLogout, currentUser }) {
+
+  // WORKSHOP_MANAGER_DESKTOP_V1
+  const managerApplications = new Set([
+    "dashboard",
+    "workshop-intake",
+    "new-job-intake",
+    "job-cards",
+    "customer-records",
+    "quotation-records",
+    "expense-records"
+  ]);
+
+  const visibleApplications =
+    currentUser?.role === "Manager"
+      ? applications.filter((app) =>
+          managerApplications.has(app.screen)
+        )
+      : applications;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-violet-50">
       <header className="border-b border-slate-200 bg-white px-6 py-5">
@@ -131,7 +176,7 @@ export default function OdooDesktop({ setActiveScreen, onLogout }) {
         </div>
 
         <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-          {applications.map((app) => {
+          {visibleApplications.map((app) => {
             const Icon = app.icon;
 
             return (
@@ -145,9 +190,21 @@ export default function OdooDesktop({ setActiveScreen, onLogout }) {
                   <Icon className="h-8 w-8 text-white" />
                 </div>
 
-                <span className="text-center text-sm font-bold text-slate-800">
-                  {app.name}
-                </span>
+                <div className="flex min-h-[52px] w-full flex-col items-center justify-center gap-1">
+                  <span
+                    lang="en"
+                    className="text-center text-sm font-bold text-slate-800"
+                  >
+                    {app.name}
+                  </span>
+                  <span
+                    lang="ar"
+                    dir="rtl"
+                    className="text-center text-xl font-bold leading-relaxed text-slate-600"
+                  >
+                    {app.nameAr}
+                  </span>
+                </div>
 
                 <ArrowRight className="mt-3 h-4 w-4 text-slate-300 transition group-hover:text-violet-600" />
               </button>
@@ -158,3 +215,4 @@ export default function OdooDesktop({ setActiveScreen, onLogout }) {
     </div>
   );
 }
+

@@ -1,8 +1,16 @@
+import { enforceManagerApiAccess } from "../../../lib/managerApiGuard";
 import { requireWorkshopInvoiceIssuer } from "../../../lib/workshopAuth";
 import { NextResponse } from "next/server";
 import { supabase } from "../../../lib/supabaseClient";
 
 export async function GET() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/invoices",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const { data, error } = await supabase
       .from("invoices")
@@ -36,6 +44,13 @@ export async function GET() {
 }
 
 export async function POST() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/invoices",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   return NextResponse.json(
     {
       error: "Legacy invoice creation is disabled. Use the coordinated ZATCA issuance endpoint."

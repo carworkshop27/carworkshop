@@ -1,3 +1,4 @@
+import { enforceManagerApiAccess } from "../../../lib/managerApiGuard";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
@@ -151,6 +152,13 @@ async function registerInvoiceCustomer(invoice) {
   }
 }
 export async function GET() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/standalone-sales-invoices",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const auth = await authenticate();
 
@@ -176,6 +184,13 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/standalone-sales-invoices",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const auth = await authenticate();
 
@@ -279,7 +294,11 @@ export async function POST(request) {
 
     const { data, error } = await supabaseAdmin
       .from("standalone_sales_invoices")
-      .insert(record)
+      .insert({
+        ...record,
+        job_id: null,
+        job_relationship: "INDEPENDENT",
+      })
       .select("*")
       .single();
 
@@ -298,6 +317,13 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/standalone-sales-invoices",
+    "PUT"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const auth = await authenticate();
     if (auth.error) return respond(auth.error, auth.status);

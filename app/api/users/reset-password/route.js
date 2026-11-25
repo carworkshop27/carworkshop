@@ -1,10 +1,18 @@
-﻿import { NextResponse } from "next/server";
+import { enforceManagerApiAccess } from "../../../../lib/managerApiGuard";
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { requireWorkshopSuperUser } from "../../../../lib/workshopAuth";
 
 export const runtime = "nodejs";
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/users/reset-password",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const auth = await requireWorkshopSuperUser();
 

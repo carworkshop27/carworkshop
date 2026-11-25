@@ -1,8 +1,16 @@
+import { enforceManagerApiAccess } from "../../../../lib/managerApiGuard";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { requireWorkshopInvoiceIssuer } from "../../../../lib/workshopAuth";
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/quotation-invoices/issue",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const authorization = await requireWorkshopInvoiceIssuer();
 

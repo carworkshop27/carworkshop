@@ -1,3 +1,4 @@
+import { enforceManagerApiAccess } from "../../../lib/managerApiGuard";
 import { NextResponse } from "next/server";
 import { requireWorkshopQuotationAccess } from "../../../lib/workshopAuth";
 import { supabaseServer } from "../../../lib/supabaseServer";
@@ -7,6 +8,13 @@ const VAT_RATE = 15;
 const roundMoney = (value) => Number(Number(value || 0).toFixed(2));
 
 export async function GET() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/quotations",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const { data: quotations, error: quotationsError } = await supabaseServer
       .from("quotations")
@@ -107,6 +115,13 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/quotations",
+    "POST"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   let createdQuotationId = null;
 
   try {
@@ -412,6 +427,13 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/quotations",
+    "PUT"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
 
     const authorization = await requireWorkshopQuotationAccess("PUT");
@@ -672,6 +694,13 @@ export async function PUT(request) {
 }
 
 export async function DELETE(request) {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/quotations",
+    "DELETE"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
 
     const authorization = await requireWorkshopQuotationAccess("DELETE");

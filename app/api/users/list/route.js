@@ -1,4 +1,5 @@
-﻿import { NextResponse } from "next/server";
+import { enforceManagerApiAccess } from "../../../../lib/managerApiGuard";
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { requireWorkshopSuperUser } from "../../../../lib/workshopAuth";
 
@@ -6,6 +7,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const managerAccessDenied = await enforceManagerApiAccess(
+    "/api/users/list",
+    "GET"
+  );
+
+  if (managerAccessDenied) return managerAccessDenied;
+
   try {
     const auth = await requireWorkshopSuperUser();
 

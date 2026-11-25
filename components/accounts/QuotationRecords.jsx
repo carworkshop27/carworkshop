@@ -4,7 +4,10 @@ import { ArrowLeft, FileText, Pencil, Trash2 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useEffect, useState } from "react";
 
-export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
+export default function QuotationRecords({ setActiveScreen, onOpenQuotation, currentUser }) {
+  // WORKSHOP_MANAGER_QUOTATION_PERMISSION_V1
+  const canDeleteQuotation = currentUser?.role === "Super User";
+
   const [quotations, setQuotations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quotationToGenerate, setQuotationToGenerate] = useState(null);
@@ -16,7 +19,7 @@ export default function QuotationRecords({ setActiveScreen, onOpenQuotation }) {
   const [quotationSearch, setQuotationSearch] = useState("");
 
   const handleDeleteQuotation = async () => {
-    if (!quotationToDelete) return;
+    if (!canDeleteQuotation || !quotationToDelete) return;
 
     const quotationId = quotationToDelete.id;
 
@@ -1477,7 +1480,7 @@ const amountInWords =
 
                       {/* DELETE */}
                       <td className="px-5 py-4 text-center align-top">
-                        {!generatedInvoices[quotation.id] &&
+                        {canDeleteQuotation && !generatedInvoices[quotation.id] &&
                         !generatedTaxInvoices[quotation.id] ? (
                           <button
                             type="button"
