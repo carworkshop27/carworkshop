@@ -1,4 +1,5 @@
 "use client";
+import LoggedInUser from "../common/LoggedInUser";
 
 import { Search, ShieldCheck, UserPlus, LogOut, Menu, X } from "lucide-react";
 
@@ -83,39 +84,9 @@ export default function DashboardHeader({
           ========================================================= */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Current User */}
-            <div className="hidden lg:flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-              <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                  currentUser.role === "Super User"
-                    ? "bg-purple-100"
-                    : "bg-emerald-100"
-                }`}
-              >
-                <ShieldCheck
-                  className={`w-5 h-5 ${
-                    currentUser.role === "Super User"
-                      ? "text-purple-600"
-                      : "text-emerald-600"
-                  }`}
-                />
-              </div>
+            <LoggedInUser currentUser={currentUser} />
 
-              <div className="text-left leading-tight">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                  Logged in as
-                </p>
-
-                <p className="text-xs font-black text-slate-900">
-                  {currentUser.name}
-                </p>
-
-                <p className="text-[10px] font-bold text-slate-500">
-                  {currentUser.role}
-                </p>
-              </div>
-            </div>
-
-            {/* Logout */}
+{/* Logout */}
             <button
               onClick={handleLogout}
               title="Log Out"

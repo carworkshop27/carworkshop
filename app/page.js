@@ -1,4 +1,5 @@
 "use client";
+import LoggedInUser from "../components/common/LoggedInUser";
 
 import LoginScreen from "../components/auth/LoginScreen";
 import SuperUserSetup from "../components/auth/SuperUserSetup";
@@ -2807,13 +2808,23 @@ export default function Home() {
       </OdooModuleLayout>
     );
   };
+  // WORKSHOP_STANDALONE_IDENTITY_V1
+  const renderWithUserIdentity = (content) => (
+    <>
+      <div className="print:hidden flex items-center justify-end border-b border-slate-200 bg-white px-4 py-2">
+        <LoggedInUser currentUser={currentUser} />
+      </div>
+      {content}
+    </>
+  );
+
   if (activeScreen === "desktop") {
     return (
       <OdooDesktop currentUser={currentUser} setActiveScreen={handleSetActiveScreen} onLogout={handleLogout} />
     );
   }
   if (activeScreen === "invoice" && invoiceJob) {
-    return (
+    return renderWithUserIdentity(
       <div className="min-h-screen bg-slate-100 p-6">
         <div className="max-w-5xl mx-auto">
           <div className="mb-4 flex items-center">
@@ -2896,7 +2907,7 @@ export default function Home() {
     );
     const assignedTechsList = Array.from(assignedTechsSet);
 
-    return (
+    return renderWithUserIdentity(
       <div className="min-h-screen bg-slate-100 text-slate-800 pb-12">
         <header className="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -3539,7 +3550,7 @@ export default function Home() {
   }
 
   if (activeScreen === "standalone-sales-invoice-edit") {
-    return standaloneInvoiceToEdit ? (
+    return standaloneInvoiceToEdit ? renderWithUserIdentity(
       <StandaloneSalesInvoice
         key={standaloneInvoiceToEdit.id}
         template={standaloneInvoiceToEdit.template_type}
@@ -3551,7 +3562,7 @@ export default function Home() {
   }
 
   if (activeScreen === "standalone-sales-invoice-records") {
-    return (
+    return renderWithUserIdentity(
       <StandaloneSalesInvoiceRecords
         setActiveScreen={setActiveScreen}
         onEdit={(record) => {
@@ -3562,7 +3573,7 @@ export default function Home() {
     );
   }
   if (activeScreen === "professional-sales-invoice") {
-    return (
+    return renderWithUserIdentity(
       <StandaloneSalesInvoice
         template="professional"
         setActiveScreen={setActiveScreen}
@@ -3571,14 +3582,14 @@ export default function Home() {
   }
 
   if (activeScreen === "partner-workshop-sales-invoice") {
-    return (
+    return renderWithUserIdentity(
       <PartnerWorkshopSalesInvoice
         setActiveScreen={setActiveScreen}
       />
     );
   }
   if (activeScreen === "workshop-sales-invoice") {
-    return (
+    return renderWithUserIdentity(
       <StandaloneSalesInvoice
         template="workshop"
         setActiveScreen={setActiveScreen}
@@ -3590,7 +3601,7 @@ export default function Home() {
   }
 
   if (activeScreen === "purchase") {
-    return <PurchaseEntry setActiveScreen={setActiveScreen} />;
+    return renderWithUserIdentity(<PurchaseEntry setActiveScreen={setActiveScreen} />);
   }
 
   if (activeScreen === "purchase-records") {
@@ -3598,7 +3609,7 @@ export default function Home() {
   }
 
   if (activeScreen === "expense") {
-    return <ExpenseEntry setActiveScreen={setActiveScreen} />;
+    return renderWithUserIdentity(<ExpenseEntry setActiveScreen={setActiveScreen} />);
   }
 
   if (activeScreen === "expense-records") {
@@ -3615,7 +3626,7 @@ export default function Home() {
   }
 
   if (activeScreen === "expense-edit") {
-    return (
+    return renderWithUserIdentity(
       <ExpenseEdit
         expense={expenseToEdit}
         currentUser={currentUser}
@@ -3650,7 +3661,7 @@ export default function Home() {
   }
 
   if (activeScreen === "monthly-account-statement") {
-    return <MonthlyAccountStatement setActiveScreen={setActiveScreen} />;
+    return renderWithUserIdentity(<MonthlyAccountStatement setActiveScreen={setActiveScreen} />);
   }
 
   if (activeScreen === "customer-records") {
@@ -3658,7 +3669,7 @@ export default function Home() {
   }
 
   if (activeScreen === "quotation") {
-    return (
+    return renderWithUserIdentity(
       <Quotations
         setActiveScreen={setActiveScreen}
         quotationToEdit={quotationToEdit}
@@ -3677,7 +3688,7 @@ export default function Home() {
           ? "Back to Monthly Ledger"
           : "Back to Quotation Records";
 
-    return (
+    return renderWithUserIdentity(
       <QuotationInvoice
         quotation={quotationToEdit}
         setActiveScreen={setActiveScreen}

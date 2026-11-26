@@ -649,7 +649,13 @@ export default function CustomerStatement({ setActiveScreen, embedded = false })
 
           <div class="header">
             <div>
-              <div class="company">CAR WORKSHOP</div>
+              <div class="company">
+                <img
+                  src="${window.location.origin}/images/garage-logo.png"
+                  alt="Garage Talaa AlFakhir"
+                  style="display:block;width:180px;height:65px;object-fit:contain;object-position:left center;margin-bottom:8px;"
+                />
+              </div>
               <div class="subtitle">
                 CUSTOMER ACCOUNT STATEMENT
               </div>
@@ -697,7 +703,12 @@ export default function CustomerStatement({ setActiveScreen, embedded = false })
           <div class="summary-grid">
 
             <div class="summary-card red-card">
-              <div class="summary-label">Total Invoiced</div>
+              <div class="summary-label">
+                Total Invoiced
+                <div lang="ar" dir="rtl" style="text-align:left;font-family:Arial,Tahoma,sans-serif;font-size:12px;font-weight:700;margin-top:4px;line-height:1.5;">
+                  إجمالي قيمة الفواتير
+                </div>
+              </div>
               <div class="summary-value">
                 ${amount(summary.total_debit)}
               </div>
@@ -705,7 +716,12 @@ export default function CustomerStatement({ setActiveScreen, embedded = false })
             </div>
 
             <div class="summary-card green-card">
-              <div class="summary-label">Net Payments Received</div>
+              <div class="summary-label">
+                Net Payments Received
+                <div lang="ar" dir="rtl" style="text-align:left;font-family:Arial,Tahoma,sans-serif;font-size:12px;font-weight:700;margin-top:4px;line-height:1.5;">
+                  صافي المدفوعات المستلمة
+                </div>
+              </div>
               <div class="summary-value">
                 ${amount(summary.total_credit)}
               </div>
@@ -715,6 +731,9 @@ export default function CustomerStatement({ setActiveScreen, embedded = false })
             <div class="summary-card blue-card">
               <div class="summary-label">
                 Outstanding Balance
+                <div lang="ar" dir="rtl" style="text-align:left;font-family:Arial,Tahoma,sans-serif;font-size:12px;font-weight:700;margin-top:4px;line-height:1.5;">
+                  الرصيد المستحق
+                </div>
               </div>
               <div class="summary-value">
                 ${amount(summary.outstanding_balance)}
@@ -725,6 +744,9 @@ export default function CustomerStatement({ setActiveScreen, embedded = false })
             <div class="summary-card">
               <div class="summary-label">
                 Total Invoices
+                <div lang="ar" dir="rtl" style="text-align:left;font-family:Arial,Tahoma,sans-serif;font-size:12px;font-weight:700;margin-top:4px;line-height:1.5;">
+                  إجمالي عدد الفواتير
+                </div>
               </div>
               <div class="summary-value">
                 ${Number(summary.total_invoices || 0)}
@@ -924,7 +946,7 @@ export default function CustomerStatement({ setActiveScreen, embedded = false })
       // ACCOUNT SUMMARY
 
       const summaryRows = [
-        ["CAR WORKSHOP"],
+        ["Garage Talaa AlFakhir"],
         ["CUSTOMER ACCOUNT STATEMENT"],
         [],
         ["Customer Name", customer.customer_name],
@@ -997,7 +1019,7 @@ export default function CustomerStatement({ setActiveScreen, embedded = false })
       // TRANSACTION HISTORY
 
       const transactionRows = [
-        ["CAR WORKSHOP"],
+        ["Garage Talaa AlFakhir"],
         ["CUSTOMER TRANSACTION HISTORY"],
         ["Customer", customer.customer_name],
         ["Mobile", String(customer.phone || "")],

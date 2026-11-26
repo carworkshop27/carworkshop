@@ -1082,7 +1082,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           </div>
         </div>
 
-        {/* BOX 1 â€” CUSTOMER INFORMATION */}
+        {/* BOX 1 — CUSTOMER INFORMATION */}
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center gap-3 border-b border-slate-200 px-6 py-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
@@ -1214,7 +1214,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
             </div>
           </div>
         </section>
-        {/* BOX 2 â€” QUOTATION ITEMS */}
+        {/* BOX 2 — QUOTATION ITEMS */}
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
             <div>
@@ -1393,7 +1393,7 @@ export default function Quotation({ setActiveScreen, quotationToEdit = null }) {
           </div>
         </section>
 
-        {/* BOX 3 â€” TERMS & CONDITIONS */}
+        {/* BOX 3 — TERMS & CONDITIONS */}
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-black text-slate-900">

@@ -1628,7 +1628,7 @@ const amountInWords =
                       {option.en}
                     </span>
                     <span className="text-lg text-emerald-700">
-                      {invoiceLayout === option.id ? "●" : "â—‹"}
+                      {invoiceLayout === option.id ? "●" : "○"}
                     </span>
                   </div>
                   <p className="mt-2 text-sm font-semibold text-slate-700" dir="rtl">

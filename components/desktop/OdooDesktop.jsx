@@ -1,4 +1,5 @@
 "use client";
+import LoggedInUser from "../common/LoggedInUser";
 
 import {
   LayoutDashboard,
@@ -141,11 +142,14 @@ export default function OdooDesktop({ setActiveScreen, onLogout, currentUser }) 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-violet-50">
       <header className="border-b border-slate-200 bg-white px-6 py-5">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
+          <div className="order-last ml-auto">
+            <LoggedInUser currentUser={currentUser} />
+          </div>
           <button
             type="button"
             onClick={onLogout}
-            className="order-last ml-auto inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-700"
+            className="order-last inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-700"
           >
             <LogOut className="h-4 w-4" />
             Log Off

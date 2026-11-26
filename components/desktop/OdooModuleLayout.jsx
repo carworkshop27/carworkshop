@@ -1,4 +1,5 @@
 "use client";
+import LoggedInUser from "../common/LoggedInUser";
 
 import { useState } from "react";
 import {
@@ -183,7 +184,13 @@ export default function OdooModuleLayout({
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1">
+        <div className="print:hidden flex flex-wrap items-center justify-end border-b border-slate-200 bg-white px-4 py-2">
+          <LoggedInUser currentUser={currentUser} />
+        </div>
+
+        {children}
+      </div>
     </div>
   );
 }

@@ -763,14 +763,80 @@ export default function WorkshopIntake({
                 <div className="grid gap-4 md:grid-cols-2">
 
                   <Field label="Car Make / Brand" required>
+                    {/* WORKSHOP_CAR_BRAND_DROPDOWN_V1 */}
                     <input
                       required
                       maxLength={100}
                       value={make}
                       onChange={(e) => setMake(e.target.value)}
-                      placeholder="e.g. Toyota / تويوتا"
+                      list="workshop-car-brands"
+                      placeholder="Select or type brand / اختر ماركة السيارة"
+                      autoComplete="off"
                       className={inputClass}
                     />
+
+                    <datalist id="workshop-car-brands">
+                      {[
+                        ["Acura", "أكيورا"],
+                        ["Alfa Romeo", "ألفا روميو"],
+                        ["Aston Martin", "أستون مارتن"],
+                        ["Audi", "أودي"],
+                        ["BAIC", "بايك"],
+                        ["Bentley", "بنتلي"],
+                        ["BMW", "بي إم دبليو"],
+                        ["BYD", "بي واي دي"],
+                        ["Cadillac", "كاديلاك"],
+                        ["Changan", "شانجان"],
+                        ["Chery", "شيري"],
+                        ["Chevrolet", "شيفروليه"],
+                        ["Chrysler", "كرايسلر"],
+                        ["Citroen", "سيتروين"],
+                        ["Daihatsu", "دايهاتسو"],
+                        ["Dodge", "دودج"],
+                        ["Fiat", "فيات"],
+                        ["Ford", "فورد"],
+                        ["GAC", "جي إيه سي"],
+                        ["Geely", "جيلي"],
+                        ["Genesis", "جينيسيس"],
+                        ["GMC", "جي إم سي"],
+                        ["Great Wall", "جريت وول"],
+                        ["Haval", "هافال"],
+                        ["Honda", "هوندا"],
+                        ["Hongqi", "هونشي"],
+                        ["Hyundai", "هيونداي"],
+                        ["Infiniti", "إنفينيتي"],
+                        ["Isuzu", "إيسوزو"],
+                        ["JAC", "جاك"],
+                        ["Jaguar", "جاكوار"],
+                        ["Jeep", "جيب"],
+                        ["Jetour", "جيتور"],
+                        ["Kia", "كيا"],
+                        ["Land Rover", "لاند روفر"],
+                        ["Lexus", "لكزس"],
+                        ["Lincoln", "لينكولن"],
+                        ["Mazda", "مازدا"],
+                        ["Mercedes-Benz", "مرسيدس بنز"],
+                        ["MG", "إم جي"],
+                        ["MINI", "ميني"],
+                        ["Mitsubishi", "ميتسوبيشي"],
+                        ["Nissan", "نيسان"],
+                        ["Peugeot", "بيجو"],
+                        ["Porsche", "بورش"],
+                        ["Renault", "رينو"],
+                        ["Suzuki", "سوزوكي"],
+                        ["Tank", "تانك"],
+                        ["Toyota", "تويوتا"],
+                        ["Volkswagen", "فولكس فاجن"],
+                        ["Volvo", "فولفو"]
+                      ]
+                        .sort((a, b) => a[0].localeCompare(b[0]))
+                        .map(([english, arabic]) => (
+                          <option
+                            key={english}
+                            value={`${english} - ${arabic}`}
+                          />
+                        ))}
+                    </datalist>
                   </Field>
 
                   <Field label="Model" required>

@@ -8,7 +8,7 @@ const DISCLAIMER_EN =
   "This is not a tax invoice. Please request a tax invoice if required.";
 
 const DISCLAIMER_AR =
-  "Ù‡Ø°Ù‡ Ù„ÙŠØ³Øª ÙØ§ØªÙˆØ±Ø© Ø¶Ø±ÙŠØ¨ÙŠØ©. ÙŠØ±Ø¬Ù‰ Ø·Ù„Ø¨ ÙØ§ØªÙˆØ±Ø© Ø¶Ø±ÙŠØ¨ÙŠØ© Ø¹Ù†Ø¯ Ø§Ù„Ø­Ø§Ø¬Ø©.";
+  "هذه ليست فاتورة ضريبية. يرجى طلب فاتورة ضريبية عند الحاجة.";
 
 const money = (value) =>
   Number(value || 0).toLocaleString("en-SA", {
@@ -402,8 +402,8 @@ export default function StandaloneSalesInvoice({
     // Locate the existing totals and Notes sections.
     const totalsSection = sections.find(
       (section) =>
-        section.textContent.includes("Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹") &&
-        section.textContent.includes("Total / Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ"),
+        section.textContent.includes("Subtotal / المجموع") &&
+        section.textContent.includes("Total / الإجمالي"),
     );
 
     const notesSection = sections.find(
@@ -498,8 +498,8 @@ export default function StandaloneSalesInvoice({
       const summarySection = Array.from(newPage.children).find(
         (element) =>
           element.tagName === "SECTION" &&
-          element.textContent.includes("Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹") &&
-          element.textContent.includes("Total / Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ"),
+          element.textContent.includes("Subtotal / المجموع") &&
+          element.textContent.includes("Total / الإجمالي"),
       );
 
       if (summarySection) {
@@ -546,7 +546,7 @@ let itemsOnCurrentPage = 0;
       const bottomSections = Array.from(currentPage.children).filter(
         (element) =>
           element.tagName === "SECTION" &&
-          (element.textContent.includes("Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹") ||
+          (element.textContent.includes("Subtotal / المجموع") ||
             element.querySelector("textarea")),
       );
 
@@ -621,8 +621,8 @@ let itemsOnCurrentPage = 0;
       const summarySection = Array.from(printedPage.children).find(
         (element) =>
           element.tagName === "SECTION" &&
-          element.textContent.includes("Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹") &&
-          element.textContent.includes("Total / Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ"),
+          element.textContent.includes("Subtotal / المجموع") &&
+          element.textContent.includes("Total / الإجمالي"),
       );
 
       if (summarySection) {
@@ -791,11 +791,11 @@ if (numberedPages.length > 1) {
   </colgroup>
             <thead>
               <tr className="bg-slate-100 text-left text-slate-700">
-                <th className="border p-2">Description / Ø§Ù„ÙˆØµÙ</th>
-                <th className="border p-2">Qty / Ø§Ù„ÙƒÙ…ÙŠØ©</th>
-                <th className="border p-2">Price / Ø§Ù„Ø³Ø¹Ø±</th>
-                <th className="border p-2">Discount / Ø§Ù„Ø®ØµÙ…</th>
-                <th className="border p-2 text-right">Amount / Ø§Ù„Ù…Ø¨Ù„Øº</th>
+                <th className="border p-2">Description / الوصف</th>
+                <th className="border p-2">Qty / الكمية</th>
+                <th className="border p-2">Price / السعر</th>
+                <th className="border p-2">Discount / الخصم</th>
+                <th className="border p-2 text-right">Amount / المبلغ</th>
                 <th className="no-print border p-2">Action</th>
               </tr>
             </thead>
@@ -1586,7 +1586,7 @@ box-sizing: border-box !important;
         {savedInvoice && !isHistorical && !isIssued && (
           <button type="button" onClick={handleIssueInvoice} disabled={issuing}
             className="rounded-lg bg-amber-700 px-5 py-2 font-bold text-white disabled:opacity-50">
-            {issuing ? "Issuing..." : "Issue Tax Invoice / Ø¥ØµØ¯Ø§Ø± ÙØ§ØªÙˆØ±Ø© Ø¶Ø±ÙŠØ¨ÙŠØ©"}
+            {issuing ? "Issuing..." : "Issue Tax Invoice / إصدار فاتورة ضريبية"}
           </button>
         )}
         <button
@@ -1642,7 +1642,7 @@ box-sizing: border-box !important;
       )}
       <section className="no-print mx-auto mb-4 max-w-5xl rounded-xl border border-blue-200 bg-white p-4">
         <h2 className="mb-3 text-base font-black text-slate-800">
-          Existing Customer Search / Ø§Ù„Ø¨Ø­Ø« Ø¹Ù† Ø¹Ù…ÙŠÙ„
+          Existing Customer Search / البحث عن عميل
         </h2>
 
         <div className="flex flex-wrap gap-2">
@@ -1720,7 +1720,7 @@ box-sizing: border-box !important;
               <input
                 dir="rtl"
                 className="w-full text-right text-lg font-bold outline-none"
-                placeholder="Ø§Ø³Ù… Ø§Ù„Ø´Ø±ÙƒØ© / Ø§Ù„ÙˆØ±Ø´Ø©"
+                placeholder="اسم الشركة / الورشة"
                 value={invoice.companyArabic}
                 onChange={(event) =>
                   updateInvoice("companyArabic", event.target.value)
@@ -1767,7 +1767,7 @@ box-sizing: border-box !important;
                 {isIssued ? "TAX INVOICE" : partnerWorkshop ? "PARTNER WORKSHOP SALES INVOICE" : workshop ? "WORKSHOP SALES INVOICE" : "SALES INVOICE"}
               </h1>
               <p className="text-right text-lg font-bold" dir="rtl">
-                {isIssued ? "ÙØ§ØªÙˆØ±Ø© Ø¶Ø±ÙŠØ¨ÙŠØ©" : "ÙØ§ØªÙˆØ±Ø© Ù…Ø¨ÙŠØ¹Ø§Øª"}
+                {isIssued ? "فاتورة ضريبية" : "فاتورة مبيعات"}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                 <span>Invoice No.</span>
@@ -1795,48 +1795,48 @@ box-sizing: border-box !important;
 
         <section className="mb-7">
           <h2 className="mb-3 text-base font-black">
-            Customer Details / Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„
+            Customer Details / بيانات العميل
           </h2>
           <div className="grid grid-cols-2 gap-3">
             {field("Customer Name", "customer")}
-            {field("Ø§Ø³Ù… Ø§Ù„Ø¹Ù…ÙŠÙ„", "customerArabic")}
-            {field("Phone / Ø§Ù„Ù‡Ø§ØªÙ", "customerPhone")}
-            {field("Address / Ø§Ù„Ø¹Ù†ÙˆØ§Ù†", "customerAddress")}
+            {field("اسم العميل", "customerArabic")}
+            {field("Phone / الهاتف", "customerPhone")}
+            {field("Address / العنوان", "customerAddress")}
           </div>
         </section>
 
         {workshop && !partnerWorkshop && (
           <section className="mb-7 rounded-lg border bg-slate-50 p-4">
             <h2 className="mb-3 text-base font-black">
-              Vehicle Details / Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø±ÙƒØ¨Ø©
+              Vehicle Details / بيانات المركبة
             </h2>
             <div className="grid gap-3 md:grid-cols-3">
-              {field("Make / Ø§Ù„Ø´Ø±ÙƒØ©", "vehicleMake")}
-              {field("Model / Ø§Ù„Ø·Ø±Ø§Ø²", "vehicleModel")}
-              {field("Plate Number / Ø§Ù„Ù„ÙˆØ­Ø©", "plateNumber")}
-              {field("Chassis / Ø§Ù„Ù‡ÙŠÙƒÙ„", "chassisNumber")}
-              {field("Mileage / Ø§Ù„Ø¹Ø¯Ø§Ø¯", "mileage")}
+              {field("Make / الشركة", "vehicleMake")}
+              {field("Model / الطراز", "vehicleModel")}
+              {field("Plate Number / اللوحة", "plateNumber")}
+              {field("Chassis / الهيكل", "chassisNumber")}
+              {field("Mileage / العداد", "mileage")}
             </div>
           </section>
         )}
 
         {workshop ? (
           <>
-            {renderTable("part", "Parts & Materials / Ù‚Ø·Ø¹ Ø§Ù„ØºÙŠØ§Ø± ÙˆØ§Ù„Ù…ÙˆØ§Ø¯")}
-            {renderTable("labor", "Services & Labor / Ø§Ù„Ø®Ø¯Ù…Ø§Øª ÙˆØ£Ø¬ÙˆØ± Ø§Ù„Ø¹Ù…Ù„")}
+            {renderTable("part", "Parts & Materials / قطع الغيار والمواد")}
+            {renderTable("labor", "Services & Labor / الخدمات وأجور العمل")}
           </>
         ) : (
-          renderTable("item", "Invoice Items / Ø¨Ù†ÙˆØ¯ Ø§Ù„ÙØ§ØªÙˆØ±Ø©")
+          renderTable("item", "Invoice Items / بنود الفاتورة")
         )}
 
         <section className="ml-auto mt-6 w-full max-w-sm space-y-3 rounded-lg border p-4">
           <div className="flex justify-between">
-            <span>Subtotal / Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹</span>
+            <span>Subtotal / المجموع</span>
             <strong>{money(totals.subtotal)} SAR</strong>
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <span>Additional Discount / Ø®ØµÙ… Ø¥Ø¶Ø§ÙÙŠ</span>
+            <span>Additional Discount / خصم إضافي</span>
             <input
               type="number"
               min="0"
@@ -1851,19 +1851,19 @@ box-sizing: border-box !important;
 
           {!isHistorical && (
             <>
-              <div className="flex justify-between"><span>Taxable Amount / Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ø®Ø§Ø¶Ø¹ Ù„Ù„Ø¶Ø±ÙŠØ¨Ø©</span><strong>{money(displayTotals?.taxable ?? totals.taxable)} SAR</strong></div>
-              <div className="flex justify-between"><span>VAT 15% / Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù‚ÙŠÙ…Ø© Ø§Ù„Ù…Ø¶Ø§ÙØ©</span><strong>{money(displayTotals?.vat ?? totals.vat)} SAR</strong></div>
+              <div className="flex justify-between"><span>Taxable Amount / المبلغ الخاضع للضريبة</span><strong>{money(displayTotals?.taxable ?? totals.taxable)} SAR</strong></div>
+              <div className="flex justify-between"><span>VAT 15% / ضريبة القيمة المضافة</span><strong>{money(displayTotals?.vat ?? totals.vat)} SAR</strong></div>
             </>
           )}
           <div className="flex justify-between border-t-2 pt-3 text-lg font-black">
-            <span>Total / Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ</span>
+            <span>Total / الإجمالي</span>
             <span>{money(isHistorical ? totals.taxable : displayTotals?.total ?? totals.total)} SAR</span>
           </div>
         </section>
 
         <section className="mt-8">
           <label className="block text-sm font-bold">
-            Notes / Ù…Ù„Ø§Ø­Ø¸Ø§Øª
+            Notes / ملاحظات
             <textarea
               value={invoice.notes}
               onChange={(event) => updateInvoice("notes", event.target.value)}
@@ -1877,9 +1877,9 @@ box-sizing: border-box !important;
 
         {workshop && (
           <div className="mt-10 grid grid-cols-2 gap-8 text-sm">
-            <div className="border-t pt-2">Prepared By / Ø£Ø¹Ø¯ Ø¨ÙˆØ§Ø³Ø·Ø©</div>
+            <div className="border-t pt-2">Prepared By / أعد بواسطة</div>
             <div className="border-t pt-2">
-              Customer Signature / ØªÙˆÙ‚ÙŠØ¹ Ø§Ù„Ø¹Ù…ÙŠÙ„
+              Customer Signature / توقيع العميل
             </div>
           </div>
         )}
@@ -1887,14 +1887,14 @@ box-sizing: border-box !important;
         <footer className="mt-12 border-t pt-5 text-center">
           <p className="font-bold">Thank you for your business!</p>
           <p className="font-bold" dir="rtl">
-            Ø´ÙƒØ±Ø§Ù‹ Ù„ØªØ¹Ø§Ù…Ù„ÙƒÙ… Ù…Ø¹Ù†Ø§
+            شكراً لتعاملكم معنا
           </p>
 
           {isIssued && savedInvoice?.zatca_qr_payload ? (
             <div className="mt-3 flex flex-col items-center gap-1">
               <QRCodeSVG value={savedInvoice.zatca_qr_payload} size={110} level="M" />
-              <p className="text-[10px]">VAT No. / Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¶Ø±ÙŠØ¨ÙŠ: 300096253100003</p>
-              <p className="text-[10px]">Issued / ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¥ØµØ¯Ø§Ø±: {savedInvoice.issued_at ? new Date(savedInvoice.issued_at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", hour12: false }) : "-"}</p>
+              <p className="text-[10px]">VAT No. / الرقم الضريبي: 300096253100003</p>
+              <p className="text-[10px]">Issued / تاريخ الإصدار: {savedInvoice.issued_at ? new Date(savedInvoice.issued_at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", hour12: false }) : "-"}</p>
             </div>
           ) : (
             <div className="mt-5 text-[9px] leading-relaxed text-slate-500">

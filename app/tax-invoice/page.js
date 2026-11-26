@@ -4,12 +4,50 @@ import { Suspense, useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import TaxInvoice from "../../components/tax-invoices/TaxInvoice";
+import LoggedInUser from "../../components/common/LoggedInUser";
 
 function TaxInvoiceContent() {
   const searchParams = useSearchParams();
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // WORKSHOP_TAX_INVOICE_IDENTITY_V1
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCurrentUser() {
+      try {
+        const response = await fetch("/api/auth/me", {
+          cache: "no-store",
+          credentials: "same-origin",
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          setCurrentUser(null);
+          return;
+        }
+
+        const result = await response.json();
+
+        if (!controller.signal.aborted) {
+          setCurrentUser(result.user || null);
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Unable to load current user:", error);
+          setCurrentUser(null);
+        }
+      }
+    }
+
+    loadCurrentUser();
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const loadJob = () => {
@@ -132,7 +170,7 @@ function TaxInvoiceContent() {
 
   return (
     <main className="min-h-screen bg-slate-100 p-6">
-      <div className="mb-4">
+      <div className="print:hidden mb-4 flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => window.history.back()}
@@ -141,6 +179,8 @@ function TaxInvoiceContent() {
           <ArrowLeft className="h-4 w-4" />
           Back to Job Cards
         </button>
+
+        <LoggedInUser currentUser={currentUser} />
       </div>
 
       <TaxInvoice

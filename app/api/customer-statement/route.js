@@ -3,7 +3,7 @@ import "server-only";
 
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import {
-  requireWorkshopSuperUser
+  requireWorkshopManagerAccess
 } from "../../../lib/workshopAuth";
 
 export const dynamic = "force-dynamic";
@@ -125,7 +125,7 @@ export async function GET(request) {
   if (managerAccessDenied) return managerAccessDenied;
 
   try {
-    const auth = await requireWorkshopSuperUser();
+    const auth = await requireWorkshopManagerAccess();
 
     if (!auth.authorized) {
       return reply(

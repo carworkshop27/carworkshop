@@ -761,7 +761,7 @@ export default function Dashboard({
                           onClick={() => setActiveScreen("professional-sales-invoice")}
                           className="ml-3 w-[calc(100%-12px)] rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white"
                         >
-                          1 â€” Professional Sales Invoice
+                          1 — Professional Sales Invoice
                         </button>
 
                         <button
@@ -769,7 +769,7 @@ export default function Dashboard({
                           onClick={() => setActiveScreen("workshop-sales-invoice")}
                           className="ml-3 w-[calc(100%-12px)] rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white"
                         >
-                          2 â€” Detailed Workshop Sales Invoice
+                          2 — Detailed Workshop Sales Invoice
                         </button>
 
                         <button
@@ -777,7 +777,7 @@ export default function Dashboard({
                           onClick={() => setActiveScreen("partner-workshop-sales-invoice")}
                           className="ml-3 w-[calc(100%-12px)] rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white"
                         >
-                          3 â€” Partner Workshop Sales Invoice
+                          3 — Partner Workshop Sales Invoice
                         </button>
                         <button
                           type="button"

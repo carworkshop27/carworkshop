@@ -341,7 +341,7 @@ export default function Invoice({
                     </td>
 
                     <td className="px-4 py-3 text-right font-bold whitespace-nowrap">
-                      âƒ{amount.toFixed(2)}
+                      SAR {amount.toFixed(2)}
                     </td>
                   </tr>
                 );
@@ -364,7 +364,7 @@ export default function Invoice({
                   </td>
 
                   <td className="px-4 py-3 text-right font-bold whitespace-nowrap">
-                    âƒ{Number(item.cost || 0).toFixed(2)}
+                    SAR {Number(item.cost || 0).toFixed(2)}
                   </td>
                 </tr>
               ))}
@@ -386,7 +386,7 @@ export default function Invoice({
                   </td>
 
                   <td className="px-4 py-3 text-right font-bold whitespace-nowrap">
-                    âƒ{Number(item.cost || 0).toFixed(2)}
+                    SAR {Number(item.cost || 0).toFixed(2)}
                   </td>
                 </tr>
               ))}
@@ -400,13 +400,13 @@ export default function Invoice({
                     <div className="text-xs text-slate-500 mt-0.5">
                       Spare Part
                       {part.qty && Number(part.qty) > 1
-                        ? ` â€¢ Qty: ${part.qty}`
+                        ? ` • Qty: ${part.qty}`
                         : ""}
                     </div>
                   </td>
 
                   <td className="px-4 py-3 text-right font-bold whitespace-nowrap">
-                    âƒ{Number(part.price || 0).toFixed(2)}
+                    SAR {Number(part.price || 0).toFixed(2)}
                   </td>
                 </tr>
               ))}
@@ -435,28 +435,28 @@ export default function Invoice({
         <div className="w-full md:w-96 border border-slate-300 rounded-xl overflow-hidden">
           <div className="flex justify-between px-4 py-3 border-b border-slate-200">
             <span className="font-bold">Subtotal</span>
-            <span className="font-bold">âƒ{subtotal.toFixed(2)}</span>
+            <span className="font-bold">SAR {subtotal.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between px-4 py-3 border-b border-slate-200">
             <span className="font-bold">Discount</span>
-            <span className="font-bold">âƒ{discount.toFixed(2)}</span>
+            <span className="font-bold">SAR {discount.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between px-4 py-3 border-b border-slate-200">
             <span className="font-bold">Taxable Amount</span>
-            <span className="font-bold">âƒ{taxableAmount.toFixed(2)}</span>
+            <span className="font-bold">SAR {taxableAmount.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between px-4 py-3 border-b border-slate-200">
             <span className="font-bold">VAT ({vatRate}%)</span>
-            <span className="font-bold">âƒ{vatAmount.toFixed(2)}</span>
+            <span className="font-bold">SAR {vatAmount.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between px-4 py-4 bg-slate-900 text-white">
             <span className="font-black text-lg">Grand Total</span>
 
-            <span className="font-black text-lg">âƒ{grandTotal.toFixed(2)}</span>
+            <span className="font-black text-lg">SAR {grandTotal.toFixed(2)}</span>
           </div>
         </div>
       </div>
