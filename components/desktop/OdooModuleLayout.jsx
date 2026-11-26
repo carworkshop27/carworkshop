@@ -60,6 +60,12 @@ export default function OdooModuleLayout({
 }) {
   const isManager = currentUser?.role === "Manager";
 
+  // WORKSHOP_INTAKE_MOBILE_NAV_V1
+  const isIntakeScreen = [
+    "workshop-intake",
+    "workshop-intake-new"
+  ].includes(activeScreen);
+
   const managerScreens = new Set([
     "dashboard",
     "workshop-intake",
@@ -91,7 +97,7 @@ export default function OdooModuleLayout({
   return (
     <div className="flex min-h-screen bg-slate-100">
       <aside
-        className={`shrink-0 border-r border-slate-200 bg-white transition-all duration-200 ${
+        className={`${isIntakeScreen ? "hidden md:block" : ""} shrink-0 border-r border-slate-200 bg-white transition-all duration-200 ${
           collapsed ? "w-20" : "w-64"
         }`}
       >
@@ -185,6 +191,25 @@ export default function OdooModuleLayout({
       </aside>
 
       <div className="min-w-0 flex-1">
+
+        {isIntakeScreen && (
+          <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 print:hidden md:hidden">
+
+            <button
+              type="button"
+              onClick={() => setActiveScreen("desktop")}
+              className="flex min-h-11 items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-bold text-white hover:bg-violet-700"
+            >
+              <House size={18} />
+              Desktop Home
+            </button>
+
+            <span className="text-sm font-black text-violet-700">
+              Car Workshop
+            </span>
+
+          </div>
+        )}
         <div className="print:hidden flex flex-wrap items-center justify-end border-b border-slate-200 bg-white px-4 py-2">
           <LoggedInUser currentUser={currentUser} />
         </div>

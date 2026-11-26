@@ -19,14 +19,14 @@ import {
 function Label({ en, ar }) {
   return (
     <div>
-      <div className="text-base font-bold">{en}</div>
-      <div lang="ar" className="text-xl font-bold">{ar}</div>
+      <div className="text-sm font-bold md:text-base">{en}</div>
+      <div lang="ar" className="text-base font-bold md:text-xl">{ar}</div>
     </div>
   );
 }
 
 const inputClass =
-  "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+  "w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 
 const money = (value) =>
   Number(value || 0).toLocaleString("en-SA", {
@@ -266,7 +266,7 @@ export default function IntakeRecords({ setActiveScreen }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
+    <div className="min-h-screen min-w-0 bg-slate-100 p-2 sm:p-4 md:p-6">
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
 
@@ -282,10 +282,10 @@ export default function IntakeRecords({ setActiveScreen }) {
           </button>
 
           <div>
-            <h1 className="text-3xl font-black">
+            <h1 className="text-xl font-black md:text-3xl">
               In-Take Records
             </h1>
-            <h2 lang="ar" className="text-3xl font-bold text-slate-600">
+            <h2 lang="ar" className="text-xl font-bold text-slate-600 md:text-3xl">
               سجلات استقبال المركبات
             </h2>
           </div>
@@ -295,7 +295,7 @@ export default function IntakeRecords({ setActiveScreen }) {
         <button
           type="button"
           onClick={() => setActiveScreen("workshop-intake-new")}
-          className="flex items-center gap-3 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
+          className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700 md:w-auto md:justify-start"
         >
           <Plus size={24} />
           <Label en="New In-Take" ar="استقبال جديد" />
@@ -305,21 +305,21 @@ export default function IntakeRecords({ setActiveScreen }) {
 
       <div className="mb-5 grid gap-4 md:grid-cols-2">
 
-        <div className="flex items-center gap-4 rounded-2xl border bg-white p-5 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3 rounded-2xl border bg-white p-3 shadow-sm md:gap-4 md:p-5">
           <ClipboardList size={32} className="text-blue-600" />
           <div>
             <Label en="Total In-Take Records" ar="إجمالي سجلات الاستقبال" />
-            <div className="mt-2 text-3xl font-black">
+            <div className="mt-2 break-words text-xl font-black md:text-3xl">
               {loading || error ? "-" : filtered.length}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-2xl border bg-white p-5 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3 rounded-2xl border bg-white p-3 shadow-sm md:gap-4 md:p-5">
           <Wallet size={32} className="text-emerald-600" />
           <div>
             <Label en="Total Estimated Cost" ar="إجمالي التكلفة التقديرية" />
-            <div className="mt-2 text-3xl font-black text-emerald-700">
+            <div className="mt-2 break-words text-xl font-black text-emerald-700 md:text-3xl">
               {loading || error ? "-" : money(totalCost)} SAR
             </div>
             <div className="text-sm text-slate-500">
@@ -330,7 +330,7 @@ export default function IntakeRecords({ setActiveScreen }) {
 
       </div>
 
-      <div className="mb-5 rounded-2xl border bg-white p-5 shadow-sm">
+      <div className="mb-5 min-w-0 rounded-2xl border bg-white p-3 shadow-sm md:p-5">
 
         <div className="grid items-end gap-4 lg:grid-cols-4">
 
@@ -438,7 +438,144 @@ export default function IntakeRecords({ setActiveScreen }) {
         ) : (
 
           <>
-            <div className="overflow-x-auto">
+                        {/* WORKSHOP_INTAKE_MOBILE_CARDS_V1 */}
+
+            <div className="space-y-3 bg-slate-100 p-2 md:hidden">
+
+              {visible.map((record) => (
+
+                <article
+                  key={record.id}
+                  className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                >
+
+                  <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
+
+                    <div className="min-w-0">
+                      <Label
+                        en="Job Card"
+                        ar={"\u0628\u0637\u0627\u0642\u0629 \u0627\u0644\u0639\u0645\u0644"}
+                      />
+                      <div className="break-all text-lg font-black text-blue-700">
+                        {record.id}
+                      </div>
+                    </div>
+
+                    <span className="max-w-full break-words rounded-lg bg-blue-100 px-2 py-2 text-xs font-bold text-blue-800">
+                      {record.status || "-"}
+                    </span>
+
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 py-3">
+
+                    {[
+                      [columns[2], record.intake_date],
+                      [columns[3], record.owner],
+                      [columns[4], record.phone],
+                      [columns[5], record.make],
+                      [columns[6], record.model],
+                      [columns[7], record.plate]
+                    ].map(([[en, ar], value]) => (
+
+                      <div key={en} className="min-w-0 rounded-lg bg-slate-50 p-2">
+
+                        <div className="text-slate-500">
+                          <Label en={en} ar={ar} />
+                        </div>
+
+                        <div className="mt-1 break-words text-sm font-bold text-slate-900">
+                          {value || "-"}
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                  <div className="rounded-lg bg-emerald-50 p-3">
+
+                    <Label
+                      en={columns[8][0]}
+                      ar={columns[8][1]}
+                    />
+
+                    <div className="mt-1 break-words text-xl font-black text-emerald-700">
+                      {money(record.approximate_cost)} SAR
+                    </div>
+
+                  </div>
+
+                  <div className="mt-3 rounded-lg bg-slate-50 p-3">
+
+                    <Label
+                      en={columns[10][0]}
+                      ar={columns[10][1]}
+                    />
+
+                    <div className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">
+                      {record.issue || "-"}
+                    </div>
+
+                  </div>
+
+                  <div className="mt-3 flex gap-2">
+
+                    <button
+                      type="button"
+                      disabled={Boolean(deletingId)}
+                      onClick={() => {
+                        setActionError("");
+                        setActionMessage("");
+                        setEditingRecord(record);
+                      }}
+                      className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-blue-700 disabled:opacity-40"
+                    >
+                      <Pencil size={18} />
+                      <Label
+                        en="Edit"
+                        ar={"\u062A\u0639\u062F\u064A\u0644"}
+                      />
+                    </button>
+
+                    {canDelete && (
+
+                      <button
+                        type="button"
+                        disabled={Boolean(deletingId)}
+                        onClick={() => handleDelete(record)}
+                        className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700 disabled:opacity-40"
+                      >
+                        <Trash2 size={18} />
+                        <Label
+                          en={deletingId === record.id ? "Deleting..." : "Delete"}
+                          ar={"\u062D\u0630\u0641"}
+                        />
+                      </button>
+
+                    )}
+
+                  </div>
+
+                </article>
+
+              ))}
+
+              {visible.length === 0 && (
+
+                <div className="rounded-xl border bg-white p-8 text-center text-slate-500">
+                  <Label
+                    en="No records found"
+                    ar={"\u0644\u0627 \u062A\u0648\u062C\u062F \u0633\u062C\u0644\u0627\u062A"}
+                  />
+                </div>
+
+              )}
+
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
 
               <table className="w-full text-left">
 

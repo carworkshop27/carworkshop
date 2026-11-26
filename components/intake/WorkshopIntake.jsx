@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 const inputClass =
-  "w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none transition placeholder:font-medium placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+  "w-full min-w-0 max-w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base sm:px-4 sm:text-sm font-bold text-slate-900 outline-none transition placeholder:font-medium placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 
 function today() {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -83,15 +83,15 @@ const arabicLabels = {
 
 function Bilingual({ value, small = false }) {
   return (
-    <span className="inline-flex flex-col gap-0.5">
-      <span className={small ? "text-base font-medium" : "text-lg font-bold"}>{value}</span>
+    <span className="inline-flex min-w-0 flex-col gap-0.5 break-words">
+      <span className={small ? "text-xs sm:text-base font-medium" : "text-sm sm:text-lg font-bold"}>{value}</span>
       {arabicLabels[value] && (
         <span
           lang="ar"
           dir="rtl"
           className={small
-            ? "text-base font-bold leading-relaxed"
-            : "text-2xl font-bold leading-relaxed"}
+            ? "text-sm sm:text-base font-bold leading-relaxed"
+            : "text-lg sm:text-2xl font-bold leading-relaxed"}
         >
           {arabicLabels[value]}
         </span>
@@ -102,9 +102,9 @@ function Bilingual({ value, small = false }) {
 
 function Section({ icon: Icon, title, subtitle, children }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center gap-3 rounded-t-2xl border-b border-slate-200 bg-slate-50 px-5 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center gap-3 rounded-t-2xl border-b border-slate-200 bg-slate-50 px-3 py-3 sm:px-5 sm:py-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10 bg-blue-100 text-blue-700">
           <Icon className="h-5 w-5" />
         </div>
 
@@ -121,7 +121,7 @@ function Section({ icon: Icon, title, subtitle, children }) {
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="min-w-0 p-3 sm:p-5">
         {children}
       </div>
     </section>
@@ -130,7 +130,7 @@ function Section({ icon: Icon, title, subtitle, children }) {
 
 function Field({ label, children, required = false }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="mb-2 block text-sm font-black text-slate-700">
         <Bilingual value={label} />
         {required && (
@@ -150,6 +150,7 @@ export default function WorkshopIntake({
   onUpdated = null
 }) {
   // WORKSHOP_INTAKE_EDIT_MODE_V1
+  // WORKSHOP_INTAKE_MOBILE_V1
 
   const isEditing = Boolean(initialRecord?.id);
 
@@ -484,7 +485,7 @@ export default function WorkshopIntake({
     <div className="min-h-screen bg-slate-100 text-slate-900">
 
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1500px] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-2 px-3 py-2 sm:flex-nowrap sm:gap-4 sm:px-6 sm:py-3 lg:px-8">
 
           <button
             type="button"
@@ -499,7 +500,7 @@ export default function WorkshopIntake({
           <h1 className="text-xl font-black tracking-tight text-slate-950">
             <Bilingual value={isEditing ? "Edit In-Take" : "In-Take"} />
             {isEditing && (
-              <span className="ml-4 rounded-lg bg-blue-100 px-4 py-2 text-lg font-black text-blue-800">
+              <span className="ml-2 inline-block break-all rounded-lg bg-blue-100 px-2 py-1 text-sm font-black text-blue-800 sm:ml-4 sm:px-4 sm:py-2 sm:text-lg">
                 {initialRecord.id}
               </span>
             )}
@@ -508,10 +509,10 @@ export default function WorkshopIntake({
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full min-w-0 max-w-[1500px] px-2 py-3 sm:px-6 sm:py-6 lg:px-8">
 
         {savedJobId ? (
-          <section className="rounded-2xl border border-emerald-200 bg-white p-8 text-center shadow-sm">
+          <section className="rounded-2xl border border-emerald-200 bg-white p-4 text-center shadow-sm sm:p-8">
 
             <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-600" />
 
@@ -553,9 +554,9 @@ export default function WorkshopIntake({
           </section>
         ) : (
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="min-w-0 space-y-3 sm:space-y-5">
 
-            <fieldset disabled={saving} className="space-y-5">
+            <fieldset disabled={saving} className="min-w-0 space-y-3 sm:space-y-5">
 
               <Section
                 icon={CalendarDays}
@@ -579,7 +580,7 @@ export default function WorkshopIntake({
                 subtitle="Select or register a customer"
               >
 
-                <div className="mb-5 flex flex-wrap gap-6">
+                <div className="mb-4 flex flex-wrap gap-3 sm:mb-5 sm:gap-6">
 
                   {[
                     ["existing", "Existing Customer"],
@@ -610,9 +611,9 @@ export default function WorkshopIntake({
 
                 {customerType === "existing" ? (
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
 
-                    <div ref={dropdownRef} className="relative">
+                    <div ref={dropdownRef} className="relative min-w-0">
 
                       <p className="mb-2 text-sm font-black text-slate-700">
                         <Bilingual value="Select Customer" />
@@ -661,12 +662,12 @@ export default function WorkshopIntake({
                               value={search}
                               onChange={(e) => setSearch(e.target.value)}
                               placeholder="Search name or mobile / البحث بالاسم أو الجوال"
-                              className="w-full text-sm outline-none"
+                              className="w-full min-w-0 text-base outline-none sm:text-sm"
                             />
 
                           </div>
 
-                          <div className="max-h-64 overflow-y-auto">
+                          <div className="max-h-48 overflow-y-auto overscroll-contain sm:max-h-64">
 
                             {filteredCustomers.map((customer) => (
 
@@ -723,7 +724,7 @@ export default function WorkshopIntake({
 
                 ) : (
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
 
                     <Field label="Customer Name" required>
                       <input
@@ -760,7 +761,7 @@ export default function WorkshopIntake({
                 subtitle="Vehicle plate identification"
               >
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
 
                   <Field label="Car Make / Brand" required>
                     {/* WORKSHOP_CAR_BRAND_DROPDOWN_V1 */}
@@ -951,9 +952,9 @@ export default function WorkshopIntake({
               </div>
             )}
 
-            <section className="sticky bottom-0 z-20 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-xl backdrop-blur">
+            <section className="relative z-20 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:sticky sm:bottom-0 sm:p-4">
 
-              <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
 
                 <div className="flex items-center gap-3">
 
@@ -973,13 +974,13 @@ export default function WorkshopIntake({
 
                 </div>
 
-                <div className="flex gap-3">
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-3">
 
                   <button
                     type="button"
                     disabled={saving}
                     onClick={closeForm}
-                    className="flex items-center gap-2 rounded-xl border border-slate-300 px-6 py-3 text-sm font-black text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    className="flex items-center gap-2 justify-center rounded-xl border border-slate-300 px-2 py-3 text-sm font-black sm:px-6 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                   >
                     <X className="h-4 w-4" />
                     <Bilingual value="Cancel" />
@@ -988,7 +989,7 @@ export default function WorkshopIntake({
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-7 py-3 text-sm font-black text-white shadow-md hover:bg-blue-700 disabled:opacity-50"
+                    className="flex items-center gap-2 justify-center rounded-xl bg-blue-600 px-2 py-3 text-sm font-black sm:px-7 text-white shadow-md hover:bg-blue-700 disabled:opacity-50"
                   >
                     <Save className="h-4 w-4" />
 
