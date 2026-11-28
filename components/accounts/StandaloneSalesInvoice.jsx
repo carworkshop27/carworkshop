@@ -45,6 +45,7 @@ export default function StandaloneSalesInvoice({
     customerArabic: "",
     customerPhone: "",
     customerAddress: "",
+    customerVat: "",
     vehicleMake: "",
     vehicleModel: "",
     plateNumber: "",
@@ -64,6 +65,7 @@ export default function StandaloneSalesInvoice({
           customerArabic: initialInvoice.customer_name_ar || "",
           customerPhone: initialInvoice.customer_phone || "",
           customerAddress: initialInvoice.customer_address || "",
+          customerVat: initialInvoice.customer_vat || "",
           vehicleMake: initialInvoice.vehicle_make || "",
           vehicleModel: initialInvoice.vehicle_model || "",
           plateNumber: initialInvoice.plate_number || "",
@@ -181,6 +183,7 @@ export default function StandaloneSalesInvoice({
             .trim(),
           phone: customer.phone || "",
           address: customer.address || "",
+          customerVat: customer.customer_vat || "",
           email: customer.email || "",
         })),
         ...quotations.map((quotation) => ({
@@ -190,6 +193,7 @@ export default function StandaloneSalesInvoice({
           name: quotation.customer_name || "",
           phone: quotation.contact_number || "",
           address: quotation.address || "",
+          customerVat: quotation.customer_vat || "",
           email: quotation.email || "",
         })),
       ];
@@ -233,11 +237,13 @@ export default function StandaloneSalesInvoice({
   };
 
   const selectExistingCustomer = (customer) => {
+    if (locked) return;
     setInvoice((previous) => ({
       ...previous,
       customer: customer.name || "",
       customerPhone: customer.phone || "",
       customerAddress: customer.address || "",
+      customerVat: String(customer.customerVat || "").trim(),
     }));
 
     setSelectedCustomerId(customer.originalId || customer.id);
@@ -279,6 +285,14 @@ export default function StandaloneSalesInvoice({
 
     setSaveError("");
 
+    if (
+      invoice.customerVat.trim() &&
+      !/^[0-9]{15}$/.test(invoice.customerVat.trim())
+    ) {
+      setSaveError("Customer VAT number must contain exactly 15 digits.");
+      return;
+    }
+
     if (!invoice.customer.trim()) {
       setSaveError("Customer name is required.");
       return;
@@ -313,6 +327,7 @@ export default function StandaloneSalesInvoice({
           customer_name_ar: invoice.customerArabic,
           customer_phone: invoice.customerPhone,
           customer_address: invoice.customerAddress,
+          customer_vat: invoice.customerVat.trim() || null,
           vehicle_make: invoice.vehicleMake,
           vehicle_model: invoice.vehicleModel,
           plate_number: invoice.plateNumber,
@@ -1663,7 +1678,7 @@ box-sizing: border-box !important;
           <button
             type="button"
             onClick={searchCustomers}
-            disabled={customerLoading}
+            disabled={customerLoading || locked}
             className="rounded-lg bg-blue-700 px-5 py-2 font-bold text-white disabled:opacity-50"
           >
             {customerLoading ? "Searching..." : "Search Customer"}
@@ -1802,6 +1817,30 @@ box-sizing: border-box !important;
             {field("اسم العميل", "customerArabic")}
             {field("Phone / الهاتف", "customerPhone")}
             {field("Address / العنوان", "customerAddress")}
+
+            {/* CW_CUSTOMER_VAT_FIELD_V1 */}
+            {(!locked || invoice.customerVat) && (
+              <label className="col-span-2 block">
+                <span className="mb-1 block text-xs font-semibold text-slate-600">
+                  {"Customer VAT Number / \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0636\u0631\u064a\u0628\u064a \u0644\u0644\u0639\u0645\u064a\u0644"}
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={15}
+                  dir="ltr"
+                  value={invoice.customerVat}
+                  onChange={(event) =>
+                    updateInvoice(
+                      "customerVat",
+                      event.target.value.replace(/[^0-9]/g, "").slice(0, 15)
+                    )
+                  }
+                  disabled={locked}
+                  className={inputClass}
+                />
+              </label>
+            )}
           </div>
         </section>
 

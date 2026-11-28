@@ -131,6 +131,7 @@ async function registerInvoiceCustomer(invoice) {
         last_name: lastName,
         phone,
         address: String(invoice.customer_address || "").trim() || null,
+        customer_vat: invoice.customer_vat || null,
       })
       .select("id")
       .single();
@@ -197,6 +198,16 @@ export async function POST(request) {
     if (auth.error) return respond(auth.error, auth.status);
 
     const body = await request.json();
+
+    // CW_INVOICE_CUSTOMER_VAT_V1
+    const customerVat = String(body.customer_vat ?? "").trim();
+
+    if (customerVat && !/^[0-9]{15}$/.test(customerVat)) {
+      return respond(
+        "Customer VAT number must contain exactly 15 digits.",
+        400
+      );
+    }
 
     if (!["professional", "workshop", "partner-workshop"].includes(body.template_type)) {
       return respond("Invalid invoice template.", 400);
@@ -275,6 +286,9 @@ export async function POST(request) {
       customer_name_ar: clean(body.customer_name_ar),
       customer_phone: clean(body.customer_phone),
       customer_address: clean(body.customer_address),
+      ...(Object.prototype.hasOwnProperty.call(body, "customer_vat")
+        ? { customer_vat: customerVat || null }
+        : {}),
       vehicle_make: clean(body.vehicle_make),
       vehicle_model: clean(body.vehicle_model),
       plate_number: clean(body.plate_number),
@@ -329,6 +343,16 @@ export async function PUT(request) {
     if (auth.error) return respond(auth.error, auth.status);
 
     const body = await request.json();
+
+    // CW_INVOICE_CUSTOMER_VAT_V1
+    const customerVat = String(body.customer_vat ?? "").trim();
+
+    if (customerVat && !/^[0-9]{15}$/.test(customerVat)) {
+      return respond(
+        "Customer VAT number must contain exactly 15 digits.",
+        400
+      );
+    }
 
     if (
       typeof body.id !== "string" ||
@@ -445,6 +469,9 @@ export async function PUT(request) {
       customer_name_ar: clean(body.customer_name_ar),
       customer_phone: clean(body.customer_phone),
       customer_address: clean(body.customer_address),
+      ...(Object.prototype.hasOwnProperty.call(body, "customer_vat")
+        ? { customer_vat: customerVat || null }
+        : {}),
       vehicle_make: clean(body.vehicle_make),
       vehicle_model: clean(body.vehicle_model),
       plate_number: clean(body.plate_number),
